@@ -64,7 +64,7 @@ Every feature decision must pass through these filters, in priority order:
 | Goal | Measurable Target |
 |---|---|
 | Weight loss | Visible downward trend in weight |
-| Healthier eating habits | Average meal health score trending toward 3/5 |
+| Healthier eating habits | Health score trend increasing over time (no fixed numeric target) |
 | Eating awareness | Logging meals consistently (photo or name at minimum) |
 | Weight logging consistency | At least 2 weigh-ins per week |
 | To-do list functional | Tasks and habits usable with reminders |
