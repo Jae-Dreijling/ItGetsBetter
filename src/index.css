@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Warm coral/salmon primary */
   --color-primary-50: #fef2f0;
@@ -37,20 +39,31 @@
   --color-accent-800: #854a0e;
   --color-accent-900: #713d12;
 
-  /* Warm backgrounds */
-  --color-surface: #fdf6f0;
-  --color-surface-dark: #1e1a17;
-  --color-card: #ffffff;
-  --color-card-dark: #2a2420;
-  --color-text-primary: #2c1810;
-  --color-text-primary-dark: #f5ebe4;
-  --color-muted: #8c7a6e;
-  --color-muted-dark: #a89888;
+  /* Semantic colors — swap in dark mode via CSS below */
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-text-primary: var(--text-primary);
+  --color-muted: var(--muted);
 
   /* Soft functional colors */
   --color-success: #5cb176;
   --color-warning: #e8a838;
   --color-danger: #d4665a;
+}
+
+:root {
+  --surface: #fdf6f0;
+  --card: #ffffff;
+  --text-primary: #2c1810;
+  --muted: #8c7a6e;
+}
+
+.dark {
+  --surface: #1e1a17;
+  --card: #2a2420;
+  --text-primary: #f5ebe4;
+  --muted: #a89888;
+  color-scheme: dark;
 }
 
 *,
@@ -64,13 +77,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-}
-
-.dark body {
-  background-color: var(--color-surface-dark);
-  color: var(--color-text-primary-dark);
+  background-color: var(--surface);
+  color: var(--text-primary);
 }
 
 #root {

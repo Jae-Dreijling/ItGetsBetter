@@ -23,7 +23,7 @@ export default function BottomTabs() {
   const activeTab = getActiveTab()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-20 flex h-16 items-center justify-around border-t border-primary-100 bg-card">
+    <nav className="fixed bottom-0 left-0 right-0 z-20 flex h-16 items-center justify-around border-t border-primary-100 dark:border-primary-900 bg-card">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id
         const Icon = tab.icon
