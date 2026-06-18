@@ -1,56 +1,79 @@
 import { useEffect, useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router'
 import { db } from './db'
 import { getLogicalDate, nowISO } from './lib/date'
+import { useProfile } from './hooks/useProfile'
 import { Heart } from 'lucide-react'
 
-export default function App() {
-  const [ready, setReady] = useState(false)
+import AppShell from './components/layout/AppShell'
+import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
+import HomePage from './features/home/HomePage'
+import LogHubPage from './features/log/LogHubPage'
+import WeightPage from './features/weight/WeightPage'
+import MealsPage from './features/meals/MealsPage'
+import MeasurementsPage from './features/measurements/MeasurementsPage'
+import SettingsPage from './features/settings/SettingsPage'
+import ProfileSettings from './features/settings/ProfileSettings'
+import BackupPage from './features/settings/BackupPage'
+import PlaceholderPage from './features/placeholder/PlaceholderPage'
+
+function AppContent() {
+  const { profile, isLoading } = useProfile()
+  const [setupDone, setSetupDone] = useState(false)
 
   useEffect(() => {
-    async function init() {
-      if (navigator.storage?.persist) {
-        await navigator.storage.persist()
-      }
-
-      await db.appOpenLog.add({
-        date: getLogicalDate(),
-        opened_at: nowISO(),
-      })
-
-      setReady(true)
+    if (profile) {
+      document.documentElement.classList.toggle('dark', profile.theme === 'dark')
     }
+  }, [profile?.theme])
 
-    init()
-  }, [])
-
-  if (!ready) {
+  if (isLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-surface">
+      <div className="flex min-h-dvh items-center justify-center bg-surface">
         <Heart className="h-8 w-8 animate-pulse text-primary-400" />
       </div>
     )
   }
 
+  if (!profile && !setupDone) {
+    return <FirstLaunchSetup onComplete={() => setSetupDone(true)} />
+  }
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-surface px-6 text-center">
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary-100">
-        <Heart className="h-10 w-10 text-primary-500" />
-      </div>
+    <Routes>
+      <Route element={<AppShell />}>
+        <Route index element={<HomePage />} />
+        <Route path="log" element={<LogHubPage />} />
+        <Route path="log/weight" element={<WeightPage />} />
+        <Route path="log/meal" element={<MealsPage />} />
+        <Route path="todo" element={<PlaceholderPage title="To-Do" />} />
+        <Route path="me" element={<PlaceholderPage title="Me" />} />
+        <Route path="me/measurements" element={<MeasurementsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="settings/profile" element={<ProfileSettings />} />
+        <Route path="settings/backup" element={<BackupPage />} />
+      </Route>
+    </Routes>
+  )
+}
 
-      <h1 className="mb-2 text-3xl font-bold text-text-primary">
-        ItGetsBetter
-      </h1>
+export default function App() {
+  useEffect(() => {
+    async function init() {
+      if (navigator.storage?.persist) {
+        await navigator.storage.persist()
+      }
+      await db.appOpenLog.add({
+        date: getLogicalDate(),
+        opened_at: nowISO(),
+      })
+    }
+    init()
+  }, [])
 
-      <p className="mb-8 max-w-sm text-lg text-muted">
-        Your personal Health Operating System.
-        Phase 0 complete — the foundation is ready.
-      </p>
-
-      <div className="rounded-xl bg-card p-6 shadow-sm">
-        <p className="text-sm text-muted">
-          PWA installed &bull; Offline ready &bull; Database initialized
-        </p>
-      </div>
-    </div>
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   )
 }
