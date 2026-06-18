@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Warm coral/salmon primary */
+  --color-primary-50: #fef2f0;
+  --color-primary-100: #fde3de;
+  --color-primary-200: #fbc8bd;
+  --color-primary-300: #f8a492;
+  --color-primary-400: #f47e6c;
+  --color-primary-500: #ec5a42;
+  --color-primary-600: #d94030;
+  --color-primary-700: #b63225;
+  --color-primary-800: #962c22;
+  --color-primary-900: #7c2922;
+
+  /* Soft teal/sage secondary */
+  --color-secondary-50: #f0faf7;
+  --color-secondary-100: #d6f1e8;
+  --color-secondary-200: #ade3d2;
+  --color-secondary-300: #7cceb7;
+  --color-secondary-400: #4eb499;
+  --color-secondary-500: #339980;
+  --color-secondary-600: #267a67;
+  --color-secondary-700: #216254;
+  --color-secondary-800: #1e4f44;
+  --color-secondary-900: #1b4239;
+
+  /* Warm amber/gold accent */
+  --color-accent-50: #fefbe8;
+  --color-accent-100: #fef5c3;
+  --color-accent-200: #fee98a;
+  --color-accent-300: #fdd647;
+  --color-accent-400: #fac215;
+  --color-accent-500: #eaaa08;
+  --color-accent-600: #ca8404;
+  --color-accent-700: #a15e07;
+  --color-accent-800: #854a0e;
+  --color-accent-900: #713d12;
+
+  /* Semantic colors — swap in dark mode via CSS below */
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-text-primary: var(--text-primary);
+  --color-muted: var(--muted);
+
+  /* Soft functional colors */
+  --color-success: #5cb176;
+  --color-warning: #e8a838;
+  --color-danger: #d4665a;
+}
+
+:root {
+  --surface: #fdf6f0;
+  --card: #ffffff;
+  --text-primary: #2c1810;
+  --muted: #8c7a6e;
+}
+
+.dark {
+  --surface: #1e1a17;
+  --card: #2a2420;
+  --text-primary: #f5ebe4;
+  --muted: #a89888;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
