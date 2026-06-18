@@ -141,6 +141,46 @@ Scope guard: Main branch auto-deploys. No preview environments. No CI/CD checks 
 
 ---
 
+### Persistent Storage Request
+
+**Call `navigator.storage.persist()` on first launch to prevent browser/OS from evicting IndexedDB data.**
+
+Why Must: This is a one-line safety mechanism, not a feature. Without it, the browser (especially on iOS) may silently delete all user data under storage pressure. The cost of adding it is near-zero. The cost of not having it is potentially catastrophic data loss.
+
+Scope guard: One API call on first launch. Log the result. If on iOS and denied, guide user to "Add to Home Screen."
+
+---
+
+### Platform Detection & iOS Guidance
+
+**Detect Android/iOS on first launch. On iOS, guide user to "Add to Home Screen" with clear instructions and reasoning.**
+
+Why Must: On iOS, a PWA that isn't installed to the Home Screen has severely limited functionality (no notifications, weaker storage persistence). If the user is on iOS and doesn't install to Home Screen, the app is significantly degraded. A one-time guidance screen prevents this.
+
+Scope guard: Detect platform. Show a dismissible guidance banner on iOS if not installed. No platform-specific features — just the guidance.
+
+---
+
+### Encrypted Backup (Export/Import)
+
+**One-tap encrypted export to .igb file. Password-protected. Restore from file.**
+
+Why Must: Data loss in a local-first app is devastating and likely causes permanent abandonment — which is the exact failure mode this app is designed to prevent. IndexedDB can be cleared by "Clear site data," iOS can evict it under storage pressure, and phones get lost. The user said losing data would be "very sad." The backup system is the safety net that makes local-first viable.
+
+Scope guard: Export all data (including photo blobs) to an encrypted file. Import from file with password. Settings screen with "Create Backup" and "Restore Backup" buttons. No automated scheduling — manual one-tap is sufficient for MVP.
+
+---
+
+### getLogicalDate() Unit Tests
+
+**Comprehensive test suite for the 3AM day boundary utility function, written before any feature that uses it.**
+
+Why Must: Every feature in the app depends on `getLogicalDate()` for correct date assignment. A bug here cascades silently through all data — weight entries assigned to wrong days, meal timestamps misaligned, fasting calculations broken. This is the one function where upfront testing is cheaper than debugging later. The test suite covers: 2:59 AM, 3:00 AM, 3:01 AM, midnight, year boundaries, and backfill scenarios.
+
+Scope guard: Unit tests only. No integration tests. No test infrastructure beyond Vitest (already in the stack).
+
+---
+
 ## Should Have
 
 Important features that make v1 significantly better, but the app is technically usable without them. These should be built immediately after the Must Haves, ideally in v1.1 or v1.2.
@@ -179,15 +219,15 @@ Scope guard: No 1-per-category-per-week enforcement yet (Could Have). No starter
 
 ---
 
-### Tasks (Basic)
+### Tasks
 
-**Create tasks with title, optional due date. Mark complete. Project grouping.**
+**Scrumboard: create tasks with title, due date, priority (low/medium/high/urgent), labels, sub-tasks (one level deep), project grouping. Check things off.**
 
-Why Should (not Must): The user wants this to replace Todoist. That's a high bar, but even a basic task list integrated into the same app reduces app-switching. Combined with habits in the To-Do tab, this gives the unified view the user asked for.
+Why Should (not Must): The user wants a unified place to track things to do alongside health habits. Combined with habits in the To-Do tab, this gives the full picture of "what do I need to do today." Due dates, priority, and sub-tasks make it usable for real life (school assignments, work tasks) without needing a separate app.
 
-Why not Must: Same reasoning as habits. The MVP is health logging, not task management.
+Why not Must: The MVP is health logging, not task management.
 
-Scope guard: No reminders/push notifications (notifications are a separate concern). No complex project management. Just a list with titles, completion, and optional grouping.
+Scope guard: No reminders/push notifications (notifications are a separate concern). No task descriptions or notes. No drag-and-drop reordering. No Gantt charts or time tracking. Sub-tasks are one level deep only (title + completed). Labels are shared with habits as a unified category system.
 
 ---
 
@@ -198,18 +238,6 @@ Scope guard: No reminders/push notifications (notifications are a separate conce
 Why Should (not Must): The user said "I LOVE graphs and charts" and wants them accessible day-to-day. Graphs are a primary motivation driver. The weight graph is in Must Have (it's on the weight screen), but a dedicated graphs page with multiple chart types is the difference between "functional" and "engaging."
 
 Why not Must: The weight screen already has a graph. Meal scores can be seen as a list. The graphs dashboard is about richness of visualization, not core functionality.
-
----
-
-### Encrypted Backup (Export/Import)
-
-**One-tap encrypted export to .igb file. Password-protected. Restore from file.**
-
-Why Should (not Must): Data loss is a real risk with IndexedDB (as we just discussed). The user said losing data would be "very sad." But in the first 2-4 weeks of v1, the amount of accumulated data is small — the risk is low initially and grows over time.
-
-Why not Must: The app works without backup. The user accepted "manual backup" as sufficient. But this should come very soon after launch — within the first month of use — before meaningful data accumulates.
-
-Why not Could: Because "manual backup tends to never happen" was called out as a risk. If we defer this too long, the user accumulates 3 months of data with no safety net, and a single "Clear site data" wipes everything. That would be devastating and might cause permanent abandonment.
 
 ---
 
@@ -263,11 +291,13 @@ Features that add real value but can absolutely wait. Building these before Shou
 
 ### Points System
 
-**Earn points for logging, completing habits, hitting goals. Points balance display. Never decrease.**
+**Earn points for logging, completing habits, hitting goals. Points balance display. Never decrease. All logged meals earn flat equal points regardless of health score — the act of logging is the achievement, not the quality of the meal.**
 
 Why Could (not Should): Points are a long-term engagement mechanic. In the first few weeks, the novelty of a new app provides motivation. Points become important when novelty fades — around month 2-3. Building them now is premature optimization of engagement.
 
 Risk of building too early: Getting the points economy wrong (values too high/low) is worse than not having points. It needs tuning, which requires real usage data.
+
+Design note: Meal points are flat (not scaled by health score) to prevent unconscious score inflation and align with the "awareness over perfection" philosophy.
 
 ---
 
@@ -579,9 +609,9 @@ Why not: Requires mood tracking (Could Have) + notification system (Could Have) 
 
 | Priority | Count | Features |
 |---|---|---|
-| **Must Have** | 11 | App shell, warm theme, home screen, weight tracking, meal tracking, body measurements, basic profile/settings, first-launch setup, PWA fundamentals, 3AM day boundary, backfill support, deployment pipeline |
-| **Should Have** | 10 | Water tracking, fasting tracker, basic habits, basic tasks, graphs dashboard, encrypted backup, welcome back message, auto light/dark mode, smoothed weight trend, measurement graphs, CI/CD checks |
-| **Could Have** | 18 | Points system, reward shop, achievements, custom quotes, mood tracking, sleep tracking, exercise tracking, medicine tracking, schedule profiles, modes, weekly reviews, progress photos, notification queue, data export, photo lifecycle, app lock, habit queue, habit enforcement, starter kit, custom install prompt, side menu |
+| **Must Have** | 15 | App shell, warm theme, home screen, weight tracking, meal tracking, body measurements, basic profile/settings, first-launch setup, PWA fundamentals, 3AM day boundary, getLogicalDate() tests, backfill support, deployment pipeline, persistent storage request, platform detection & iOS guidance, encrypted backup |
+| **Should Have** | 8 | Water tracking, fasting tracker, basic habits, basic tasks (scrumboard), graphs dashboard, welcome back message, auto light/dark mode, smoothed weight trend, measurement graphs, CI/CD checks |
+| **Could Have** | 18 | Points system (flat meal points), reward shop, achievements, custom quotes, mood tracking, sleep tracking, exercise tracking, medicine tracking, schedule profiles, modes, weekly reviews, progress photos, notification queue, data export, photo lifecycle, app lock, habit queue, habit enforcement, starter kit, custom install prompt, side menu |
 | **Won't Have Yet** | 14 | Health insights, push server, multi-device sync, local AI, companion character, smartwatch integration, autophagy, sugar detox, onboarding wizard, quote tone shifting, workout plans, calendar integration, meal photo AI, desktop layout, automated cloud backup, emotional support detection |
 
 ---
@@ -589,20 +619,21 @@ Why not: Requires mood tracking (Could Have) + notification system (Could Have) 
 ## Build Order Recommendation
 
 ```
-Week 1-2:  Must Have (all 11 features)
+Week 1-2:  Must Have (all 15 items)
            → Result: A usable app that logs weight, meals, and measurements
+           → Data is safely backed up from day one
            → Deployed and installable on phone
+           → getLogicalDate() fully tested
 
-Week 3-4:  Should Have (top 6: water, fasting, habits, tasks, graphs, backup)
+Week 3-4:  Should Have (water, fasting, habits, tasks, graphs)
            → Result: An engaging daily-use app with routine tracking
-           → Data is safely backed up
 
-Week 5-6:  Should Have (remaining: welcome back, auto theme, smoothed trend, 
+Week 5-6:  Should Have (remaining: welcome back, auto theme, smoothed trend,
            measurement graphs, CI/CD)
            → Result: A polished, emotionally intelligent v1
 
 Month 2-3: Could Have (prioritized by user desire and engagement impact)
-           → Suggested order: points → achievements → mood → weekly reviews
+           → Suggested order: points (flat meal points) → achievements → mood → weekly reviews
            → Result: Long-term engagement mechanics in place
 
 Month 4+:  Remaining Could Haves and early Won't Have Yets as the user's
@@ -621,9 +652,11 @@ Watch for these during implementation:
 
 3. **"I need notifications for the medicine reminders."** You need medicine tracking first (Could Have), which needs the notification system (Could Have), which needs the notification rule engine (Could Have). That's three features masquerading as one.
 
-4. **"The weekly review would motivate me to keep going."** It will — in month 3 when you have rich data. In week 1 with only weight and meals, it's a summary of two numbers. Build it when it has something to summarize.
+4. **"I need reminders, descriptions, and drag-and-drop on tasks."** The task system has due dates, priorities, sub-tasks, and labels — that's the agreed scope. Reminders require the notification system (separate feature). Descriptions, drag-and-drop reordering, and recurring tasks are scope creep beyond the scrumboard model. If a task needs a paragraph of notes, it belongs in a different tool.
 
-5. **"I should add the reward shop now so I can reward myself for building the app."** Charming, but no. Use real-world rewards until the point system exists.
+5. **"The weekly review would motivate me to keep going."** It will — in month 3 when you have rich data. In week 1 with only weight and meals, it's a summary of two numbers. Build it when it has something to summarize.
+
+6. **"I should add the reward shop now so I can reward myself for building the app."** Charming, but no. Use real-world rewards until the point system exists.
 
 ---
 

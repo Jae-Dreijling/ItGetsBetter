@@ -76,7 +76,7 @@ Every feature decision must pass through these filters, in priority order:
 |---|---|
 | Body transformation | Visible change in body measurements over time |
 | Exercise consistency | Exercising at least 3 times per week |
-| Health score improvement | Average meal health score of 4/5 consistently |
+| Health score improvement | Sustained upward trend in meal health scores over time |
 | Routine consistency | Opening the app on at least 75% of days |
 | Weight loss rate | Average of 0.5kg loss per week (measured monthly) |
 
@@ -97,7 +97,7 @@ Every feature decision must pass through these filters, in priority order:
 
 | Metric | Target | Measurement |
 |---|---|---|
-| Average meal health score | 3/5 at 3 months, 4/5 at 12 months | Rolling weekly average of all scored meals |
+| Meal health score trend | Increasing over time (no fixed numeric target) | Directional trend analysis: "your scores have been increasing over the past month" |
 | Weight trend | -0.5kg/week average | Monthly weight delta / 4 |
 | Water intake | 2L daily | Daily water total vs. configured goal |
 | Fasting consistency | Meeting configured fasting goal | Days fasting target was met / active days |
@@ -263,7 +263,7 @@ The user should be able to manually set which profile applies to each day, as th
 | ML-08 | Food photos are compressed after 3 months. |
 | ML-09 | Food photos are deleted after 1 year, or earlier if storage exceeds a configurable threshold. |
 | ML-10 | A loose reference guide for health scores is available but not enforced (e.g., 1 = fast food, 5 = balanced home-cooked). The user defines their own meaning. |
-| ML-11 | Average meal health score is calculated on a rolling weekly basis. |
+| ML-11 | Meal health scores are tracked as directional trends ("your scores have been increasing this month"), not numeric goal targets. No fixed average target is set — awareness and trend direction are what matter. |
 
 ### 6.3 Body Measurements
 
@@ -355,7 +355,12 @@ The user should be able to manually set which profile applies to each day, as th
 | TK-03 | Tasks appear in a unified "to-do" view alongside habits, but are stored separately. |
 | TK-04 | Tasks have reminders with push notifications at user-set times. |
 | TK-05 | Completing a task earns a small number of points (e.g., 5 points). |
-| TK-06 | This is a general-purpose task manager (not limited to health tasks). It must be good enough to replace Todoist. |
+| TK-06 | Tasks have an optional due date. |
+| TK-07 | Tasks have a priority level: low, medium, high, or urgent. Default is medium. |
+| TK-08 | Tasks can have sub-tasks (one level deep only — a sub-task cannot have its own sub-tasks). Sub-tasks are lightweight: title + completed status only. |
+| TK-09 | A parent task's completion can be independent of its sub-tasks (the user decides when the parent is "done"), or the user can check off sub-tasks individually. |
+| TK-10 | Tasks have user-defined labels (e.g., health, exercise, school, work). Labels are shared across tasks and habits as a unified category/tagging system. |
+| TK-11 | The task system is a scrumboard for tracking things that need to get done — check things off, see what's pending, prioritize. It is not a full project management suite. No Gantt charts, no time tracking, no complex workflows. Its strength is simplicity and integration with the health ecosystem. |
 
 ### 6.11 Habits
 
@@ -363,7 +368,7 @@ The user should be able to manually set which profile applies to each day, as th
 |---|---|
 | HB-01 | Habits are recurring actions with a configurable frequency: daily, weekly, or monthly. |
 | HB-02 | Habits appear in a unified "to-do" view alongside tasks, but are stored separately. |
-| HB-03 | Habits have categories (e.g., diet, exercise, skincare, etc.). Categories are user-defined. |
+| HB-03 | Habits have labels/categories (e.g., diet, exercise, skincare, etc.). Labels are user-defined and shared with the task system as a unified tagging system. |
 | HB-04 | The user can add a maximum of 1 new habit per category per week. |
 | HB-05 | A "habit queue" exists: a pool of future habits the user wants to eventually adopt. Habits move from the queue to active status. |
 | HB-06 | A "starter kit" of 2-3 suggested habits is offered during initial setup. |
@@ -385,7 +390,7 @@ The user should be able to manually set which profile applies to each day, as th
 | ID | Requirement |
 |---|---|
 | PT-01 | Points are earned through healthy behaviors. Points are never deducted. |
-| PT-02 | Logging a meal earns points, regardless of health score. Higher health scores earn more points. A 3/5 health score is the neutral baseline and earns a minimal amount. |
+| PT-02 | Logging a meal earns a flat number of points, regardless of health score. All logged meals earn the same amount. The act of logging is the achievement, not the quality of the meal. This prevents unconscious score inflation and aligns with the "awareness over perfection" philosophy. |
 | PT-03 | Hitting daily goals earns a small number of points. |
 | PT-04 | Streaks earn escalating points (longer streaks = more points per day). |
 | PT-05 | Completing habits earns a small number of points. |
@@ -450,13 +455,14 @@ The user should be able to manually set which profile applies to each day, as th
 | NF-04 | The app does not share data with any external service, analytics platform, or ad network. |
 | NF-05 | Single-user system — no accounts, no social features, no data sharing. |
 
-### 7.2 Offline Capability
+### 7.2 Offline Capability & Data Durability
 
 | ID | Requirement |
 |---|---|
 | NF-06 | The app must be fully functional without an internet connection. |
 | NF-07 | All data is stored locally on the device. |
 | NF-08 | Sync (if implemented) occurs only when online and is not required for any functionality. |
+| NF-08a | The app must request persistent storage (`navigator.storage.persist()`) on first launch. This prevents the browser/OS from evicting IndexedDB data under storage pressure. This is a day-one safety mechanism, not a feature. |
 
 ### 7.3 Platform
 
@@ -465,6 +471,8 @@ The user should be able to manually set which profile applies to each day, as th
 | NF-09 | Phone is the primary and required platform. |
 | NF-10 | Desktop is a desired but not required platform. |
 | NF-11 | If only one platform is built, it is the phone version. |
+| NF-11a | The app detects the user's platform (Android/iOS) on first launch. On iOS, the app prominently guides the user to "Add to Home Screen" since this is required for notification functionality and improved data persistence. |
+| NF-11b | Android is the primary development target. iOS is supported with documented caveats (limited background processing, notification restrictions, potential storage eviction). |
 
 ### 7.4 Performance & Storage
 
@@ -503,7 +511,9 @@ The user should be able to manually set which profile applies to each day, as th
 
 ## 8. Data Entities
 
-### 8.1 User Profile
+> **Implementation note:** Only build database tables for features currently being implemented. The MVP requires only: User Profile, Weight Entry, Meal Entry, and Body Measurement Entry. All other entities below are defined for completeness but should be added to the database schema only when their corresponding feature is being built. Dexie's versioned schema migration supports this incremental approach.
+
+### 8.1 User Profile (MVP)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -516,7 +526,7 @@ The user should be able to manually set which profile applies to each day, as th
 | points_balance | Number | Yes | Current accumulated points |
 | created_at | DateTime | Yes | Account creation date |
 
-### 8.2 Weight Entry
+### 8.2 Weight Entry (MVP)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -526,7 +536,7 @@ The user should be able to manually set which profile applies to each day, as th
 | logged_at | DateTime | Yes | Actual timestamp of entry |
 | is_backfill | Boolean | Yes | Whether this was entered retroactively |
 
-### 8.3 Meal Entry
+### 8.3 Meal Entry (MVP)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -541,7 +551,7 @@ The user should be able to manually set which profile applies to each day, as th
 | logged_at | DateTime | Yes | Actual timestamp — used for fasting calculation |
 | is_backfill | Boolean | Yes | |
 
-### 8.4 Body Measurement Entry
+### 8.4 Body Measurement Entry (MVP)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -557,7 +567,7 @@ The user should be able to manually set which profile applies to each day, as th
 | wrists | Number (cm) | No | |
 | logged_at | DateTime | Yes | |
 
-### 8.5 Progress Photo
+### 8.5 Progress Photo (Deferred — build with Progress Photos feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -569,7 +579,7 @@ The user should be able to manually set which profile applies to each day, as th
 | notified_for_download | Boolean | Yes | Whether 6-month download notice was sent |
 | logged_at | DateTime | Yes | |
 
-### 8.6 Fasting Record
+### 8.6 Fasting Record (Deferred — build with Fasting feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -582,7 +592,7 @@ The user should be able to manually set which profile applies to each day, as th
 | goal_met | Boolean | Yes | duration >= goal |
 | was_broken_early | Boolean | Yes | Whether a caloric item was logged before goal was met |
 
-### 8.7 Water Entry
+### 8.7 Water Entry (Deferred — build with Water Tracking feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -593,7 +603,7 @@ The user should be able to manually set which profile applies to each day, as th
 
 Note: Daily water total is aggregated from individual entries. Days with no entries are "unknown."
 
-### 8.8 Mood Entry
+### 8.8 Mood Entry (Deferred — build with Mood Tracking feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -603,7 +613,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | tags | Array of Strings | No | User-created tags from personal library |
 | logged_at | DateTime | Yes | |
 
-### 8.9 Sleep Entry
+### 8.9 Sleep Entry (Deferred — build with Sleep Tracking feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -614,7 +624,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | wake_feeling | String | No | How the user feels upon waking |
 | logged_at | DateTime | Yes | |
 
-### 8.10 Exercise Entry
+### 8.10 Exercise Entry (Deferred — build with Exercise Tracking feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -629,22 +639,35 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | notes | String | No | Optional |
 | logged_at | DateTime | Yes | |
 
-### 8.11 Task
+### 8.11 Task (Deferred — build with Tasks feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | id | UUID | Yes | |
 | title | String | Yes | |
-| description | String | No | |
 | project_id | UUID | No | Optional grouping |
+| parent_task_id | UUID | No | If set, this is a sub-task. Only one level deep (a sub-task cannot reference another sub-task as parent). |
 | is_completed | Boolean | Yes | |
-| due_date | Date | No | |
+| due_date | Date | No | Optional |
+| priority | Enum | Yes | low, medium, high, urgent. Default: medium. |
+| labels | Array of UUID | No | References to Label entities. User-defined categories. |
 | reminder_time | DateTime | No | |
 | points_earned | Number | No | Points awarded on completion |
 | completed_at | DateTime | No | |
 | created_at | DateTime | Yes | |
 
-### 8.12 Project
+### 8.11a Label (Deferred — build with Tasks/Habits feature)
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| id | UUID | Yes | |
+| name | String | Yes | User-defined (e.g., health, exercise, school, work) |
+| color | String | No | Optional display color |
+| created_at | DateTime | Yes | |
+
+> **Note:** Labels are shared between tasks and habits as a unified tagging/category system. A task labeled "health" and a habit categorized as "health" reference the same Label entity.
+
+### 8.12 Project (Deferred — build with Tasks feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -653,20 +676,20 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | description | String | No | |
 | created_at | DateTime | Yes | |
 
-### 8.13 Habit
+### 8.13 Habit (Deferred — build with Habits feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | id | UUID | Yes | |
 | title | String | Yes | |
-| category | String | Yes | User-defined category (diet, exercise, skincare, etc.) |
+| labels | Array of UUID | Yes | References to Label entities (shared with tasks). At least one label required. |
 | frequency | Enum | Yes | daily, weekly, monthly |
 | is_active | Boolean | Yes | Whether currently in active rotation |
 | is_queued | Boolean | Yes | Whether in the "future habits" queue |
 | activated_at | Date | No | When moved from queue to active |
 | created_at | DateTime | Yes | |
 
-### 8.14 Habit Completion
+### 8.14 Habit Completion (Deferred — build with Habits feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -676,7 +699,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | completed | Boolean | Yes | |
 | logged_at | DateTime | Yes | |
 
-### 8.15 Medicine
+### 8.15 Medicine (Deferred — build with Medicine Tracking feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -686,7 +709,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | is_active | Boolean | Yes | |
 | created_at | DateTime | Yes | |
 
-### 8.16 Medicine Log
+### 8.16 Medicine Log (Deferred — build with Medicine Tracking feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -696,7 +719,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | taken | Boolean | Yes | |
 | logged_at | DateTime | Yes | |
 
-### 8.17 Reward
+### 8.17 Reward (Deferred — build with Points & Reward feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -707,7 +730,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | is_available | Boolean | Yes | Whether still in the shop |
 | created_at | DateTime | Yes | |
 
-### 8.18 Reward Claim
+### 8.18 Reward Claim (Deferred — build with Points & Reward feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -716,7 +739,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | points_spent | Number | Yes | Snapshot of cost at time of claim |
 | claimed_at | DateTime | Yes | |
 
-### 8.19 Achievement
+### 8.19 Achievement (Deferred — build with Achievements feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -728,7 +751,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | is_unlocked | Boolean | Yes | |
 | unlocked_at | DateTime | No | |
 
-### 8.20 Custom Quote
+### 8.20 Custom Quote (Deferred — build with Custom Quotes feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -737,7 +760,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | quote_type | Enum | No | motivation, grounding, or both |
 | created_at | DateTime | Yes | |
 
-### 8.21 Mood Tag
+### 8.21 Mood Tag (Deferred — build with Mood Tracking feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -745,7 +768,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | label | String | Yes | User-created, any language |
 | created_at | DateTime | Yes | |
 
-### 8.22 Points Transaction
+### 8.22 Points Transaction (Deferred — build with Points feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -756,7 +779,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | date | Date | Yes | |
 | created_at | DateTime | Yes | |
 
-### 8.23 Health Insight
+### 8.23 Health Insight (Deferred — build with Health Insights feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -768,7 +791,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | surfaced_at | DateTime | Yes | When shown to user |
 | responded_at | DateTime | No | When user confirmed/rejected |
 
-### 8.24 Weekly Review
+### 8.24 Weekly Review (Deferred — build with Weekly Reviews feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -788,7 +811,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | suggestions | Array of String | No | Generated goal suggestions for next week |
 | generated_at | DateTime | Yes | |
 
-### 8.25 Schedule Profile Config
+### 8.25 Schedule Profile Config (Deferred — build with Schedule Profiles feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -801,7 +824,7 @@ Note: Daily water total is aggregated from individual entries. Days with no entr
 | phone_away_at | Time | Yes | |
 | target_sleep_time | Time | Yes | |
 
-### 8.26 Day Config
+### 8.26 Day Config (Deferred — build with Schedule Profiles feature)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -929,22 +952,28 @@ User Profile
 
 - Combined view of today's active habits and pending tasks
 - Clear visual distinction between habits (recurring) and tasks (one-time)
+- Tasks show priority indicator (color/icon for low/medium/high/urgent)
+- Tasks with due dates show the due date; overdue tasks are visually flagged (gently — not alarming)
 - Tap to complete
 - Filter/toggle between: all, habits only, tasks only
+- Filter by label (health, exercise, school, work, etc.)
 
 ### 10.12 Habits Management Screen
 
-- Active habits list with categories
+- Active habits list with labels
 - Habit queue ("future habits I want")
-- Add new habit (with category, frequency)
-- Category management
+- Add new habit (with label, frequency)
+- Label management (shared with tasks)
 - Enforcement: max 1 new habit per category per week
 
 ### 10.13 Tasks Management Screen
 
-- All tasks list, filterable by project
-- Add task (title, description, due date, reminder, project)
+- All tasks list, filterable by project and label
+- Sortable by priority, due date, or creation date
+- Add task (title, due date, priority, labels, project)
+- Sub-tasks shown nested under their parent task (one level)
 - Project management (create, view tasks within)
+- Label management (shared with habits)
 
 ### 10.14 Medicine Screen
 
@@ -1118,7 +1147,7 @@ The weekly review is auto-generated and available on Sunday mornings. It is not 
 |---|---|
 | Greeting | Warm, personalized opening using display name |
 | Weight summary | Start/end weight, delta, trend direction, progress toward milestone |
-| Meal summary | Meals logged count, average health score, best/worst day |
+| Meal summary | Meals logged count, health score trend direction ("your scores are trending up/stable/down this week compared to last"), best/worst day |
 | Fasting summary | Total hours fasted, days fasting goal was met, streak status |
 | Water summary | Average daily intake, days goal was met |
 | Habit summary | Completion rate per habit, overall percentage, streak info (X of last Y days format) |
@@ -1206,13 +1235,13 @@ These features were identified during requirements gathering but are explicitly 
 |---|---|---|
 | **Emotional stress causes abandonment** | High — identified as the primary historical failure mode | Supportive messaging, no punishment mechanics, warm welcome-back flow, quiet mode, max 2 nudge attempts |
 | **Feature overload at launch** | High — too many tracking dimensions at once overwhelms a near-zero-routine user | Phased rollout: MVP is weight + meals + measurements only. Additional features added one at a time. |
-| **Subjective health score drift** | Medium — a "3" means different things on different days, making the "average 3/5" goal unreliable | Accept this as inherent to a subjective system. A loose reference guide helps but is not enforced. The goal is awareness, not precision. |
+| **Subjective health score drift** | Low — a "3" means different things on different days, but since no fixed numeric target is set, drift doesn't undermine a goal. | Accept as inherent to a subjective system. Track directional trends ("improving", "stable", "declining") rather than absolute averages. The goal is awareness, not precision. |
 | **Points economy imbalance** | Medium — if rewards are too cheap or too expensive, the system loses motivational value | Calibrate so a small reward takes ~1 week, a large reward ~1 month. The user controls both sides (earnings and costs), so self-correction is possible. |
 | **Photo storage growth** | Medium — 2-3 meal photos per day = 1000+/year, plus progress photos | Compression at 3 months for food photos, 1 year for progress photos. Deletion of food photos at 1 year or configurable storage threshold. |
 | **Offline-first complexity** | Medium — offline-first architecture with potential future sync adds technical complexity | Accept phone as primary with local storage. Defer sync to a future phase. |
 | **Manual backup neglect** | Medium — "manual backup" tends to never happen | Design backup to be as close to one-tap as possible. Consider automated encrypted backup to a user-controlled cloud location. |
 | **Fasting calculation edge cases** | Low — meals logged at odd hours, forgotten logs, backfilled entries could produce inaccurate fasting data | Fasting is derived from timestamps — backfilled entries need accurate time entry. System should handle gracefully when data is missing (skip the day, don't fabricate). |
-| **Scope creep from task manager** | Medium — the general-purpose task system must compete with Todoist, a mature product | Focus on core task/habit functionality that serves the user's needs, not feature parity with Todoist. The advantage is integration with the health system, not standalone task management superiority. |
+| **Scope creep from task manager** | Low (reduced) — the task system is scoped as a simple scrumboard, not a Todoist competitor | The task system tracks things that need to get done and repeating habits. It does not aim for feature parity with dedicated task managers. Its value is integration with the health ecosystem, not standalone depth. |
 
 ### Assumptions
 
@@ -1220,7 +1249,7 @@ These features were identified during requirements gathering but are explicitly 
 |---|---|
 | The user will be the sole developer and maintainer of this app | Tech stack must be learnable and maintainable by a single HBO ICT student |
 | Phone-first is sufficient; desktop can wait indefinitely | If the user's workflow shifts to desktop-heavy, the phone-only approach may frustrate |
-| Subjective health scores (1-5) provide meaningful data over time | If scores are too inconsistent, the "average 3/5" goal becomes meaningless — but awareness value remains |
+| Subjective health scores (1-5) provide meaningful trend data over time | Scores may drift, but since no fixed numeric target exists, only trend direction matters — and trends are resistant to individual score drift |
 | 2-3 habits/features added at a time is the right pace | The user may want to accelerate or may need to slow down even further |
 | Encrypted cloud backup is acceptable for privacy | If the user's privacy requirements tighten, only fully local backup with manual export would work |
 | The app's warm tone will remain motivating over months/years | Novelty wears off — the reward/achievement system and genuine data insights need to carry long-term engagement |
@@ -1241,7 +1270,7 @@ The following decisions were identified during requirements gathering but not ye
 | **Achievement library contents** | Specific achievements, trigger conditions, and fun descriptions | Requires creative writing and milestone planning | Before achievements implementation |
 | **Fasting "broken early" indicator** | Gentle notification vs. silent visual indicator only | Affects UX tone | Before fasting implementation |
 | **Bottom tab bar composition** | Which 3-4 screens get tabs vs. side menu | Core navigation UX | Before UI design |
-| **Tech stack** | React Native, Flutter, PWA, or other | Foundational architectural decision | Before any implementation |
+| **Tech stack** | ~~React Native, Flutter, PWA, or other~~ **Resolved: PWA with React + TypeScript + Vite + Tailwind + Dexie.js** (see [ARCHITECTURE.md](ARCHITECTURE.md)) | Foundational architectural decision | **Decided** |
 | **Backup mechanism** | Encrypted local file export, encrypted cloud (which provider), or self-hosted | Affects privacy and convenience tradeoff | Before backup implementation |
 | **Health insight engine approach** | Statistical rules, local LLM, or hybrid | Affects infrastructure requirements and accuracy | Before insights implementation |
 | **Photo storage thresholds** | Exact storage limit (in MB/GB) that triggers early food photo deletion | Device-dependent | Before photo management implementation |
