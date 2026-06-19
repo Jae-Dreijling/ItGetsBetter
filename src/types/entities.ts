@@ -1,4 +1,4 @@
-import type { MealSlot } from './enums'
+import type { MealSlot, HabitFrequency, TaskPriority, Weekday } from './enums'
 
 export interface UserProfile {
   id?: number
@@ -47,4 +47,49 @@ export interface AppOpenLog {
   id?: number
   date: string
   opened_at: string
+}
+
+export interface Label {
+  id?: number
+  name: string
+  color: string
+  created_at: string
+}
+
+export interface Habit {
+  id?: number
+  title: string
+  label_ids: number[]
+  frequency: HabitFrequency
+  custom_days: Weekday[]
+  is_active: boolean
+  is_queued: boolean
+  activated_at: string | null
+  created_at: string
+}
+
+export interface HabitCompletion {
+  id?: number
+  habit_id: number
+  date: string
+  logged_at: string
+}
+
+export interface Task {
+  id?: number
+  title: string
+  project_id: number | null
+  parent_task_id: number | null
+  is_completed: boolean
+  due_date: string | null
+  priority: TaskPriority
+  label_ids: number[]
+  completed_at: string | null
+  created_at: string
+}
+
+export interface Project {
+  id?: number
+  name: string
+  created_at: string
 }

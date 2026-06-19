@@ -16,7 +16,9 @@ import SettingsPage from './features/settings/SettingsPage'
 import ProfileSettings from './features/settings/ProfileSettings'
 import BackupPage from './features/settings/BackupPage'
 import MePage from './features/me/MePage'
-import PlaceholderPage from './features/placeholder/PlaceholderPage'
+import TodoPage from './features/todo/TodoPage'
+import HabitsPage from './features/todo/HabitsPage'
+import TasksPage from './features/todo/TasksPage'
 
 function AppContent() {
   const { profile, isLoading } = useProfile()
@@ -47,7 +49,9 @@ function AppContent() {
         <Route path="log" element={<LogHubPage />} />
         <Route path="log/weight" element={<WeightPage />} />
         <Route path="log/meal" element={<MealsPage />} />
-        <Route path="todo" element={<PlaceholderPage title="To-Do" />} />
+        <Route path="todo" element={<TodoPage />} />
+        <Route path="todo/habits" element={<HabitsPage />} />
+        <Route path="todo/tasks" element={<TasksPage />} />
         <Route path="me" element={<MePage />} />
         <Route path="me/measurements" element={<MeasurementsPage />} />
         <Route path="settings" element={<SettingsPage />} />

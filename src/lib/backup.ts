@@ -26,13 +26,18 @@ async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promi
 
 export async function createBackup(password: string): Promise<Blob> {
   const data = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     userProfile: await db.userProfile.toArray(),
     weightEntries: await db.weightEntries.toArray(),
     mealEntries: await db.mealEntries.toArray(),
     measurements: await db.measurements.toArray(),
     appOpenLog: await db.appOpenLog.toArray(),
+    labels: await db.labels.toArray(),
+    habits: await db.habits.toArray(),
+    habitCompletions: await db.habitCompletions.toArray(),
+    tasks: await db.tasks.toArray(),
+    projects: await db.projects.toArray(),
   }
 
   const json = JSON.stringify(data)
@@ -90,19 +95,29 @@ export async function restoreBackup(file: File, password: string): Promise<void>
   }
 
   await db.transaction('rw',
-    [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog],
+    [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects],
     async () => {
       await db.userProfile.clear()
       await db.weightEntries.clear()
       await db.mealEntries.clear()
       await db.measurements.clear()
       await db.appOpenLog.clear()
+      await db.labels.clear()
+      await db.habits.clear()
+      await db.habitCompletions.clear()
+      await db.tasks.clear()
+      await db.projects.clear()
 
       if (data.userProfile?.length) await db.userProfile.bulkAdd(data.userProfile)
       if (data.weightEntries?.length) await db.weightEntries.bulkAdd(data.weightEntries)
       if (data.mealEntries?.length) await db.mealEntries.bulkAdd(data.mealEntries)
       if (data.measurements?.length) await db.measurements.bulkAdd(data.measurements)
       if (data.appOpenLog?.length) await db.appOpenLog.bulkAdd(data.appOpenLog)
+      if (data.labels?.length) await db.labels.bulkAdd(data.labels)
+      if (data.habits?.length) await db.habits.bulkAdd(data.habits)
+      if (data.habitCompletions?.length) await db.habitCompletions.bulkAdd(data.habitCompletions)
+      if (data.tasks?.length) await db.tasks.bulkAdd(data.tasks)
+      if (data.projects?.length) await db.projects.bulkAdd(data.projects)
     }
   )
 }

@@ -6,12 +6,15 @@ import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
+import { useActiveHabits, useTodaysCompletions } from '../../hooks/useHabits'
 import { getRandomMessage } from '../../lib/supportiveMessages'
 
 export default function HomePage() {
   const { profile } = useProfile()
   const latestWeight = useLatestWeight()
   const todaysMeals = useTodaysMeals()
+  const activeHabits = useActiveHabits()
+  const todaysCompletions = useTodaysCompletions()
   const navigate = useNavigate()
 
   const message = useMemo(
@@ -78,6 +81,16 @@ export default function HomePage() {
                 )}
               </p>
             </div>
+
+            {activeHabits && activeHabits.length > 0 && (
+              <div className="col-span-2 rounded-xl bg-card p-4 shadow-sm">
+                <p className="text-xs text-muted mb-1">Habits</p>
+                <p className="text-xl font-bold text-text-primary">
+                  {todaysCompletions?.length ?? 0}
+                  <span className="text-sm font-normal text-muted"> / {activeHabits.length} done</span>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </PageContainer>
