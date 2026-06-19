@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry } from './types'
 
 const DEFAULT_LABELS = [
   { name: 'Health', color: '#5cb176' },
@@ -19,6 +19,8 @@ class ItGetsBetterDB extends Dexie {
   habitCompletions!: EntityTable<HabitCompletion, 'id'>
   tasks!: EntityTable<Task, 'id'>
   projects!: EntityTable<Project, 'id'>
+  waterEntries!: EntityTable<WaterEntry, 'id'>
+  exerciseEntries!: EntityTable<ExerciseEntry, 'id'>
 
   constructor() {
     super('ItGetsBetter')
@@ -61,6 +63,21 @@ class ItGetsBetterDB extends Dexie {
           task.show_in_today = true
         }
       })
+    })
+
+    this.version(4).stores({
+      userProfile: '++id',
+      weightEntries: '++id, date, logged_at',
+      mealEntries: '++id, date, meal_slot, logged_at',
+      measurements: '++id, date',
+      appOpenLog: '++id, date',
+      labels: '++id',
+      habits: '++id, is_active, is_queued',
+      habitCompletions: '++id, habit_id, date',
+      tasks: '++id, project_id, parent_task_id, is_completed, due_date, priority, show_in_today',
+      projects: '++id',
+      waterEntries: '++id, date, logged_at',
+      exerciseEntries: '++id, date, exercise_type',
     })
 
     this.on('populate', () => {
