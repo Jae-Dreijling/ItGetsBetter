@@ -35,10 +35,10 @@ export function useTodaysCompletions() {
 
 export function useHabitCompletions(habitId: number, days: number = 21) {
   return useLiveQuery(() => {
-    const now = new Date()
-    const from = new Date(now)
+    const from = new Date()
     from.setDate(from.getDate() - days)
-    const fromStr = from.toISOString().slice(0, 10)
+    from.setHours(12, 0, 0, 0)
+    const fromStr = getLogicalDate(from)
     return db.habitCompletions
       .where('habit_id').equals(habitId)
       .and(c => c.date >= fromStr)
