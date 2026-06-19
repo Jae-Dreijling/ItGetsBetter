@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router'
-import { Scale, UtensilsCrossed, Ruler, AlertCircle } from 'lucide-react'
+import { Scale, UtensilsCrossed, Ruler, Droplets, AlertCircle } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
@@ -40,6 +40,7 @@ export default function HomePage() {
   const quickActions = [
     { label: 'Log Weight', icon: Scale, path: '/log/weight', color: 'bg-secondary-100 text-secondary-600' },
     { label: 'Log Meal', icon: UtensilsCrossed, path: '/log/meal', color: 'bg-primary-100 text-primary-600' },
+    { label: 'Water', icon: Droplets, path: '/log/water', color: 'bg-secondary-50 text-secondary-600' },
     { label: 'Measurements', icon: Ruler, path: '/me/measurements', color: 'bg-accent-100 text-accent-700' },
   ]
 
@@ -53,7 +54,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="mb-6 grid grid-cols-3 gap-3">
+        <div className="mb-6 grid grid-cols-4 gap-3">
           {quickActions.map((action) => {
             const Icon = action.icon
             return (
