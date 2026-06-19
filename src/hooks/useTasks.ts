@@ -37,6 +37,7 @@ export async function addTask(data: {
   due_date?: string | null
   priority?: TaskPriority
   label_ids?: number[]
+  show_in_today?: boolean
 }) {
   return db.tasks.add({
     title: data.title,
@@ -46,6 +47,7 @@ export async function addTask(data: {
     due_date: data.due_date ?? null,
     priority: data.priority ?? 'medium',
     label_ids: data.label_ids ?? [],
+    show_in_today: data.show_in_today ?? true,
     completed_at: null,
     created_at: nowISO(),
   })
@@ -57,6 +59,7 @@ export async function updateTask(id: number, changes: Partial<{
   due_date: string | null
   priority: TaskPriority
   label_ids: number[]
+  show_in_today: boolean
 }>) {
   await db.tasks.update(id, changes)
 }

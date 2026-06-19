@@ -49,11 +49,10 @@ export function useHabitCompletions(habitId: number, days: number = 21) {
 export function isTodayScheduled(habit: { frequency: HabitFrequency; custom_days?: Weekday[] }): boolean {
   if (habit.frequency === 'daily') return true
   if (habit.frequency === 'weekly') {
-    const dayOfWeek = new Date().getDay()
-    return dayOfWeek === 1
+    return true
   }
   if (habit.frequency === 'monthly') {
-    return new Date().getDate() === 1
+    return true
   }
   if (habit.frequency === 'custom' && habit.custom_days) {
     const dayMap: Record<number, Weekday> = { 0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat' }

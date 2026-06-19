@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
-import { db } from './db'
+import { db, ensureDefaultLabels } from './db'
 import { getLogicalDate, nowISO } from './lib/date'
 import { useProfile } from './hooks/useProfile'
 import { Heart } from 'lucide-react'
@@ -72,6 +72,7 @@ export default function App() {
         date: getLogicalDate(),
         opened_at: nowISO(),
       })
+      await ensureDefaultLabels()
     }
     init()
   }, [])

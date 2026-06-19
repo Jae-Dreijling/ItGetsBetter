@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router'
-import { Scale, UtensilsCrossed, Ruler } from 'lucide-react'
+import { Scale, UtensilsCrossed, Ruler, AlertCircle } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
 import { useActiveHabits, useTodaysCompletions } from '../../hooks/useHabits'
+import { useTasks } from '../../hooks/useTasks'
 import { getRandomMessage } from '../../lib/supportiveMessages'
 
 export default function HomePage() {
@@ -15,7 +16,14 @@ export default function HomePage() {
   const todaysMeals = useTodaysMeals()
   const activeHabits = useActiveHabits()
   const todaysCompletions = useTodaysCompletions()
+  const pendingTasks = useTasks({ completed: false })
   const navigate = useNavigate()
+
+  const today = new Date().toISOString().slice(0, 10)
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+  const homepageTasks = pendingTasks?.filter(t =>
+    (t.due_date && t.due_date <= tomorrow) || t.show_in_today
+  ) ?? []
 
   const message = useMemo(
     () => getRandomMessage(profile?.display_name ?? 'friend'),
@@ -93,6 +101,40 @@ export default function HomePage() {
             )}
           </div>
         </div>
+
+        {homepageTasks.length > 0 && (
+          <div className="mt-4 space-y-3">
+            <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">Due Soon</h2>
+            <div className="space-y-2">
+              {homepageTasks.map(task => {
+                const isOverdue = task.due_date ? task.due_date < today : false
+                const isToday = task.due_date === today
+                const isTomorrow = task.due_date === tomorrow
+                const dueLine = !task.due_date
+                  ? 'No due date'
+                  : isOverdue ? 'Overdue'
+                  : isToday ? 'Due today'
+                  : isTomorrow ? 'Due tomorrow'
+                  : `Due ${task.due_date}`
+                return (
+                  <button
+                    key={task.id}
+                    onClick={() => navigate('/todo/tasks')}
+                    className="flex w-full items-center gap-3 rounded-lg bg-card px-4 py-3 shadow-sm text-left"
+                  >
+                    <AlertCircle className={`h-5 w-5 shrink-0 ${isOverdue ? 'text-danger' : isToday ? 'text-warning' : 'text-muted'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-text-primary truncate">{task.title}</p>
+                      <p className={`text-xs ${isOverdue ? 'text-danger font-medium' : 'text-muted'}`}>
+                        {dueLine}
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </PageContainer>
     </>
   )

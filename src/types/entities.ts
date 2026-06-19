@@ -84,6 +84,7 @@ export interface Task {
   due_date: string | null
   priority: TaskPriority
   label_ids: number[]
+  show_in_today: boolean
   completed_at: string | null
   created_at: string
 }

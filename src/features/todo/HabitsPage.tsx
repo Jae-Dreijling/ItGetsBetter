@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { Plus, Trash2, Play, Pause, Pencil, X } from 'lucide-react'
+import { Plus, Trash2, Play, Pause, Pencil } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import LabelPicker from '../../components/LabelPicker'
 import LabelBadge from '../../components/LabelBadge'
 import { useActiveHabits, useQueuedHabits, useInactiveHabits, addHabit, updateHabit, activateHabit, deactivateHabit, deleteHabit } from '../../hooks/useHabits'
 import { useLabels } from '../../hooks/useLabels'
-import type { HabitFrequency, Weekday, Habit } from '../../types'
+import type { HabitFrequency, Weekday, Habit, Label } from '../../types'
 
 const WEEKDAYS: { key: Weekday; label: string }[] = [
   { key: 'mon', label: 'M' },
@@ -94,7 +94,7 @@ export default function HabitsPage() {
 }
 
 function HabitForm({ labels, onSave, initial }: {
-  labels: { id?: number; name: string; color: string }[]
+  labels: Label[]
   onSave: () => void
   initial?: Habit
 }) {
@@ -219,8 +219,8 @@ function HabitForm({ labels, onSave, initial }: {
 
 function HabitItem({ habit, labelsMap, allLabels, status }: {
   habit: Habit
-  labelsMap: Map<number, { name: string; color: string }>
-  allLabels: { id?: number; name: string; color: string }[]
+  labelsMap: Map<number, Label>
+  allLabels: Label[]
   status: 'active' | 'queued' | 'inactive'
 }) {
   const [editing, setEditing] = useState(false)

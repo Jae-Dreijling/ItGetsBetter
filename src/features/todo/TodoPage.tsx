@@ -6,20 +6,24 @@ import PageContainer from '../../components/layout/PageContainer'
 import LabelBadge from '../../components/LabelBadge'
 import PriorityBadge from '../../components/PriorityBadge'
 import StreakDisplay from '../../components/StreakDisplay'
-import { useActiveHabits, useTodaysCompletions, useHabitCompletions, toggleHabitCompletion } from '../../hooks/useHabits'
-import { useTasks, toggleTask } from '../../hooks/useTasks'
+import { useActiveHabits, useTodaysCompletions, useHabitCompletions, toggleHabitCompletion, isTodayScheduled } from '../../hooks/useHabits'
+import { useTasks, useProjects, toggleTask } from '../../hooks/useTasks'
 import { useLabels } from '../../hooks/useLabels'
-import type { Habit, Task, Label } from '../../types'
+import type { Habit, Task, Label, TaskPriority } from '../../types'
 
 type Filter = 'all' | 'habits' | 'tasks'
+type SortMode = 'priority' | 'due_date'
 
 export default function TodoPage() {
   const [filter, setFilter] = useState<Filter>('all')
   const [labelFilter, setLabelFilter] = useState<number | null>(null)
+  const [projectFilter, setProjectFilter] = useState<number | 'none' | null>(null)
+  const [sortMode, setSortMode] = useState<SortMode>('priority')
   const habits = useActiveHabits()
   const completions = useTodaysCompletions()
   const pendingTasks = useTasks({ completed: false })
   const labels = useLabels()
+  const projects = useProjects()
   const navigate = useNavigate()
 
   const labelsMap = new Map(labels?.map(l => [l.id!, l]))
@@ -28,15 +32,36 @@ export default function TodoPage() {
     return completions?.some(c => c.habit_id === habitId) ?? false
   }
 
-  const filteredHabits = habits?.filter(h =>
+  const todaysHabits = habits?.filter(h => isTodayScheduled(h))
+
+  const filteredHabits = todaysHabits?.filter(h =>
     labelFilter === null || h.label_ids.includes(labelFilter)
   )
-  const filteredTasks = pendingTasks?.filter(t =>
-    labelFilter === null || t.label_ids.includes(labelFilter)
-  )
 
-  const habitsCompleted = habits?.filter(h => isHabitDone(h.id!)).length ?? 0
-  const habitsTotal = habits?.length ?? 0
+  let filteredTasks = pendingTasks?.slice() ?? []
+  if (labelFilter !== null) {
+    filteredTasks = filteredTasks.filter(t => t.label_ids.includes(labelFilter))
+  }
+  if (projectFilter === 'none') {
+    filteredTasks = filteredTasks.filter(t => t.project_id === null)
+  } else if (projectFilter !== null) {
+    filteredTasks = filteredTasks.filter(t => t.project_id === projectFilter)
+  }
+
+  const prioOrder: Record<TaskPriority, number> = { urgent: 0, high: 1, medium: 2, low: 3 }
+  if (sortMode === 'priority') {
+    filteredTasks.sort((a, b) => prioOrder[a.priority] - prioOrder[b.priority])
+  } else {
+    filteredTasks.sort((a, b) => {
+      if (!a.due_date && !b.due_date) return 0
+      if (!a.due_date) return 1
+      if (!b.due_date) return -1
+      return a.due_date.localeCompare(b.due_date)
+    })
+  }
+
+  const habitsCompleted = todaysHabits?.filter(h => isHabitDone(h.id!)).length ?? 0
+  const habitsTotal = todaysHabits?.length ?? 0
 
   return (
     <>
@@ -58,33 +83,69 @@ export default function TodoPage() {
           ))}
         </div>
 
-        {labels && labels.length > 0 && (
-          <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-            <button
-              onClick={() => setLabelFilter(null)}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                labelFilter === null ? 'bg-primary-500 text-white' : 'bg-card text-muted'
-              }`}
-            >
-              All
-            </button>
-            {labels.map(l => (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {labels && labels.length > 0 && (
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
               <button
-                key={l.id}
-                onClick={() => setLabelFilter(labelFilter === l.id! ? null : l.id!)}
-                className="shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all"
-                style={{
-                  backgroundColor: labelFilter === l.id! ? l.color : `${l.color}20`,
-                  color: labelFilter === l.id! ? 'white' : l.color,
-                }}
+                onClick={() => setLabelFilter(null)}
+                className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  labelFilter === null ? 'bg-primary-500 text-white' : 'bg-card text-muted'
+                }`}
               >
-                {l.name}
+                All
               </button>
-            ))}
-          </div>
-        )}
+              {labels.map(l => (
+                <button
+                  key={l.id}
+                  onClick={() => setLabelFilter(labelFilter === l.id! ? null : l.id!)}
+                  className="shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all"
+                  style={{
+                    backgroundColor: labelFilter === l.id! ? l.color : `${l.color}20`,
+                    color: labelFilter === l.id! ? 'white' : l.color,
+                  }}
+                >
+                  {l.name}
+                </button>
+              ))}
+            </div>
+          )}
 
-        {habitsTotal > 0 && (
+          {(filter === 'all' || filter === 'tasks') && projects && projects.length > 0 && (
+            <select
+              value={projectFilter === 'none' ? 'none' : projectFilter ?? ''}
+              onChange={e => {
+                const v = e.target.value
+                setProjectFilter(v === '' ? null : v === 'none' ? 'none' : Number(v))
+              }}
+              className="rounded-lg border border-primary-100 dark:border-primary-900 bg-card px-2.5 py-1 text-xs text-text-primary"
+            >
+              <option value="">All projects</option>
+              <option value="none">No project</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          )}
+
+          {(filter === 'all' || filter === 'tasks') && (
+            <div className="flex gap-1 rounded-lg bg-card p-0.5">
+              <button
+                onClick={() => setSortMode('priority')}
+                className={`rounded-md px-2 py-1 text-xs font-medium ${sortMode === 'priority' ? 'bg-primary-500 text-white' : 'text-muted'}`}
+              >
+                Priority
+              </button>
+              <button
+                onClick={() => setSortMode('due_date')}
+                className={`rounded-md px-2 py-1 text-xs font-medium ${sortMode === 'due_date' ? 'bg-primary-500 text-white' : 'text-muted'}`}
+              >
+                Due
+              </button>
+            </div>
+          )}
+        </div>
+
+        {habitsTotal > 0 && (filter === 'all' || filter === 'habits') && (
           <div className="mb-4 rounded-lg bg-card p-3 shadow-sm flex items-center gap-3">
             <CheckCircle2 className="h-5 w-5 text-success" />
             <span className="text-sm text-text-primary font-medium">
@@ -114,7 +175,9 @@ export default function TodoPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-center text-sm text-muted py-3">No active habits</p>
+              <p className="text-center text-sm text-muted py-3">
+                {habits?.length ? 'No habits scheduled for today' : 'No active habits'}
+              </p>
             )}
           </div>
         )}
@@ -127,21 +190,17 @@ export default function TodoPage() {
                 Manage
               </button>
             </div>
-            {filteredTasks && filteredTasks.length > 0 ? (
+            {filteredTasks.length > 0 ? (
               <div className="space-y-2">
-                {filteredTasks
-                  .sort((a, b) => {
-                    const prio = { urgent: 0, high: 1, medium: 2, low: 3 }
-                    return prio[a.priority] - prio[b.priority]
-                  })
-                  .map(task => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      labels={task.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
-                      onToggle={() => toggleTask(task.id!)}
-                    />
-                  ))}
+                {filteredTasks.map(task => (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    labels={task.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
+                    projectName={projects?.find(p => p.id === task.project_id)?.name}
+                    onToggle={() => toggleTask(task.id!)}
+                  />
+                ))}
               </div>
             ) : (
               <p className="text-center text-sm text-muted py-3">No pending tasks</p>
@@ -198,7 +257,7 @@ function HabitRow({ habit, isDone, labels, onToggle }: { habit: Habit; isDone: b
   )
 }
 
-function TaskRow({ task, labels, onToggle }: { task: Task; labels: Label[]; onToggle: () => void }) {
+function TaskRow({ task, labels, projectName, onToggle }: { task: Task; labels: Label[]; projectName?: string; onToggle: () => void }) {
   const isOverdue = task.due_date && !task.is_completed && task.due_date < new Date().toISOString().slice(0, 10)
 
   return (
@@ -212,6 +271,7 @@ function TaskRow({ task, labels, onToggle }: { task: Task; labels: Label[]; onTo
         <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
           <PriorityBadge priority={task.priority} />
           {labels.map(l => <LabelBadge key={l.id} name={l.name} color={l.color} />)}
+          {projectName && <span className="text-xs text-muted">📁 {projectName}</span>}
           {task.due_date && (
             <span className={`text-xs ${isOverdue ? 'text-danger font-medium' : 'text-muted'}`}>
               {isOverdue ? 'Overdue: ' : 'Due: '}{task.due_date}

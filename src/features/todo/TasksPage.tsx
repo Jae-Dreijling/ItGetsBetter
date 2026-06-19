@@ -23,10 +23,11 @@ export default function TasksPage() {
   const [priority, setPriority] = useState<TaskPriority>('medium')
   const [selectedLabels, setSelectedLabels] = useState<number[]>([])
   const [projectId, setProjectId] = useState<number | null>(null)
+  const [showInToday, setShowInToday] = useState(true)
   const [newProjectName, setNewProjectName] = useState('')
   const [showProjectForm, setShowProjectForm] = useState(false)
   const [sortMode, setSortMode] = useState<SortMode>('priority')
-  const [projectFilter, setProjectFilter] = useState<number | null>(null)
+  const [projectFilter, setProjectFilter] = useState<number | 'none' | null>(null)
   const [labelFilter, setLabelFilter] = useState<number | null>(null)
 
   const labelsMap = new Map(labels?.map(l => [l.id!, l]))
@@ -40,6 +41,7 @@ export default function TasksPage() {
       priority,
       label_ids: selectedLabels,
       project_id: projectId,
+      show_in_today: showInToday,
     })
     setTitle('')
     setDueDate('')
@@ -59,7 +61,9 @@ export default function TasksPage() {
 
   let sortedTasks = pendingTasks?.slice() ?? []
 
-  if (projectFilter !== null) {
+  if (projectFilter === 'none') {
+    sortedTasks = sortedTasks.filter(t => t.project_id === null)
+  } else if (projectFilter !== null) {
     sortedTasks = sortedTasks.filter(t => t.project_id === projectFilter)
   }
   if (labelFilter !== null) {
@@ -154,6 +158,16 @@ export default function TasksPage() {
               </div>
             )}
 
+            <label className="mb-4 flex items-center gap-2 text-sm text-text-primary cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showInToday}
+                onChange={e => setShowInToday(e.target.checked)}
+                className="rounded"
+              />
+              Show in daily to-do (even before due date)
+            </label>
+
             <button
               type="submit"
               disabled={!title.trim()}
@@ -181,11 +195,15 @@ export default function TasksPage() {
 
           {projects && projects.length > 0 && (
             <select
-              value={projectFilter ?? ''}
-              onChange={e => setProjectFilter(e.target.value ? Number(e.target.value) : null)}
+              value={projectFilter === 'none' ? 'none' : projectFilter ?? ''}
+              onChange={e => {
+                const v = e.target.value
+                setProjectFilter(v === '' ? null : v === 'none' ? 'none' : Number(v))
+              }}
               className="rounded-lg border border-primary-100 dark:border-primary-900 bg-card px-2.5 py-1 text-xs text-text-primary"
             >
               <option value="">All projects</option>
+              <option value="none">No project</option>
               {projects.map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
@@ -284,6 +302,7 @@ function TaskItem({ task, labelsMap, projects, labels: allLabels }: { task: Task
   const [editDueDate, setEditDueDate] = useState(task.due_date ?? '')
   const [editLabels, setEditLabels] = useState(task.label_ids)
   const [editProjectId, setEditProjectId] = useState(task.project_id)
+  const [editShowInToday, setEditShowInToday] = useState(task.show_in_today ?? true)
 
   const isOverdue = task.due_date && task.due_date < new Date().toISOString().slice(0, 10)
   const completedSubs = subTasks?.filter(s => s.is_completed).length ?? 0
@@ -304,6 +323,7 @@ function TaskItem({ task, labelsMap, projects, labels: allLabels }: { task: Task
       due_date: editDueDate || null,
       label_ids: editLabels,
       project_id: editProjectId,
+      show_in_today: editShowInToday,
     })
     setEditing(false)
   }
@@ -359,6 +379,15 @@ function TaskItem({ task, labelsMap, projects, labels: allLabels }: { task: Task
             ))}
           </select>
         )}
+        <label className="mb-2 flex items-center gap-2 text-xs text-text-primary cursor-pointer">
+          <input
+            type="checkbox"
+            checked={editShowInToday}
+            onChange={e => setEditShowInToday(e.target.checked)}
+            className="rounded"
+          />
+          Show in daily to-do
+        </label>
         <button
           onClick={handleSaveEdit}
           disabled={!editTitle.trim()}
