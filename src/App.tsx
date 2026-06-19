@@ -18,6 +18,8 @@ import BackupPage from './features/settings/BackupPage'
 import WaterPage from './features/water/WaterPage'
 import FastingPage from './features/fasting/FastingPage'
 import ExercisePage from './features/exercise/ExercisePage'
+import MoodPage from './features/mood/MoodPage'
+import SleepPage from './features/sleep/SleepPage'
 import MePage from './features/me/MePage'
 import TodoPage from './features/todo/TodoPage'
 import HabitsPage from './features/todo/HabitsPage'
@@ -55,6 +57,8 @@ function AppContent() {
         <Route path="log/water" element={<WaterPage />} />
         <Route path="log/fasting" element={<FastingPage />} />
         <Route path="log/exercise" element={<ExercisePage />} />
+        <Route path="log/mood" element={<MoodPage />} />
+        <Route path="log/sleep" element={<SleepPage />} />
         <Route path="todo" element={<TodoPage />} />
         <Route path="todo/habits" element={<HabitsPage />} />
         <Route path="todo/tasks" element={<TasksPage />} />
