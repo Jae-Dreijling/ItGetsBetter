@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router'
-import { Scale, UtensilsCrossed, Droplets, Timer, AlertCircle, Dumbbell, CheckCircle2, ChevronRight } from 'lucide-react'
+import { Scale, UtensilsCrossed, Droplets, Timer, AlertCircle, Dumbbell, CheckCircle2, ChevronRight, Pill, Check, Star } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
+import MoodPrompt from '../../components/MoodPrompt'
 import { useProfile } from '../../hooks/useProfile'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
@@ -11,10 +12,22 @@ import { useTasks } from '../../hooks/useTasks'
 import { useTodaysWaterTotal } from '../../hooks/useWater'
 import { useCurrentFast, formatFastingDuration } from '../../hooks/useFasting'
 import { useTodaysExercise } from '../../hooks/useExercise'
+import { useTodaysMood } from '../../hooks/useMood'
+import { useActiveMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
+import { usePointsBalance } from '../../hooks/usePoints'
 import { useIsReturningAfterAbsence, getWelcomeBackMessage } from '../../hooks/useWelcomeBack'
 import { getRandomMessage } from '../../lib/supportiveMessages'
 import { getLogicalDate } from '../../lib/date'
 import { addDays, format, parseISO } from 'date-fns'
+
+type TimeOfDay = 'morning' | 'midday' | 'night'
+
+function getTimeOfDay(): TimeOfDay {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'morning'
+  if (hour < 17) return 'midday'
+  return 'night'
+}
 
 export default function HomePage() {
   const { profile } = useProfile()
@@ -26,8 +39,14 @@ export default function HomePage() {
   const waterTotal = useTodaysWaterTotal()
   const fast = useCurrentFast(16)
   const todaysExercise = useTodaysExercise()
+  const todaysMood = useTodaysMood()
+  const activeMeds = useActiveMedicines()
+  const todaysMedLogs = useTodaysMedicineLogs()
+  const points = usePointsBalance()
   const isReturning = useIsReturningAfterAbsence()
   const navigate = useNavigate()
+
+  const [moodDismissed, setMoodDismissed] = useState(false)
 
   const today = getLogicalDate()
   const tomorrow = format(addDays(parseISO(today), 1), 'yyyy-MM-dd')
@@ -59,17 +78,42 @@ export default function HomePage() {
   const habitsTotal = activeHabits?.length ?? 0
   const habitsPercent = habitsTotal > 0 ? Math.round((habitsCompleted / habitsTotal) * 100) : 0
 
+  const timeOfDay = getTimeOfDay()
+  const moodLoggedForPeriod = todaysMood?.some(m => m.tags.includes(timeOfDay)) ?? false
+  const showMoodPrompt = !moodDismissed && !moodLoggedForPeriod
+
+  const isMedTaken = useCallback((medId: number) => {
+    return todaysMedLogs?.some(l => l.medicine_id === medId) ?? false
+  }, [todaysMedLogs])
+
+  const medsTotal = activeMeds?.length ?? 0
+  const medsTaken = activeMeds?.filter(m => isMedTaken(m.id!)).length ?? 0
+
   return (
     <>
       <TopBar title="Home" />
       <PageContainer>
-        <div className={`mb-5 rounded-2xl p-5 shadow-sm ${isReturning ? 'bg-primary-100' : 'bg-card'}`}>
+        <div className={`mb-4 rounded-2xl p-5 shadow-sm ${isReturning ? 'bg-primary-100' : 'bg-card'}`}>
           <p className="text-center text-lg font-medium text-text-primary leading-relaxed">
             {message}
           </p>
         </div>
 
-        <div className="mb-5 space-y-3">
+        {showMoodPrompt && (
+          <MoodPrompt timeOfDay={timeOfDay} onDismiss={() => setMoodDismissed(true)} />
+        )}
+
+        {points !== undefined && (
+          <button
+            onClick={() => navigate('/me/rewards')}
+            className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent-100 py-2.5 transition-transform active:scale-[0.98]"
+          >
+            <Star className="h-4 w-4 text-accent-600" />
+            <span className="text-sm font-bold text-accent-700">{points} points</span>
+          </button>
+        )}
+
+        <div className="mb-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => navigate('/log/weight')}
@@ -188,6 +232,43 @@ export default function HomePage() {
             </button>
           )}
         </div>
+
+        {medsTotal > 0 && (
+          <div className="mb-4 space-y-3">
+            <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">Medicine</h2>
+            <div className="space-y-2">
+              {activeMeds!.map(med => {
+                const taken = isMedTaken(med.id!)
+                return (
+                  <div
+                    key={med.id}
+                    className={`flex items-center gap-3 rounded-xl bg-card px-4 py-3 shadow-sm transition-opacity ${taken ? 'opacity-60' : ''}`}
+                  >
+                    <button
+                      onClick={() => toggleMedicineLog(med.id!)}
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                        taken
+                          ? 'border-success bg-success text-white'
+                          : 'border-secondary-300 hover:border-secondary-500'
+                      }`}
+                    >
+                      {taken && <Check className="h-3 w-3" />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium text-text-primary ${taken ? 'line-through' : ''}`}>
+                        {med.name}
+                      </p>
+                    </div>
+                    <Pill className="h-4 w-4 text-muted" />
+                  </div>
+                )
+              })}
+            </div>
+            {medsTotal > 0 && (
+              <p className="text-xs text-muted text-center">{medsTaken} / {medsTotal} taken</p>
+            )}
+          </div>
+        )}
 
         {homepageTasks.length > 0 && (
           <div className="space-y-3">

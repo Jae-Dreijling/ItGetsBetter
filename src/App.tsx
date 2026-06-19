@@ -5,6 +5,7 @@ import { getLogicalDate, nowISO } from './lib/date'
 import { useProfile } from './hooks/useProfile'
 import { Heart } from 'lucide-react'
 
+import UpdatePrompt from './components/UpdatePrompt'
 import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
 import HomePage from './features/home/HomePage'
@@ -95,6 +96,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <UpdatePrompt />
       <AppContent />
     </BrowserRouter>
   )
