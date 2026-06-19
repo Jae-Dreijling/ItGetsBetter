@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { awardPoints } from './usePoints'
 
 export function useTodaysMood() {
   const today = getLogicalDate()
@@ -27,6 +28,7 @@ export async function addMoodEntry(score: number, tags: string[]) {
     tags,
     logged_at: nowISO(),
   })
+  await awardPoints('mood_logged')
 }
 
 export async function addMoodTag(label: string) {

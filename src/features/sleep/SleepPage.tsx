@@ -12,6 +12,7 @@ const QUALITY_LABELS = ['', 'Terrible', 'Poor', 'Fair', 'Good', 'Excellent']
 export default function SleepPage() {
   const todaysSleep = useTodaysSleep()
   const history = useSleepHistory(30)
+  const [showForm, setShowForm] = useState(false)
   const [hours, setHours] = useState('')
   const [quality, setQuality] = useState(3)
   const [wakeFeeling, setWakeFeeling] = useState('')
@@ -32,6 +33,7 @@ export default function SleepPage() {
     setQuality(3)
     setWakeFeeling('')
     setSaving(false)
+    setShowForm(false)
   }
 
   const chartData = history
@@ -62,7 +64,16 @@ export default function SleepPage() {
           </div>
         )}
 
-        {!todaysSleep && (
+        {todaysSleep && !showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="mb-4 w-full rounded-xl bg-accent-100 py-2.5 text-sm font-medium text-accent-700"
+          >
+            Log another day
+          </button>
+        )}
+
+        {(!todaysSleep || showForm) && (
           <form onSubmit={handleSubmit} className="mb-6 rounded-2xl bg-card p-4 shadow-sm">
             <p className="mb-3 text-sm font-medium text-text-primary text-center">How did you sleep?</p>
 
@@ -130,9 +141,6 @@ export default function SleepPage() {
           </form>
         )}
 
-        {todaysSleep && (
-          <p className="mb-4 text-center text-xs text-muted">Sleep already logged today. Use backfill to log other days.</p>
-        )}
 
         <div className="mb-6 flex gap-3">
           {avgHours && (

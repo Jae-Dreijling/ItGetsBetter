@@ -1,13 +1,15 @@
 import { useNavigate } from 'react-router'
-import { Ruler, Settings, Download } from 'lucide-react'
+import { Ruler, Settings, Download, Gift, Star, Trophy } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
+import { usePointsBalance } from '../../hooks/usePoints'
 
 export default function MePage() {
   const { profile } = useProfile()
   const latestWeight = useLatestWeight()
+  const points = usePointsBalance()
   const navigate = useNavigate()
 
   const bmi = latestWeight && profile
@@ -29,7 +31,32 @@ export default function MePage() {
           </div>
         )}
 
+        <button
+          onClick={() => navigate('/me/rewards')}
+          className="mb-5 flex w-full items-center gap-4 rounded-2xl bg-accent-100 p-4 text-left transition-transform active:scale-[0.98]"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-200">
+            <Star className="h-5 w-5 text-accent-700" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-accent-700">{points ?? 0} points</p>
+            <p className="text-xs text-accent-600">Reward Shop</p>
+          </div>
+          <Gift className="h-5 w-5 text-accent-600" />
+        </button>
+
         <div className="space-y-3">
+          <button
+            onClick={() => navigate('/me/achievements')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Trophy className="h-5 w-5 text-accent-500" />
+            <div>
+              <p className="font-medium text-text-primary">Achievements</p>
+              <p className="text-sm text-muted">Your milestones and victories</p>
+            </div>
+          </button>
+
           <button
             onClick={() => navigate('/me/measurements')}
             className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"

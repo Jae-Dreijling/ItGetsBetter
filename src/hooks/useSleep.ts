@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { awardPoints } from './usePoints'
 
 export function useTodaysSleep() {
   const today = getLogicalDate()
@@ -29,4 +30,5 @@ export async function addSleepEntry(data: {
     wake_feeling: data.wake_feeling,
     logged_at: nowISO(),
   })
+  await awardPoints('sleep_logged')
 }
