@@ -9,6 +9,8 @@ import { useTodaysMeals } from '../../hooks/useMealEntries'
 import { useActiveHabits, useTodaysCompletions } from '../../hooks/useHabits'
 import { useTasks } from '../../hooks/useTasks'
 import { getRandomMessage } from '../../lib/supportiveMessages'
+import { getLogicalDate } from '../../lib/date'
+import { addDays, format, parseISO } from 'date-fns'
 
 export default function HomePage() {
   const { profile } = useProfile()
@@ -19,8 +21,8 @@ export default function HomePage() {
   const pendingTasks = useTasks({ completed: false })
   const navigate = useNavigate()
 
-  const today = new Date().toISOString().slice(0, 10)
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+  const today = getLogicalDate()
+  const tomorrow = format(addDays(parseISO(today), 1), 'yyyy-MM-dd')
   const homepageTasks = pendingTasks?.filter(t =>
     (t.due_date && t.due_date <= tomorrow) || t.show_in_today
   ) ?? []
