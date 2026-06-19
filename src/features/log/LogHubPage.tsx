@@ -1,11 +1,14 @@
 import { useNavigate } from 'react-router'
-import { Scale, UtensilsCrossed, Ruler } from 'lucide-react'
+import { Scale, UtensilsCrossed, Ruler, Droplets, Timer, Dumbbell } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 
 const actions = [
   { label: 'Weight', subtitle: 'Track your progress', icon: Scale, path: '/log/weight', bg: 'bg-secondary-100', text: 'text-secondary-700' },
   { label: 'Meals', subtitle: 'Log what you eat', icon: UtensilsCrossed, path: '/log/meal', bg: 'bg-primary-100', text: 'text-primary-700' },
+  { label: 'Water', subtitle: 'Track your intake', icon: Droplets, path: '/log/water', bg: 'bg-secondary-50', text: 'text-secondary-700' },
+  { label: 'Fasting', subtitle: 'Auto-tracked from meals', icon: Timer, path: '/log/fasting', bg: 'bg-accent-50', text: 'text-accent-700' },
+  { label: 'Exercise', subtitle: 'Log your workouts', icon: Dumbbell, path: '/log/exercise', bg: 'bg-primary-50', text: 'text-primary-700' },
   { label: 'Measurements', subtitle: 'Body measurements', icon: Ruler, path: '/me/measurements', bg: 'bg-accent-100', text: 'text-accent-700' },
 ]
 

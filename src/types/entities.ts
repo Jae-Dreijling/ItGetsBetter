@@ -94,3 +94,23 @@ export interface Project {
   name: string
   created_at: string
 }
+
+export interface WaterEntry {
+  id?: number
+  date: string
+  amount_ml: number
+  logged_at: string
+}
+
+export interface ExerciseEntry {
+  id?: number
+  date: string
+  exercise_type: string
+  sets: number | null
+  reps: number | null
+  weight_used_kg: number | null
+  duration_minutes: number | null
+  distance_km: number | null
+  notes: string | null
+  logged_at: string
+}

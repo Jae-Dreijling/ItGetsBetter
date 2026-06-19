@@ -15,6 +15,9 @@ import MeasurementsPage from './features/measurements/MeasurementsPage'
 import SettingsPage from './features/settings/SettingsPage'
 import ProfileSettings from './features/settings/ProfileSettings'
 import BackupPage from './features/settings/BackupPage'
+import WaterPage from './features/water/WaterPage'
+import FastingPage from './features/fasting/FastingPage'
+import ExercisePage from './features/exercise/ExercisePage'
 import MePage from './features/me/MePage'
 import TodoPage from './features/todo/TodoPage'
 import HabitsPage from './features/todo/HabitsPage'
@@ -49,6 +52,9 @@ function AppContent() {
         <Route path="log" element={<LogHubPage />} />
         <Route path="log/weight" element={<WeightPage />} />
         <Route path="log/meal" element={<MealsPage />} />
+        <Route path="log/water" element={<WaterPage />} />
+        <Route path="log/fasting" element={<FastingPage />} />
+        <Route path="log/exercise" element={<ExercisePage />} />
         <Route path="todo" element={<TodoPage />} />
         <Route path="todo/habits" element={<HabitsPage />} />
         <Route path="todo/tasks" element={<TasksPage />} />

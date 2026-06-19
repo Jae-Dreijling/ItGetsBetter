@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { format } from 'date-fns'
+import { Ruler } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
@@ -8,6 +10,7 @@ import { useWeightEntries, useLatestWeight, addWeightEntry } from '../../hooks/u
 import { getLogicalDate } from '../../lib/date'
 
 export default function WeightPage() {
+  const navigate = useNavigate()
   const { profile } = useProfile()
   const entries = useWeightEntries()
   const latest = useLatestWeight()
@@ -56,6 +59,17 @@ export default function WeightPage() {
             )}
           </div>
         )}
+
+        <button
+          onClick={() => navigate('/me/measurements')}
+          className="mb-4 flex w-full items-center gap-3 rounded-xl bg-accent-100 p-3 text-left transition-transform active:scale-[0.98]"
+        >
+          <Ruler className="h-5 w-5 text-accent-700" />
+          <div>
+            <p className="text-sm font-semibold text-accent-700">Body Measurements</p>
+            <p className="text-xs text-accent-700/60">Track neck, chest, waist, and more</p>
+          </div>
+        </button>
 
         <form onSubmit={handleSubmit} className="mb-6 rounded-xl bg-card p-4 shadow-sm">
           <div className="flex gap-2">

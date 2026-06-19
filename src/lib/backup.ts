@@ -26,7 +26,7 @@ async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promi
 
 export async function createBackup(password: string): Promise<Blob> {
   const data = {
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     userProfile: await db.userProfile.toArray(),
     weightEntries: await db.weightEntries.toArray(),
@@ -38,6 +38,8 @@ export async function createBackup(password: string): Promise<Blob> {
     habitCompletions: await db.habitCompletions.toArray(),
     tasks: await db.tasks.toArray(),
     projects: await db.projects.toArray(),
+    waterEntries: await db.waterEntries.toArray(),
+    exerciseEntries: await db.exerciseEntries.toArray(),
   }
 
   const json = JSON.stringify(data)
@@ -95,7 +97,7 @@ export async function restoreBackup(file: File, password: string): Promise<void>
   }
 
   await db.transaction('rw',
-    [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects],
+    [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries],
     async () => {
       await db.userProfile.clear()
       await db.weightEntries.clear()
@@ -107,6 +109,8 @@ export async function restoreBackup(file: File, password: string): Promise<void>
       await db.habitCompletions.clear()
       await db.tasks.clear()
       await db.projects.clear()
+      await db.waterEntries.clear()
+      await db.exerciseEntries.clear()
 
       if (data.userProfile?.length) await db.userProfile.bulkAdd(data.userProfile)
       if (data.weightEntries?.length) await db.weightEntries.bulkAdd(data.weightEntries)
@@ -121,6 +125,8 @@ export async function restoreBackup(file: File, password: string): Promise<void>
         await db.tasks.bulkAdd(tasks)
       }
       if (data.projects?.length) await db.projects.bulkAdd(data.projects)
+      if (data.waterEntries?.length) await db.waterEntries.bulkAdd(data.waterEntries)
+      if (data.exerciseEntries?.length) await db.exerciseEntries.bulkAdd(data.exerciseEntries)
     }
   )
 }
