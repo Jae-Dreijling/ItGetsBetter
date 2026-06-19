@@ -116,7 +116,10 @@ export async function restoreBackup(file: File, password: string): Promise<void>
       if (data.labels?.length) await db.labels.bulkAdd(data.labels)
       if (data.habits?.length) await db.habits.bulkAdd(data.habits)
       if (data.habitCompletions?.length) await db.habitCompletions.bulkAdd(data.habitCompletions)
-      if (data.tasks?.length) await db.tasks.bulkAdd(data.tasks)
+      if (data.tasks?.length) {
+        const tasks = data.tasks.map((t: any) => ({ ...t, show_in_today: t.show_in_today ?? true }))
+        await db.tasks.bulkAdd(tasks)
+      }
       if (data.projects?.length) await db.projects.bulkAdd(data.projects)
     }
   )
