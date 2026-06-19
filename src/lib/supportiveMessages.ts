@@ -24,7 +24,7 @@ const messages = [
   "It's okay if it's taking more time than you thought.",
   "Still. After all of it. Mostly, I want to be kind.",
   "For your own sanity, don't try to understand every single thing.",
-  "I have no prime. I will evolve untill i die.",
+  "I have no prime. I will evolve until I die.",
   "God fucking damnit.",
   "Don't forget to imagine the best case scenario, too.",
   "Congrats on your failure! Most people don't even try.",
