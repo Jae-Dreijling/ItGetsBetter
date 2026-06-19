@@ -114,3 +114,77 @@ export interface ExerciseEntry {
   notes: string | null
   logged_at: string
 }
+
+export interface MoodEntry {
+  id?: number
+  date: string
+  score: number
+  tags: string[]
+  logged_at: string
+}
+
+export interface MoodTag {
+  id?: number
+  label: string
+  created_at: string
+}
+
+export interface SleepEntry {
+  id?: number
+  date: string
+  hours_slept: number
+  quality_rating: number
+  wake_feeling: string | null
+  logged_at: string
+}
+
+export interface Medicine {
+  id?: number
+  name: string
+  frequency: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface MedicineLog {
+  id?: number
+  medicine_id: number
+  date: string
+  taken: boolean
+  logged_at: string
+}
+
+export interface PointsTransaction {
+  id?: number
+  amount: number
+  source_type: string
+  source_id: number | null
+  date: string
+  created_at: string
+}
+
+export interface Reward {
+  id?: number
+  name: string
+  description: string | null
+  point_cost: number
+  is_available: boolean
+  created_at: string
+}
+
+export interface RewardClaim {
+  id?: number
+  reward_id: number
+  points_spent: number
+  claimed_at: string
+}
+
+export interface Achievement {
+  id?: number
+  name: string
+  description: string
+  trigger_type: string
+  trigger_value: number
+  is_unlocked: boolean
+  unlocked_at: string | null
+}

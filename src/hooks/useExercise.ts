@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { awardPoints } from './usePoints'
 import type { ExerciseEntry } from '../types'
 
 export function useTodaysExercise() {
@@ -28,7 +29,7 @@ export function useExerciseTypes() {
 type ExerciseInput = Omit<ExerciseEntry, 'id' | 'date' | 'logged_at'>
 
 export async function addExerciseEntry(data: ExerciseInput & { date?: string }) {
-  await db.exerciseEntries.add({
+  const id = await db.exerciseEntries.add({
     date: data.date ?? getLogicalDate(),
     exercise_type: data.exercise_type,
     sets: data.sets ?? null,
@@ -39,6 +40,7 @@ export async function addExerciseEntry(data: ExerciseInput & { date?: string }) 
     notes: data.notes ?? null,
     logged_at: nowISO(),
   })
+  await awardPoints('exercise_logged', id as number)
 }
 
 export async function deleteExerciseEntry(id: number) {

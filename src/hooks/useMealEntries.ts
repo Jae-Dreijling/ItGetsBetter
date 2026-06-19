@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { awardPoints } from './usePoints'
 import type { MealSlot } from '../types'
 
 export function useTodaysMeals() {
@@ -31,7 +32,7 @@ export async function addMealEntry(data: {
   date?: string
   is_backfill?: boolean
 }) {
-  await db.mealEntries.add({
+  const id = await db.mealEntries.add({
     date: data.date ?? getLogicalDate(),
     meal_slot: data.meal_slot,
     name: data.name,
@@ -40,4 +41,5 @@ export async function addMealEntry(data: {
     logged_at: nowISO(),
     is_backfill: data.is_backfill ?? false,
   })
+  if (!data.is_backfill) await awardPoints('meal_logged', id as number)
 }

@@ -5,6 +5,7 @@ import { getLogicalDate, nowISO } from './lib/date'
 import { useProfile } from './hooks/useProfile'
 import { Heart } from 'lucide-react'
 
+import UpdatePrompt from './components/UpdatePrompt'
 import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
 import HomePage from './features/home/HomePage'
@@ -18,6 +19,11 @@ import BackupPage from './features/settings/BackupPage'
 import WaterPage from './features/water/WaterPage'
 import FastingPage from './features/fasting/FastingPage'
 import ExercisePage from './features/exercise/ExercisePage'
+import MoodPage from './features/mood/MoodPage'
+import SleepPage from './features/sleep/SleepPage'
+import MedicinePage from './features/medicine/MedicinePage'
+import RewardShopPage from './features/rewards/RewardShopPage'
+import AchievementsPage from './features/achievements/AchievementsPage'
 import MePage from './features/me/MePage'
 import TodoPage from './features/todo/TodoPage'
 import HabitsPage from './features/todo/HabitsPage'
@@ -55,11 +61,16 @@ function AppContent() {
         <Route path="log/water" element={<WaterPage />} />
         <Route path="log/fasting" element={<FastingPage />} />
         <Route path="log/exercise" element={<ExercisePage />} />
+        <Route path="log/mood" element={<MoodPage />} />
+        <Route path="log/sleep" element={<SleepPage />} />
+        <Route path="log/medicine" element={<MedicinePage />} />
         <Route path="todo" element={<TodoPage />} />
         <Route path="todo/habits" element={<HabitsPage />} />
         <Route path="todo/tasks" element={<TasksPage />} />
         <Route path="me" element={<MePage />} />
         <Route path="me/measurements" element={<MeasurementsPage />} />
+        <Route path="me/rewards" element={<RewardShopPage />} />
+        <Route path="me/achievements" element={<AchievementsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
@@ -85,6 +96,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <UpdatePrompt />
       <AppContent />
     </BrowserRouter>
   )

@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { awardPoints } from './usePoints'
 import type { HabitFrequency, Weekday } from '../types'
 
 export function useActiveHabits() {
@@ -117,10 +118,11 @@ export async function toggleHabitCompletion(habitId: number) {
   if (existing) {
     await db.habitCompletions.delete(existing.id!)
   } else {
-    await db.habitCompletions.add({
+    const id = await db.habitCompletions.add({
       habit_id: habitId,
       date: today,
       logged_at: nowISO(),
     })
+    await awardPoints('habit_completed', id as number)
   }
 }

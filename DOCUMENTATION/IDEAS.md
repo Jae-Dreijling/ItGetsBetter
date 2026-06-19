@@ -71,4 +71,12 @@ Important: this feature requires calorie estimation for meals (either manual inp
 
 ---
 
+## Points Notification
+
+When you earn points, show a small celebratory notification/toast: "+5 points for logging a meal!" or "+10 points for hitting your fasting goal!" Makes the reward system feel alive and gives instant positive feedback for good behavior.
+
+Could animate the points counter briefly or show a small floating number that fades out.
+
+---
+
 *Add new ideas here as they come up. These are seeds, not commitments.*

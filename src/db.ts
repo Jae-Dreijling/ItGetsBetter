@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement } from './types'
 
 const DEFAULT_LABELS = [
   { name: 'Health', color: '#5cb176' },
@@ -21,6 +21,15 @@ class ItGetsBetterDB extends Dexie {
   projects!: EntityTable<Project, 'id'>
   waterEntries!: EntityTable<WaterEntry, 'id'>
   exerciseEntries!: EntityTable<ExerciseEntry, 'id'>
+  moodEntries!: EntityTable<MoodEntry, 'id'>
+  moodTags!: EntityTable<MoodTag, 'id'>
+  sleepEntries!: EntityTable<SleepEntry, 'id'>
+  medicines!: EntityTable<Medicine, 'id'>
+  medicineLogs!: EntityTable<MedicineLog, 'id'>
+  pointsTransactions!: EntityTable<PointsTransaction, 'id'>
+  rewards!: EntityTable<Reward, 'id'>
+  rewardClaims!: EntityTable<RewardClaim, 'id'>
+  achievements!: EntityTable<Achievement, 'id'>
 
   constructor() {
     super('ItGetsBetter')
@@ -78,6 +87,30 @@ class ItGetsBetterDB extends Dexie {
       projects: '++id',
       waterEntries: '++id, date, logged_at',
       exerciseEntries: '++id, date, exercise_type',
+    })
+
+    this.version(5).stores({
+      userProfile: '++id',
+      weightEntries: '++id, date, logged_at',
+      mealEntries: '++id, date, meal_slot, logged_at',
+      measurements: '++id, date',
+      appOpenLog: '++id, date',
+      labels: '++id',
+      habits: '++id, is_active, is_queued',
+      habitCompletions: '++id, habit_id, date',
+      tasks: '++id, project_id, parent_task_id, is_completed, due_date, priority, show_in_today',
+      projects: '++id',
+      waterEntries: '++id, date, logged_at',
+      exerciseEntries: '++id, date, exercise_type',
+      moodEntries: '++id, date, logged_at',
+      moodTags: '++id',
+      sleepEntries: '++id, date',
+      medicines: '++id, is_active',
+      medicineLogs: '++id, medicine_id, date',
+      pointsTransactions: '++id, source_type, date',
+      rewards: '++id, is_available',
+      rewardClaims: '++id, reward_id, claimed_at',
+      achievements: '++id, trigger_type, is_unlocked',
     })
 
     this.on('populate', () => {

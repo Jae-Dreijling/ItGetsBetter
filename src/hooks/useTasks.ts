@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
+import { awardPoints } from './usePoints'
 import type { TaskPriority } from '../types'
 
 export function useTasks(filters?: { projectId?: number; completed?: boolean }) {
@@ -67,10 +68,12 @@ export async function updateTask(id: number, changes: Partial<{
 export async function toggleTask(id: number) {
   const task = await db.tasks.get(id)
   if (!task) return
+  const completing = !task.is_completed
   await db.tasks.update(id, {
-    is_completed: !task.is_completed,
-    completed_at: task.is_completed ? null : nowISO(),
+    is_completed: completing,
+    completed_at: completing ? nowISO() : null,
   })
+  if (completing) await awardPoints('task_completed', id)
 }
 
 export async function deleteTask(id: number) {
