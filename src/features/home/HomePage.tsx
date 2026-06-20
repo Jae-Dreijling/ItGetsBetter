@@ -2,8 +2,10 @@ import { useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { Scale, UtensilsCrossed, Droplets, Timer, AlertCircle, Dumbbell, CheckCircle2, ChevronRight, Pill, Check, Star } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
+import { SideMenuContext } from '../../components/layout/AppShell'
 import PageContainer from '../../components/layout/PageContainer'
 import MoodPrompt from '../../components/MoodPrompt'
+import NotificationToast from '../../components/NotificationToast'
 import { useProfile } from '../../hooks/useProfile'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
@@ -16,7 +18,9 @@ import { useTodaysMood } from '../../hooks/useMood'
 import { useActiveMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
 import { usePointsBalance } from '../../hooks/usePoints'
 import { useIsReturningAfterAbsence, getWelcomeBackMessage } from '../../hooks/useWelcomeBack'
-import { getRandomMessage } from '../../lib/supportiveMessages'
+import { useQuotes, pickQuote } from '../../hooks/useQuotes'
+import { useTodaySchedule } from '../../hooks/useSchedule'
+import { useNotifications } from '../../hooks/useNotifications'
 import { getLogicalDate } from '../../lib/date'
 import { addDays, format, parseISO } from 'date-fns'
 
@@ -44,6 +48,9 @@ export default function HomePage() {
   const todaysMedLogs = useTodaysMedicineLogs()
   const points = usePointsBalance()
   const isReturning = useIsReturningAfterAbsence()
+  const customQuotes = useQuotes()
+  const { mode } = useTodaySchedule()
+  const { notification, dismiss } = useNotifications()
   const navigate = useNavigate()
 
   const [moodDismissed, setMoodDismissed] = useState(false)
@@ -58,9 +65,9 @@ export default function HomePage() {
 
   const message = useMemo(() => {
     if (isReturning) return getWelcomeBackMessage(displayName)
-    return getRandomMessage(displayName)
+    return pickQuote(customQuotes, displayName)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayName, isReturning])
+  }, [displayName, isReturning, customQuotes?.length])
 
   const avgScore = todaysMeals?.length
     ? (todaysMeals.reduce((sum, m) => sum + m.health_score, 0) / todaysMeals.length).toFixed(1)
@@ -91,13 +98,31 @@ export default function HomePage() {
 
   return (
     <>
-      <TopBar title="Home" />
+      <TopBar title="Home" onMenuClick={() => SideMenuContext.open()} />
       <PageContainer>
         <div className={`mb-4 rounded-2xl p-5 shadow-sm ${isReturning ? 'bg-primary-100' : 'bg-card'}`}>
           <p className="text-center text-lg font-medium text-text-primary leading-relaxed">
             {message}
           </p>
         </div>
+
+        {mode !== 'none' && (
+          <button
+            onClick={() => navigate('/settings/schedule')}
+            className={`mb-4 flex w-full items-center justify-center gap-2 rounded-xl py-2 text-sm font-medium ${
+              mode === 'exam' ? 'bg-accent-100 text-accent-700' :
+              mode === 'social' ? 'bg-primary-100 text-primary-700' :
+              'bg-secondary-100 text-secondary-700'
+            }`}
+          >
+            {mode === 'exam' ? '📚' : mode === 'social' ? '🎉' : '🤫'}
+            {mode.charAt(0).toUpperCase() + mode.slice(1)} mode active
+          </button>
+        )}
+
+        {notification && (
+          <NotificationToast message={notification.message} onDismiss={dismiss} />
+        )}
 
         {showMoodPrompt && (
           <MoodPrompt timeOfDay={timeOfDay} onDismiss={() => setMoodDismissed(true)} />
