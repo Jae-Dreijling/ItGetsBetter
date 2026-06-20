@@ -93,6 +93,22 @@ export async function updateHabit(id: number, changes: Partial<{
   await db.habits.update(id, changes)
 }
 
+export async function canActivateInCategory(labelIds: number[]): Promise<boolean> {
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  const weekAgoStr = oneWeekAgo.toISOString()
+
+  const recentlyActivated = await db.habits
+    .filter(h => h.is_active === true && h.activated_at !== null && h.activated_at > weekAgoStr)
+    .toArray()
+
+  for (const habit of recentlyActivated) {
+    const overlap = habit.label_ids.some(id => labelIds.includes(id))
+    if (overlap) return false
+  }
+  return true
+}
+
 export async function activateHabit(id: number) {
   await db.habits.update(id, { is_active: true, is_queued: false, activated_at: nowISO() })
 }

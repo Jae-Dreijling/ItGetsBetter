@@ -31,13 +31,15 @@ export default function BottomTabs() {
           <button
             key={tab.id}
             onClick={() => navigate(tab.path)}
+            aria-label={tab.label}
+            aria-current={isActive ? 'page' : undefined}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2 transition-colors ${
               isActive
                 ? 'text-primary-500'
                 : 'text-muted hover:text-primary-400'
             }`}
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-5 w-5" aria-hidden="true" />
             <span className="text-xs font-medium">{tab.label}</span>
           </button>
         )

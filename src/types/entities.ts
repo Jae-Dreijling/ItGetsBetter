@@ -6,7 +6,7 @@ export interface UserProfile {
   height_cm: number
   starting_weight_kg: number
   goal_weight_milestone_kg: number
-  theme: 'light' | 'dark'
+  theme: 'light' | 'dark' | 'auto'
   created_at: string
 }
 
