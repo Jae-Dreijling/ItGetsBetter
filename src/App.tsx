@@ -17,6 +17,7 @@ import SettingsPage from './features/settings/SettingsPage'
 import ProfileSettings from './features/settings/ProfileSettings'
 import BackupPage from './features/settings/BackupPage'
 import ExportPage from './features/settings/ExportPage'
+import QuoteManager from './features/settings/QuoteManager'
 import WaterPage from './features/water/WaterPage'
 import FastingPage from './features/fasting/FastingPage'
 import ExercisePage from './features/exercise/ExercisePage'
@@ -84,6 +85,7 @@ function AppContent() {
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
         <Route path="settings/export" element={<ExportPage />} />
+        <Route path="settings/quotes" element={<QuoteManager />} />
       </Route>
     </Routes>
   )

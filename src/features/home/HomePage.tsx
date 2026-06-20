@@ -16,7 +16,7 @@ import { useTodaysMood } from '../../hooks/useMood'
 import { useActiveMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
 import { usePointsBalance } from '../../hooks/usePoints'
 import { useIsReturningAfterAbsence, getWelcomeBackMessage } from '../../hooks/useWelcomeBack'
-import { getRandomMessage } from '../../lib/supportiveMessages'
+import { useQuotes, pickQuote } from '../../hooks/useQuotes'
 import { getLogicalDate } from '../../lib/date'
 import { addDays, format, parseISO } from 'date-fns'
 
@@ -44,6 +44,7 @@ export default function HomePage() {
   const todaysMedLogs = useTodaysMedicineLogs()
   const points = usePointsBalance()
   const isReturning = useIsReturningAfterAbsence()
+  const customQuotes = useQuotes()
   const navigate = useNavigate()
 
   const [moodDismissed, setMoodDismissed] = useState(false)
@@ -58,9 +59,9 @@ export default function HomePage() {
 
   const message = useMemo(() => {
     if (isReturning) return getWelcomeBackMessage(displayName)
-    return getRandomMessage(displayName)
+    return pickQuote(customQuotes, displayName)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayName, isReturning])
+  }, [displayName, isReturning, customQuotes?.length])
 
   const avgScore = todaysMeals?.length
     ? (todaysMeals.reduce((sum, m) => sum + m.health_score, 0) / todaysMeals.length).toFixed(1)
