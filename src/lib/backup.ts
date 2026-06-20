@@ -26,13 +26,31 @@ async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promi
 
 export async function createBackup(password: string): Promise<Blob> {
   const data = {
-    version: 1,
+    version: 4,
     exportedAt: new Date().toISOString(),
     userProfile: await db.userProfile.toArray(),
     weightEntries: await db.weightEntries.toArray(),
     mealEntries: await db.mealEntries.toArray(),
     measurements: await db.measurements.toArray(),
     appOpenLog: await db.appOpenLog.toArray(),
+    labels: await db.labels.toArray(),
+    habits: await db.habits.toArray(),
+    habitCompletions: await db.habitCompletions.toArray(),
+    tasks: await db.tasks.toArray(),
+    projects: await db.projects.toArray(),
+    waterEntries: await db.waterEntries.toArray(),
+    exerciseEntries: await db.exerciseEntries.toArray(),
+    moodEntries: await db.moodEntries.toArray(),
+    moodTags: await db.moodTags.toArray(),
+    sleepEntries: await db.sleepEntries.toArray(),
+    medicines: await db.medicines.toArray(),
+    medicineLogs: await db.medicineLogs.toArray(),
+    pointsTransactions: await db.pointsTransactions.toArray(),
+    rewards: await db.rewards.toArray(),
+    rewardClaims: await db.rewardClaims.toArray(),
+    achievements: await db.achievements.toArray(),
+    progressPhotos: await db.progressPhotos.toArray(),
+    healthInsights: await db.table('healthInsights').toArray(),
   }
 
   const json = JSON.stringify(data)
@@ -89,20 +107,59 @@ export async function restoreBackup(file: File, password: string): Promise<void>
     throw new Error('Invalid backup file format')
   }
 
-  await db.transaction('rw',
-    [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog],
-    async () => {
+  const allTables = [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries, db.moodEntries, db.moodTags, db.sleepEntries, db.medicines, db.medicineLogs, db.pointsTransactions, db.rewards, db.rewardClaims, db.achievements, db.progressPhotos, db.table('healthInsights')]
+
+  await db.transaction('rw', allTables, async () => {
       await db.userProfile.clear()
       await db.weightEntries.clear()
       await db.mealEntries.clear()
       await db.measurements.clear()
       await db.appOpenLog.clear()
+      await db.labels.clear()
+      await db.habits.clear()
+      await db.habitCompletions.clear()
+      await db.tasks.clear()
+      await db.projects.clear()
+      await db.waterEntries.clear()
+      await db.exerciseEntries.clear()
+      await db.moodEntries.clear()
+      await db.moodTags.clear()
+      await db.sleepEntries.clear()
+      await db.medicines.clear()
+      await db.medicineLogs.clear()
+      await db.pointsTransactions.clear()
+      await db.rewards.clear()
+      await db.rewardClaims.clear()
+      await db.achievements.clear()
+      await db.progressPhotos.clear()
+      await db.table('healthInsights').clear()
 
       if (data.userProfile?.length) await db.userProfile.bulkAdd(data.userProfile)
       if (data.weightEntries?.length) await db.weightEntries.bulkAdd(data.weightEntries)
       if (data.mealEntries?.length) await db.mealEntries.bulkAdd(data.mealEntries)
       if (data.measurements?.length) await db.measurements.bulkAdd(data.measurements)
       if (data.appOpenLog?.length) await db.appOpenLog.bulkAdd(data.appOpenLog)
+      if (data.labels?.length) await db.labels.bulkAdd(data.labels)
+      if (data.habits?.length) await db.habits.bulkAdd(data.habits)
+      if (data.habitCompletions?.length) await db.habitCompletions.bulkAdd(data.habitCompletions)
+      if (data.tasks?.length) {
+        const tasks = data.tasks.map((t: any) => ({ ...t, show_in_today: t.show_in_today ?? true }))
+        await db.tasks.bulkAdd(tasks)
+      }
+      if (data.projects?.length) await db.projects.bulkAdd(data.projects)
+      if (data.waterEntries?.length) await db.waterEntries.bulkAdd(data.waterEntries)
+      if (data.exerciseEntries?.length) await db.exerciseEntries.bulkAdd(data.exerciseEntries)
+      if (data.moodEntries?.length) await db.moodEntries.bulkAdd(data.moodEntries)
+      if (data.moodTags?.length) await db.moodTags.bulkAdd(data.moodTags)
+      if (data.sleepEntries?.length) await db.sleepEntries.bulkAdd(data.sleepEntries)
+      if (data.medicines?.length) await db.medicines.bulkAdd(data.medicines)
+      if (data.medicineLogs?.length) await db.medicineLogs.bulkAdd(data.medicineLogs)
+      if (data.pointsTransactions?.length) await db.pointsTransactions.bulkAdd(data.pointsTransactions)
+      if (data.rewards?.length) await db.rewards.bulkAdd(data.rewards)
+      if (data.rewardClaims?.length) await db.rewardClaims.bulkAdd(data.rewardClaims)
+      if (data.achievements?.length) await db.achievements.bulkAdd(data.achievements)
+      if (data.progressPhotos?.length) await db.progressPhotos.bulkAdd(data.progressPhotos)
+      if (data.healthInsights?.length) await db.table('healthInsights').bulkAdd(data.healthInsights)
     }
   )
 }

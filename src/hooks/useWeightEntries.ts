@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { awardPoints } from './usePoints'
 
 export function useWeightEntries(dateRange?: { from: string; to: string }) {
   return useLiveQuery(() => {
@@ -31,4 +32,5 @@ export async function addWeightEntry(
     logged_at: nowISO(),
     is_backfill,
   })
+  if (!is_backfill) await awardPoints('weight_logged')
 }

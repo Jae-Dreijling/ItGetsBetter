@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
-import { db } from './db'
+import { db, ensureDefaultLabels } from './db'
 import { getLogicalDate, nowISO } from './lib/date'
 import { useProfile } from './hooks/useProfile'
 import { Heart } from 'lucide-react'
 
+import UpdatePrompt from './components/UpdatePrompt'
 import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
 import HomePage from './features/home/HomePage'
@@ -15,8 +16,23 @@ import MeasurementsPage from './features/measurements/MeasurementsPage'
 import SettingsPage from './features/settings/SettingsPage'
 import ProfileSettings from './features/settings/ProfileSettings'
 import BackupPage from './features/settings/BackupPage'
+import ExportPage from './features/settings/ExportPage'
+import WaterPage from './features/water/WaterPage'
+import FastingPage from './features/fasting/FastingPage'
+import ExercisePage from './features/exercise/ExercisePage'
+import MoodPage from './features/mood/MoodPage'
+import SleepPage from './features/sleep/SleepPage'
+import MedicinePage from './features/medicine/MedicinePage'
+import RewardShopPage from './features/rewards/RewardShopPage'
+import AchievementsPage from './features/achievements/AchievementsPage'
+import GraphsDashboard from './features/graphs/GraphsDashboard'
+import WeeklyReviewPage from './features/review/WeeklyReviewPage'
+import ProgressPhotosPage from './features/photos/ProgressPhotosPage'
+import InsightsPage from './features/insights/InsightsPage'
 import MePage from './features/me/MePage'
-import PlaceholderPage from './features/placeholder/PlaceholderPage'
+import TodoPage from './features/todo/TodoPage'
+import HabitsPage from './features/todo/HabitsPage'
+import TasksPage from './features/todo/TasksPage'
 
 function AppContent() {
   const { profile, isLoading } = useProfile()
@@ -47,12 +63,27 @@ function AppContent() {
         <Route path="log" element={<LogHubPage />} />
         <Route path="log/weight" element={<WeightPage />} />
         <Route path="log/meal" element={<MealsPage />} />
-        <Route path="todo" element={<PlaceholderPage title="To-Do" />} />
+        <Route path="log/water" element={<WaterPage />} />
+        <Route path="log/fasting" element={<FastingPage />} />
+        <Route path="log/exercise" element={<ExercisePage />} />
+        <Route path="log/mood" element={<MoodPage />} />
+        <Route path="log/sleep" element={<SleepPage />} />
+        <Route path="log/medicine" element={<MedicinePage />} />
+        <Route path="todo" element={<TodoPage />} />
+        <Route path="todo/habits" element={<HabitsPage />} />
+        <Route path="todo/tasks" element={<TasksPage />} />
         <Route path="me" element={<MePage />} />
         <Route path="me/measurements" element={<MeasurementsPage />} />
+        <Route path="me/rewards" element={<RewardShopPage />} />
+        <Route path="me/achievements" element={<AchievementsPage />} />
+        <Route path="me/graphs" element={<GraphsDashboard />} />
+        <Route path="me/review" element={<WeeklyReviewPage />} />
+        <Route path="me/photos" element={<ProgressPhotosPage />} />
+        <Route path="me/insights" element={<InsightsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
+        <Route path="settings/export" element={<ExportPage />} />
       </Route>
     </Routes>
   )
@@ -68,12 +99,14 @@ export default function App() {
         date: getLogicalDate(),
         opened_at: nowISO(),
       })
+      await ensureDefaultLabels()
     }
     init()
   }, [])
 
   return (
     <BrowserRouter>
+      <UpdatePrompt />
       <AppContent />
     </BrowserRouter>
   )
