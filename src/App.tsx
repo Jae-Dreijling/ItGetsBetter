@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
 import { db, ensureDefaults } from './db'
+import { shouldRunLifecycle, runPhotoLifecycle, markLifecycleRun } from './lib/photoLifecycle'
 import { getLogicalDate, nowISO } from './lib/date'
 import { useProfile } from './hooks/useProfile'
 import { Heart } from 'lucide-react'
 
 import UpdatePrompt from './components/UpdatePrompt'
+import ErrorBoundary from './components/ErrorBoundary'
+import AppLock, { isLockEnabled } from './components/AppLock'
+import InstallPrompt from './components/InstallPrompt'
 import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
 import HomePage from './features/home/HomePage'
@@ -16,25 +20,34 @@ import MeasurementsPage from './features/measurements/MeasurementsPage'
 import SettingsPage from './features/settings/SettingsPage'
 import ProfileSettings from './features/settings/ProfileSettings'
 import BackupPage from './features/settings/BackupPage'
-import ExportPage from './features/settings/ExportPage'
-import QuoteManager from './features/settings/QuoteManager'
-import ScheduleSettings from './features/settings/ScheduleSettings'
 import WaterPage from './features/water/WaterPage'
 import FastingPage from './features/fasting/FastingPage'
 import ExercisePage from './features/exercise/ExercisePage'
 import MoodPage from './features/mood/MoodPage'
 import SleepPage from './features/sleep/SleepPage'
 import MedicinePage from './features/medicine/MedicinePage'
-import RewardShopPage from './features/rewards/RewardShopPage'
-import AchievementsPage from './features/achievements/AchievementsPage'
-import GraphsDashboard from './features/graphs/GraphsDashboard'
-import WeeklyReviewPage from './features/review/WeeklyReviewPage'
-import ProgressPhotosPage from './features/photos/ProgressPhotosPage'
-import InsightsPage from './features/insights/InsightsPage'
 import MePage from './features/me/MePage'
 import TodoPage from './features/todo/TodoPage'
 import HabitsPage from './features/todo/HabitsPage'
 import TasksPage from './features/todo/TasksPage'
+
+const ExportPage = lazy(() => import('./features/settings/ExportPage'))
+const QuoteManager = lazy(() => import('./features/settings/QuoteManager'))
+const ScheduleSettings = lazy(() => import('./features/settings/ScheduleSettings'))
+const RewardShopPage = lazy(() => import('./features/rewards/RewardShopPage'))
+const AchievementsPage = lazy(() => import('./features/achievements/AchievementsPage'))
+const GraphsDashboard = lazy(() => import('./features/graphs/GraphsDashboard'))
+const WeeklyReviewPage = lazy(() => import('./features/review/WeeklyReviewPage'))
+const ProgressPhotosPage = lazy(() => import('./features/photos/ProgressPhotosPage'))
+const InsightsPage = lazy(() => import('./features/insights/InsightsPage'))
+
+function LazyFallback() {
+  return (
+    <div className="flex flex-1 items-center justify-center py-12">
+      <Heart className="h-6 w-6 animate-pulse text-primary-400" />
+    </div>
+  )
+}
 
 function AppContent() {
   const { profile, isLoading } = useProfile()
@@ -42,7 +55,18 @@ function AppContent() {
 
   useEffect(() => {
     if (profile) {
-      document.documentElement.classList.toggle('dark', profile.theme === 'dark')
+      if (profile.theme === 'auto') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        document.documentElement.classList.toggle('dark', prefersDark)
+        const listener = (e: MediaQueryListEvent) => {
+          document.documentElement.classList.toggle('dark', e.matches)
+        }
+        const mq = window.matchMedia('(prefers-color-scheme: dark)')
+        mq.addEventListener('change', listener)
+        return () => mq.removeEventListener('change', listener)
+      } else {
+        document.documentElement.classList.toggle('dark', profile.theme === 'dark')
+      }
     }
   }, [profile?.theme])
 
@@ -76,24 +100,26 @@ function AppContent() {
         <Route path="todo/tasks" element={<TasksPage />} />
         <Route path="me" element={<MePage />} />
         <Route path="me/measurements" element={<MeasurementsPage />} />
-        <Route path="me/rewards" element={<RewardShopPage />} />
-        <Route path="me/achievements" element={<AchievementsPage />} />
-        <Route path="me/graphs" element={<GraphsDashboard />} />
-        <Route path="me/review" element={<WeeklyReviewPage />} />
-        <Route path="me/photos" element={<ProgressPhotosPage />} />
-        <Route path="me/insights" element={<InsightsPage />} />
+        <Route path="me/rewards" element={<Suspense fallback={<LazyFallback />}><RewardShopPage /></Suspense>} />
+        <Route path="me/achievements" element={<Suspense fallback={<LazyFallback />}><AchievementsPage /></Suspense>} />
+        <Route path="me/graphs" element={<Suspense fallback={<LazyFallback />}><GraphsDashboard /></Suspense>} />
+        <Route path="me/review" element={<Suspense fallback={<LazyFallback />}><WeeklyReviewPage /></Suspense>} />
+        <Route path="me/photos" element={<Suspense fallback={<LazyFallback />}><ProgressPhotosPage /></Suspense>} />
+        <Route path="me/insights" element={<Suspense fallback={<LazyFallback />}><InsightsPage /></Suspense>} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
-        <Route path="settings/export" element={<ExportPage />} />
-        <Route path="settings/quotes" element={<QuoteManager />} />
-        <Route path="settings/schedule" element={<ScheduleSettings />} />
+        <Route path="settings/export" element={<Suspense fallback={<LazyFallback />}><ExportPage /></Suspense>} />
+        <Route path="settings/quotes" element={<Suspense fallback={<LazyFallback />}><QuoteManager /></Suspense>} />
+        <Route path="settings/schedule" element={<Suspense fallback={<LazyFallback />}><ScheduleSettings /></Suspense>} />
       </Route>
     </Routes>
   )
 }
 
 export default function App() {
+  const [unlocked, setUnlocked] = useState(!isLockEnabled())
+
   useEffect(() => {
     async function init() {
       if (navigator.storage?.persist) {
@@ -104,14 +130,24 @@ export default function App() {
         opened_at: nowISO(),
       })
       await ensureDefaults()
+      if (shouldRunLifecycle()) {
+        runPhotoLifecycle().then(() => markLifecycleRun())
+      }
     }
     init()
   }, [])
 
+  if (!unlocked) {
+    return <AppLock onUnlock={() => setUnlocked(true)} />
+  }
+
   return (
     <BrowserRouter>
       <UpdatePrompt />
-      <AppContent />
+      <ErrorBoundary feature="the app">
+        <AppContent />
+      </ErrorBoundary>
+      <InstallPrompt />
     </BrowserRouter>
   )
 }
