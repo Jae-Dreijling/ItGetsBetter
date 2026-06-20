@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
-import { db, ensureDefaultLabels } from './db'
+import { db, ensureDefaults } from './db'
 import { getLogicalDate, nowISO } from './lib/date'
 import { useProfile } from './hooks/useProfile'
 import { Heart } from 'lucide-react'
@@ -18,6 +18,7 @@ import ProfileSettings from './features/settings/ProfileSettings'
 import BackupPage from './features/settings/BackupPage'
 import ExportPage from './features/settings/ExportPage'
 import QuoteManager from './features/settings/QuoteManager'
+import ScheduleSettings from './features/settings/ScheduleSettings'
 import WaterPage from './features/water/WaterPage'
 import FastingPage from './features/fasting/FastingPage'
 import ExercisePage from './features/exercise/ExercisePage'
@@ -86,6 +87,7 @@ function AppContent() {
         <Route path="settings/backup" element={<BackupPage />} />
         <Route path="settings/export" element={<ExportPage />} />
         <Route path="settings/quotes" element={<QuoteManager />} />
+        <Route path="settings/schedule" element={<ScheduleSettings />} />
       </Route>
     </Routes>
   )
@@ -101,7 +103,7 @@ export default function App() {
         date: getLogicalDate(),
         opened_at: nowISO(),
       })
-      await ensureDefaultLabels()
+      await ensureDefaults()
     }
     init()
   }, [])

@@ -17,6 +17,7 @@ import { useActiveMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '..
 import { usePointsBalance } from '../../hooks/usePoints'
 import { useIsReturningAfterAbsence, getWelcomeBackMessage } from '../../hooks/useWelcomeBack'
 import { useQuotes, pickQuote } from '../../hooks/useQuotes'
+import { useTodaySchedule } from '../../hooks/useSchedule'
 import { getLogicalDate } from '../../lib/date'
 import { addDays, format, parseISO } from 'date-fns'
 
@@ -45,6 +46,7 @@ export default function HomePage() {
   const points = usePointsBalance()
   const isReturning = useIsReturningAfterAbsence()
   const customQuotes = useQuotes()
+  const { mode } = useTodaySchedule()
   const navigate = useNavigate()
 
   const [moodDismissed, setMoodDismissed] = useState(false)
@@ -99,6 +101,20 @@ export default function HomePage() {
             {message}
           </p>
         </div>
+
+        {mode !== 'none' && (
+          <button
+            onClick={() => navigate('/settings/schedule')}
+            className={`mb-4 flex w-full items-center justify-center gap-2 rounded-xl py-2 text-sm font-medium ${
+              mode === 'exam' ? 'bg-accent-100 text-accent-700' :
+              mode === 'social' ? 'bg-primary-100 text-primary-700' :
+              'bg-secondary-100 text-secondary-700'
+            }`}
+          >
+            {mode === 'exam' ? '📚' : mode === 'social' ? '🎉' : '🤫'}
+            {mode.charAt(0).toUpperCase() + mode.slice(1)} mode active
+          </button>
+        )}
 
         {showMoodPrompt && (
           <MoodPrompt timeOfDay={timeOfDay} onDismiss={() => setMoodDismissed(true)} />
