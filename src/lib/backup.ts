@@ -51,6 +51,9 @@ export async function createBackup(password: string): Promise<Blob> {
     achievements: await db.achievements.toArray(),
     progressPhotos: await db.progressPhotos.toArray(),
     healthInsights: await db.table('healthInsights').toArray(),
+    customQuotes: await db.table('customQuotes').toArray(),
+    scheduleProfiles: await db.table('scheduleProfiles').toArray(),
+    dayConfigs: await db.table('dayConfigs').toArray(),
   }
 
   const json = JSON.stringify(data)
@@ -107,7 +110,7 @@ export async function restoreBackup(file: File, password: string): Promise<void>
     throw new Error('Invalid backup file format')
   }
 
-  const allTables = [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries, db.moodEntries, db.moodTags, db.sleepEntries, db.medicines, db.medicineLogs, db.pointsTransactions, db.rewards, db.rewardClaims, db.achievements, db.progressPhotos, db.table('healthInsights')]
+  const allTables = [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries, db.moodEntries, db.moodTags, db.sleepEntries, db.medicines, db.medicineLogs, db.pointsTransactions, db.rewards, db.rewardClaims, db.achievements, db.progressPhotos, db.table('healthInsights'), db.table('customQuotes'), db.table('scheduleProfiles'), db.table('dayConfigs')]
 
   await db.transaction('rw', allTables, async () => {
       await db.userProfile.clear()
@@ -133,6 +136,9 @@ export async function restoreBackup(file: File, password: string): Promise<void>
       await db.achievements.clear()
       await db.progressPhotos.clear()
       await db.table('healthInsights').clear()
+      await db.table('customQuotes').clear()
+      await db.table('scheduleProfiles').clear()
+      await db.table('dayConfigs').clear()
 
       if (data.userProfile?.length) await db.userProfile.bulkAdd(data.userProfile)
       if (data.weightEntries?.length) await db.weightEntries.bulkAdd(data.weightEntries)
@@ -160,6 +166,9 @@ export async function restoreBackup(file: File, password: string): Promise<void>
       if (data.achievements?.length) await db.achievements.bulkAdd(data.achievements)
       if (data.progressPhotos?.length) await db.progressPhotos.bulkAdd(data.progressPhotos)
       if (data.healthInsights?.length) await db.table('healthInsights').bulkAdd(data.healthInsights)
+      if (data.customQuotes?.length) await db.table('customQuotes').bulkAdd(data.customQuotes)
+      if (data.scheduleProfiles?.length) await db.table('scheduleProfiles').bulkAdd(data.scheduleProfiles)
+      if (data.dayConfigs?.length) await db.table('dayConfigs').bulkAdd(data.dayConfigs)
     }
   )
 }

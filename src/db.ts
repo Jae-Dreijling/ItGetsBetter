@@ -140,6 +140,35 @@ class ItGetsBetterDB extends Dexie {
       healthInsights: '++id, correlation_type, is_confirmed, is_rejected',
     })
 
+    this.version(7).stores({
+      userProfile: '++id',
+      weightEntries: '++id, date, logged_at',
+      mealEntries: '++id, date, meal_slot, logged_at',
+      measurements: '++id, date',
+      appOpenLog: '++id, date',
+      labels: '++id',
+      habits: '++id, is_active, is_queued',
+      habitCompletions: '++id, habit_id, date',
+      tasks: '++id, project_id, parent_task_id, is_completed, due_date, priority, show_in_today',
+      projects: '++id',
+      waterEntries: '++id, date, logged_at',
+      exerciseEntries: '++id, date, exercise_type',
+      moodEntries: '++id, date, logged_at',
+      moodTags: '++id',
+      sleepEntries: '++id, date',
+      medicines: '++id, is_active',
+      medicineLogs: '++id, medicine_id, date',
+      pointsTransactions: '++id, source_type, date',
+      rewards: '++id, is_available',
+      rewardClaims: '++id, reward_id, claimed_at',
+      achievements: '++id, trigger_type, is_unlocked',
+      progressPhotos: '++id, date',
+      healthInsights: '++id, correlation_type, is_confirmed, is_rejected',
+      customQuotes: '++id',
+      scheduleProfiles: '++id, &profile_name',
+      dayConfigs: '&date',
+    })
+
     this.on('populate', () => {
       this.labels.bulkAdd(
         DEFAULT_LABELS.map(l => ({ ...l, created_at: new Date().toISOString() }))
@@ -150,11 +179,19 @@ class ItGetsBetterDB extends Dexie {
 
 export const db = new ItGetsBetterDB()
 
-export async function ensureDefaultLabels() {
-  const count = await db.labels.count()
-  if (count === 0) {
+export async function ensureDefaults() {
+  const labelCount = await db.labels.count()
+  if (labelCount === 0) {
     await db.labels.bulkAdd(
       DEFAULT_LABELS.map(l => ({ ...l, created_at: new Date().toISOString() }))
     )
+  }
+
+  const profileCount = await db.table('scheduleProfiles').count()
+  if (profileCount === 0) {
+    await db.table('scheduleProfiles').bulkAdd([
+      { profile_name: 'school_day', wake_time: '07:00', phone_free_until: '08:00', expected_first_meal: '12:00', expected_dinner: '18:00', phone_away_at: '21:00', target_sleep_time: '22:00' },
+      { profile_name: 'free_day', wake_time: '08:00', phone_free_until: '09:00', expected_first_meal: '12:00', expected_dinner: '19:00', phone_away_at: '21:00', target_sleep_time: '22:00' },
+    ])
   }
 }
