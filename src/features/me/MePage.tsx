@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { Ruler, Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera } from 'lucide-react'
+import { Ruler, Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
@@ -46,6 +46,17 @@ export default function MePage() {
         </button>
 
         <div className="space-y-3">
+          <button
+            onClick={() => navigate('/me/insights')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Lightbulb className="h-5 w-5 text-accent-500" />
+            <div>
+              <p className="font-medium text-text-primary">Health Insights</p>
+              <p className="text-sm text-muted">Patterns in your data</p>
+            </div>
+          </button>
+
           <button
             onClick={() => navigate('/me/graphs')}
             className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
@@ -98,6 +109,17 @@ export default function MePage() {
             <div>
               <p className="font-medium text-text-primary">Measurements</p>
               <p className="text-sm text-muted">Track body measurements</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/settings/export')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <FileSpreadsheet className="h-5 w-5 text-secondary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Export Data</p>
+              <p className="text-sm text-muted">Excel and photo downloads</p>
             </div>
           </button>
 

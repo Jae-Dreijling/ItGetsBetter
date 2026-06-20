@@ -16,6 +16,7 @@ import MeasurementsPage from './features/measurements/MeasurementsPage'
 import SettingsPage from './features/settings/SettingsPage'
 import ProfileSettings from './features/settings/ProfileSettings'
 import BackupPage from './features/settings/BackupPage'
+import ExportPage from './features/settings/ExportPage'
 import WaterPage from './features/water/WaterPage'
 import FastingPage from './features/fasting/FastingPage'
 import ExercisePage from './features/exercise/ExercisePage'
@@ -27,6 +28,7 @@ import AchievementsPage from './features/achievements/AchievementsPage'
 import GraphsDashboard from './features/graphs/GraphsDashboard'
 import WeeklyReviewPage from './features/review/WeeklyReviewPage'
 import ProgressPhotosPage from './features/photos/ProgressPhotosPage'
+import InsightsPage from './features/insights/InsightsPage'
 import MePage from './features/me/MePage'
 import TodoPage from './features/todo/TodoPage'
 import HabitsPage from './features/todo/HabitsPage'
@@ -77,9 +79,11 @@ function AppContent() {
         <Route path="me/graphs" element={<GraphsDashboard />} />
         <Route path="me/review" element={<WeeklyReviewPage />} />
         <Route path="me/photos" element={<ProgressPhotosPage />} />
+        <Route path="me/insights" element={<InsightsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
+        <Route path="settings/export" element={<ExportPage />} />
       </Route>
     </Routes>
   )

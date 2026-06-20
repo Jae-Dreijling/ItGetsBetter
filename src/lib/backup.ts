@@ -49,6 +49,8 @@ export async function createBackup(password: string): Promise<Blob> {
     rewards: await db.rewards.toArray(),
     rewardClaims: await db.rewardClaims.toArray(),
     achievements: await db.achievements.toArray(),
+    progressPhotos: await db.progressPhotos.toArray(),
+    healthInsights: await db.table('healthInsights').toArray(),
   }
 
   const json = JSON.stringify(data)
@@ -105,7 +107,7 @@ export async function restoreBackup(file: File, password: string): Promise<void>
     throw new Error('Invalid backup file format')
   }
 
-  const allTables = [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries, db.moodEntries, db.moodTags, db.sleepEntries, db.medicines, db.medicineLogs, db.pointsTransactions, db.rewards, db.rewardClaims, db.achievements]
+  const allTables = [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries, db.moodEntries, db.moodTags, db.sleepEntries, db.medicines, db.medicineLogs, db.pointsTransactions, db.rewards, db.rewardClaims, db.achievements, db.progressPhotos, db.table('healthInsights')]
 
   await db.transaction('rw', allTables, async () => {
       await db.userProfile.clear()
@@ -129,6 +131,8 @@ export async function restoreBackup(file: File, password: string): Promise<void>
       await db.rewards.clear()
       await db.rewardClaims.clear()
       await db.achievements.clear()
+      await db.progressPhotos.clear()
+      await db.table('healthInsights').clear()
 
       if (data.userProfile?.length) await db.userProfile.bulkAdd(data.userProfile)
       if (data.weightEntries?.length) await db.weightEntries.bulkAdd(data.weightEntries)
@@ -154,6 +158,8 @@ export async function restoreBackup(file: File, password: string): Promise<void>
       if (data.rewards?.length) await db.rewards.bulkAdd(data.rewards)
       if (data.rewardClaims?.length) await db.rewardClaims.bulkAdd(data.rewardClaims)
       if (data.achievements?.length) await db.achievements.bulkAdd(data.achievements)
+      if (data.progressPhotos?.length) await db.progressPhotos.bulkAdd(data.progressPhotos)
+      if (data.healthInsights?.length) await db.table('healthInsights').bulkAdd(data.healthInsights)
     }
   )
 }

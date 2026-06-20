@@ -137,6 +137,7 @@ class ItGetsBetterDB extends Dexie {
       rewardClaims: '++id, reward_id, claimed_at',
       achievements: '++id, trigger_type, is_unlocked',
       progressPhotos: '++id, date',
+      healthInsights: '++id, correlation_type, is_confirmed, is_rejected',
     })
 
     this.on('populate', () => {
