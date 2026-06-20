@@ -188,3 +188,11 @@ export interface Achievement {
   is_unlocked: boolean
   unlocked_at: string | null
 }
+
+export interface ProgressPhoto {
+  id?: number
+  date: string
+  photo: Blob
+  pose_type: string
+  logged_at: string
+}

@@ -24,6 +24,9 @@ import SleepPage from './features/sleep/SleepPage'
 import MedicinePage from './features/medicine/MedicinePage'
 import RewardShopPage from './features/rewards/RewardShopPage'
 import AchievementsPage from './features/achievements/AchievementsPage'
+import GraphsDashboard from './features/graphs/GraphsDashboard'
+import WeeklyReviewPage from './features/review/WeeklyReviewPage'
+import ProgressPhotosPage from './features/photos/ProgressPhotosPage'
 import MePage from './features/me/MePage'
 import TodoPage from './features/todo/TodoPage'
 import HabitsPage from './features/todo/HabitsPage'
@@ -71,6 +74,9 @@ function AppContent() {
         <Route path="me/measurements" element={<MeasurementsPage />} />
         <Route path="me/rewards" element={<RewardShopPage />} />
         <Route path="me/achievements" element={<AchievementsPage />} />
+        <Route path="me/graphs" element={<GraphsDashboard />} />
+        <Route path="me/review" element={<WeeklyReviewPage />} />
+        <Route path="me/photos" element={<ProgressPhotosPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />

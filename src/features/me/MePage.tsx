@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { Ruler, Settings, Download, Gift, Star, Trophy } from 'lucide-react'
+import { Ruler, Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
@@ -47,6 +47,28 @@ export default function MePage() {
 
         <div className="space-y-3">
           <button
+            onClick={() => navigate('/me/graphs')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <BarChart3 className="h-5 w-5 text-primary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Graphs</p>
+              <p className="text-sm text-muted">Charts and trends</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/me/review')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <CalendarCheck className="h-5 w-5 text-secondary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Weekly Review</p>
+              <p className="text-sm text-muted">Your week at a glance</p>
+            </div>
+          </button>
+
+          <button
             onClick={() => navigate('/me/achievements')}
             className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
           >
@@ -54,6 +76,17 @@ export default function MePage() {
             <div>
               <p className="font-medium text-text-primary">Achievements</p>
               <p className="text-sm text-muted">Your milestones and victories</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/me/photos')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Camera className="h-5 w-5 text-primary-400" />
+            <div>
+              <p className="font-medium text-text-primary">Progress Photos</p>
+              <p className="text-sm text-muted">Before & after comparison</p>
             </div>
           </button>
 
