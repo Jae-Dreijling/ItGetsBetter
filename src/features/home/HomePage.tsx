@@ -6,6 +6,7 @@ import { SideMenuContext } from '../../components/layout/AppShell'
 import PageContainer from '../../components/layout/PageContainer'
 import MoodPrompt from '../../components/MoodPrompt'
 import NotificationToast from '../../components/NotificationToast'
+import StarterHabitPrompt from '../../components/StarterHabitPrompt'
 import { useProfile } from '../../hooks/useProfile'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
@@ -18,6 +19,7 @@ import { useTodaysMood } from '../../hooks/useMood'
 import { useActiveMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
 import { usePointsBalance } from '../../hooks/usePoints'
 import { useIsReturningAfterAbsence, getWelcomeBackMessage } from '../../hooks/useWelcomeBack'
+import { wasStarterOffered } from '../../lib/starterHabits'
 import { useQuotes, pickQuote } from '../../hooks/useQuotes'
 import { useTodaySchedule } from '../../hooks/useSchedule'
 import { useNotifications } from '../../hooks/useNotifications'
@@ -54,6 +56,8 @@ export default function HomePage() {
   const navigate = useNavigate()
 
   const [moodDismissed, setMoodDismissed] = useState(false)
+  const [starterDismissed, setStarterDismissed] = useState(wasStarterOffered)
+  const showStarter = !starterDismissed && (activeHabits?.length ?? 0) === 0
 
   const today = getLogicalDate()
   const tomorrow = format(addDays(parseISO(today), 1), 'yyyy-MM-dd')
@@ -122,6 +126,10 @@ export default function HomePage() {
 
         {notification && (
           <NotificationToast message={notification.message} onDismiss={dismiss} />
+        )}
+
+        {showStarter && (
+          <StarterHabitPrompt onDismiss={() => setStarterDismissed(true)} />
         )}
 
         {showMoodPrompt && (
