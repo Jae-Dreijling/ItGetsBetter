@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Clock, Shield } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
-import { useScheduleProfiles, useTodayConfig, useTodaySchedule, setDayProfile, setDayMode, updateScheduleProfile, type ActiveMode, type ScheduleProfile } from '../../hooks/useSchedule'
+import { useScheduleProfiles, useTodaySchedule, setDayProfile, setDayMode, updateScheduleProfile, getWeeklyDefaults, setWeeklyDefaults, type ActiveMode, type ScheduleProfile } from '../../hooks/useSchedule'
 import { getLogicalDate } from '../../lib/date'
 
 const MODES: { value: ActiveMode; label: string; description: string; color: string }[] = [
@@ -14,10 +14,19 @@ const MODES: { value: ActiveMode; label: string; description: string; color: str
 
 export default function ScheduleSettings() {
   const profiles = useScheduleProfiles()
-  const todayConfig = useTodayConfig()
   const { mode, profileName } = useTodaySchedule()
   const today = getLogicalDate()
   const [editingProfile, setEditingProfile] = useState<ScheduleProfile | null>(null)
+  const [weeklyDefaults, setWeeklyDefaultsState] = useState(getWeeklyDefaults)
+
+  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+  function toggleWeeklyDay(dayIndex: number) {
+    const current = weeklyDefaults[dayIndex]
+    const updated = { ...weeklyDefaults, [dayIndex]: current === 'school_day' ? 'free_day' : 'school_day' }
+    setWeeklyDefaultsState(updated)
+    setWeeklyDefaults(updated)
+  }
 
   async function handleProfileChange(name: string) {
     await setDayProfile(today, name)
@@ -54,6 +63,28 @@ export default function ScheduleSettings() {
               </button>
             ))}
           </div>
+          <p className="mt-1 text-xs text-muted">Override for today only. Weekly defaults below.</p>
+        </div>
+
+        <div className="mb-5">
+          <h3 className="mb-2 text-sm font-semibold text-muted uppercase tracking-wide">Weekly Defaults</h3>
+          <div className="flex gap-1.5 rounded-2xl bg-card p-3 shadow-sm">
+            {DAY_NAMES.map((name, i) => (
+              <button
+                key={i}
+                onClick={() => toggleWeeklyDay(i)}
+                className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-xs font-medium transition-colors ${
+                  weeklyDefaults[i] === 'school_day'
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-secondary-100 text-secondary-700'
+                }`}
+              >
+                <span>{name}</span>
+                <span className="text-[10px]">{weeklyDefaults[i] === 'school_day' ? '📚' : '☀️'}</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-muted">Tap to toggle. Auto-applies unless you override today.</p>
         </div>
 
         <div className="mb-5">
@@ -95,7 +126,7 @@ export default function ScheduleSettings() {
                     {profile.profile_name === 'school_day' ? '📚 School Day' : '☀️ Free Day'}
                   </p>
                   <button
-                    onClick={() => setEditingProfile(editingProfile?.id === profile.id ? null : { ...profile })}
+                    onClick={() => setEditingProfile(editingProfile?.id === profile.id ? null : JSON.parse(JSON.stringify(profile)))}
                     className="text-xs text-primary-500 font-medium"
                   >
                     {editingProfile?.id === profile.id ? 'Cancel' : 'Edit'}
@@ -117,7 +148,7 @@ export default function ScheduleSettings() {
                         <input
                           type="time"
                           value={(editingProfile as any)[field.key]}
-                          onChange={e => setEditingProfile({ ...editingProfile, [field.key]: e.target.value })}
+                          onChange={e => setEditingProfile({ ...editingProfile!, [field.key]: e.target.value })}
                           className="rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-2 py-1 text-sm text-text-primary focus:border-primary-400 focus:outline-none"
                         />
                       </div>

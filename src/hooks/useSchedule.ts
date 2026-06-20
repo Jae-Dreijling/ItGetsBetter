@@ -35,17 +35,6 @@ export function useTodayConfig() {
   )
 }
 
-export function useTodaySchedule() {
-  const profiles = useScheduleProfiles()
-  const config = useTodayConfig()
-
-  const profileName = config?.schedule_profile ?? 'free_day'
-  const profile = profiles?.find(p => p.profile_name === profileName) ?? null
-  const mode: ActiveMode = config?.active_mode ?? 'none'
-
-  return { profile, mode, profileName }
-}
-
 export async function setDayProfile(date: string, profileName: string) {
   const existing = await db.table('dayConfigs').get(date)
   if (existing) {
@@ -66,4 +55,31 @@ export async function setDayMode(date: string, mode: ActiveMode) {
 
 export async function updateScheduleProfile(id: number, changes: Partial<ScheduleProfile>) {
   await db.table('scheduleProfiles').update(id, changes)
+}
+
+const WEEKLY_DEFAULTS_KEY = 'igb_weekly_schedule'
+
+export function getWeeklyDefaults(): Record<number, string> {
+  const stored = localStorage.getItem(WEEKLY_DEFAULTS_KEY)
+  if (stored) return JSON.parse(stored)
+  return { 0: 'free_day', 1: 'school_day', 2: 'school_day', 3: 'school_day', 4: 'school_day', 5: 'free_day', 6: 'free_day' }
+}
+
+export function setWeeklyDefaults(defaults: Record<number, string>) {
+  localStorage.setItem(WEEKLY_DEFAULTS_KEY, JSON.stringify(defaults))
+}
+
+export function useTodaySchedule() {
+  const profiles = useScheduleProfiles()
+  const config = useTodayConfig()
+
+  const weeklyDefaults = getWeeklyDefaults()
+  const dayOfWeek = new Date().getDay()
+  const defaultProfile = weeklyDefaults[dayOfWeek] ?? 'free_day'
+
+  const profileName = config?.schedule_profile ?? defaultProfile
+  const profile = profiles?.find(p => p.profile_name === profileName) ?? null
+  const mode: ActiveMode = config?.active_mode ?? 'none'
+
+  return { profile, mode, profileName }
 }

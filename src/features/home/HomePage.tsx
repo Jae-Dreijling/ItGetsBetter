@@ -2,8 +2,10 @@ import { useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { Scale, UtensilsCrossed, Droplets, Timer, AlertCircle, Dumbbell, CheckCircle2, ChevronRight, Pill, Check, Star } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
+import { SideMenuContext } from '../../components/layout/AppShell'
 import PageContainer from '../../components/layout/PageContainer'
 import MoodPrompt from '../../components/MoodPrompt'
+import NotificationToast from '../../components/NotificationToast'
 import { useProfile } from '../../hooks/useProfile'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
@@ -18,6 +20,7 @@ import { usePointsBalance } from '../../hooks/usePoints'
 import { useIsReturningAfterAbsence, getWelcomeBackMessage } from '../../hooks/useWelcomeBack'
 import { useQuotes, pickQuote } from '../../hooks/useQuotes'
 import { useTodaySchedule } from '../../hooks/useSchedule'
+import { useNotifications } from '../../hooks/useNotifications'
 import { getLogicalDate } from '../../lib/date'
 import { addDays, format, parseISO } from 'date-fns'
 
@@ -47,6 +50,7 @@ export default function HomePage() {
   const isReturning = useIsReturningAfterAbsence()
   const customQuotes = useQuotes()
   const { mode } = useTodaySchedule()
+  const { notification, dismiss } = useNotifications()
   const navigate = useNavigate()
 
   const [moodDismissed, setMoodDismissed] = useState(false)
@@ -94,7 +98,7 @@ export default function HomePage() {
 
   return (
     <>
-      <TopBar title="Home" />
+      <TopBar title="Home" onMenuClick={() => SideMenuContext.open()} />
       <PageContainer>
         <div className={`mb-4 rounded-2xl p-5 shadow-sm ${isReturning ? 'bg-primary-100' : 'bg-card'}`}>
           <p className="text-center text-lg font-medium text-text-primary leading-relaxed">
@@ -114,6 +118,10 @@ export default function HomePage() {
             {mode === 'exam' ? '📚' : mode === 'social' ? '🎉' : '🤫'}
             {mode.charAt(0).toUpperCase() + mode.slice(1)} mode active
           </button>
+        )}
+
+        {notification && (
+          <NotificationToast message={notification.message} onDismiss={dismiss} />
         )}
 
         {showMoodPrompt && (
