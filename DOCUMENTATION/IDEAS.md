@@ -14,12 +14,12 @@ A collection of ideas for features that are not planned for any current phase. T
 | 4 | Exercise Calorie Estimation | ⭐⭐⭐ | ⭐⭐ (needs research for accuracy) |
 | 5 | Meal Burn-Off Suggestions | ⭐⭐⭐ | ⭐⭐ (depends on #4) |
 | 6 | Points Notification | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ (toast component exists) |
-| 7 | Label Management (CRUD in settings) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ (simple CRUD page) |
+| 7 | ~~Label Management (CRUD in settings)~~ | ✅ **Built** | Settings → Labels |
 | 8 | Grocery Lists (boodschappenlijstjes) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (new feature area) |
 | 9 | Progressive Habits (auto-increasing difficulty) | ⭐⭐⭐⭐⭐ | ⭐⭐ (data model changes + scheduling logic) |
 | 10 | Habit Formation Threshold (30 days, 75% consistency) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (calculation logic + UI) |
 | 11 | Habit Chaining (linked sequences) | ⭐⭐⭐⭐ | ⭐⭐ (data model changes + UX design) |
-| 12 | Medicine Hides When Taken | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ (simple filter change) |
+| 12 | ~~Medicine Hides When Taken~~ | ✅ **Built** | Shows "All taken ✓" summary |
 | 13 | Book Reading Tracker | ⭐⭐⭐ | ⭐⭐⭐ (new feature area, simple model) |
 | 14 | "Can't Fail" Habit Fallback | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (data model addition + UI) |
 
@@ -100,13 +100,11 @@ Could animate the points counter briefly or show a small floating number that fa
 
 ---
 
-## 7. Label Management
+## 7. Label Management — ✅ BUILT
 
-Add a dedicated settings page where you can configure, add, delete, and edit labels. Currently labels are pre-seeded (Health, Exercise, School, Work) and can only be created during habit/task creation. A proper management page would let you:
-- Rename labels
-- Change label colors
-- Delete unused labels
-- Create new labels independently
+~~Add a dedicated settings page where you can configure, add, delete, and edit labels.~~
+
+**Implemented:** Settings → Labels. Full CRUD with 10 color options. Labels shared across habits and tasks.
 
 ---
 
@@ -163,11 +161,11 @@ Requires: a `chain_id` and `chain_order` on habits, plus UI to create/edit chain
 
 ---
 
-## 12. Medicine Hides When Taken
+## 12. Medicine Hides When Taken — ✅ BUILT
 
-On the homepage, hide medications from the checklist once they've been taken for the day. Currently they stay visible (greyed out). Hiding them reduces visual clutter and gives a cleaner "all done" feeling.
+~~On the homepage, hide medications from the checklist once they've been taken for the day.~~
 
-Could show a summary instead: "All 3 medications taken ✓" when everything is checked off.
+**Implemented:** Taken medicines are hidden from homepage. When all are done, shows green "All X medications taken ✓" summary. Also added frequency-aware display — "every other day" medicines only show on their scheduled days.
 
 ---
 
