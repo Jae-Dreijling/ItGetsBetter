@@ -16,7 +16,7 @@ import { useTodaysWaterTotal } from '../../hooks/useWater'
 import { useCurrentFast, formatFastingDuration } from '../../hooks/useFasting'
 import { useTodaysExercise } from '../../hooks/useExercise'
 import { useTodaysMood } from '../../hooks/useMood'
-import { useActiveMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
+import { useTodaysMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
 import { usePointsBalance } from '../../hooks/usePoints'
 import { useIsReturningAfterAbsence, getWelcomeBackMessage } from '../../hooks/useWelcomeBack'
 import { wasStarterOffered } from '../../lib/starterHabits'
@@ -46,7 +46,7 @@ export default function HomePage() {
   const fast = useCurrentFast(16)
   const todaysExercise = useTodaysExercise()
   const todaysMood = useTodaysMood()
-  const activeMeds = useActiveMedicines()
+  const activeMeds = useTodaysMedicines()
   const todaysMedLogs = useTodaysMedicineLogs()
   const points = usePointsBalance()
   const isReturning = useIsReturningAfterAbsence()
@@ -269,36 +269,29 @@ export default function HomePage() {
         {medsTotal > 0 && (
           <div className="mb-4 space-y-3">
             <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">Medicine</h2>
-            <div className="space-y-2">
-              {activeMeds!.map(med => {
-                const taken = isMedTaken(med.id!)
-                return (
+            {medsTaken < medsTotal ? (
+              <div className="space-y-2">
+                {activeMeds!.filter(med => !isMedTaken(med.id!)).map(med => (
                   <div
                     key={med.id}
-                    className={`flex items-center gap-3 rounded-xl bg-card px-4 py-3 shadow-sm transition-opacity ${taken ? 'opacity-60' : ''}`}
+                    className="flex items-center gap-3 rounded-xl bg-card px-4 py-3 shadow-sm"
                   >
                     <button
                       onClick={() => toggleMedicineLog(med.id!)}
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                        taken
-                          ? 'border-success bg-success text-white'
-                          : 'border-secondary-300 hover:border-secondary-500'
-                      }`}
-                    >
-                      {taken && <Check className="h-3 w-3" />}
-                    </button>
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-secondary-300 hover:border-secondary-500 transition-colors"
+                    />
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium text-text-primary ${taken ? 'line-through' : ''}`}>
-                        {med.name}
-                      </p>
+                      <p className="text-sm font-medium text-text-primary">{med.name}</p>
                     </div>
                     <Pill className="h-4 w-4 text-muted" />
                   </div>
-                )
-              })}
-            </div>
-            {medsTotal > 0 && (
-              <p className="text-xs text-muted text-center">{medsTaken} / {medsTotal} taken</p>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2 rounded-xl bg-success/10 px-4 py-3">
+                <Check className="h-4 w-4 text-success" />
+                <p className="text-sm font-medium text-success">All {medsTotal} medications taken</p>
+              </div>
             )}
           </div>
         )}
