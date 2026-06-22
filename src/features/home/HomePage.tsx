@@ -16,7 +16,7 @@ import { useTodaysWaterTotal } from '../../hooks/useWater'
 import { useCurrentFast, formatFastingDuration } from '../../hooks/useFasting'
 import { useTodaysExercise } from '../../hooks/useExercise'
 import { useTodaysMood } from '../../hooks/useMood'
-import { useActiveMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
+import { useTodaysMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
 import { usePointsBalance } from '../../hooks/usePoints'
 import { useIsReturningAfterAbsence, getWelcomeBackMessage } from '../../hooks/useWelcomeBack'
 import { wasStarterOffered } from '../../lib/starterHabits'
@@ -46,7 +46,7 @@ export default function HomePage() {
   const fast = useCurrentFast(16)
   const todaysExercise = useTodaysExercise()
   const todaysMood = useTodaysMood()
-  const activeMeds = useActiveMedicines()
+  const activeMeds = useTodaysMedicines()
   const todaysMedLogs = useTodaysMedicineLogs()
   const points = usePointsBalance()
   const isReturning = useIsReturningAfterAbsence()

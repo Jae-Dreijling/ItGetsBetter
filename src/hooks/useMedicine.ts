@@ -9,6 +9,33 @@ export function useActiveMedicines() {
   )
 }
 
+export function isMedicineDueToday(medicine: { id?: number; frequency: string; created_at: string }): boolean {
+  const freq = medicine.frequency
+  if (freq === 'daily') return true
+  if (freq === 'as needed') return true
+
+  if (freq === 'every other day') {
+    const created = new Date(medicine.created_at)
+    const today = new Date(getLogicalDate() + 'T12:00:00')
+    const daysDiff = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
+    return daysDiff % 2 === 0
+  }
+
+  if (freq === 'weekly') {
+    const created = new Date(medicine.created_at)
+    const today = new Date(getLogicalDate() + 'T12:00:00')
+    return today.getDay() === created.getDay()
+  }
+
+  return true
+}
+
+export function useTodaysMedicines() {
+  const active = useActiveMedicines()
+  if (!active) return undefined
+  return active.filter(m => isMedicineDueToday(m))
+}
+
 export function useAllMedicines() {
   return useLiveQuery(() => db.medicines.toArray())
 }
