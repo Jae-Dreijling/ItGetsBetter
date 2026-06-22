@@ -1,9 +1,9 @@
 # ItGetsBetter — Product Requirements Document
 
-**Version:** 1.0
-**Date:** 2026-06-18
+**Version:** 2.0
+**Date:** 2026-06-22
 **Author:** Product Definition (Interview-Driven)
-**Status:** Draft — Pending Technical Architecture
+**Status:** Implemented — All 7 phases complete
 
 ---
 
@@ -1257,27 +1257,27 @@ These features were identified during requirements gathering but are explicitly 
 
 ---
 
-## 18. Unresolved Decisions
+## 18. Previously Unresolved Decisions — Now Resolved
 
-The following decisions were identified during requirements gathering but not yet resolved. They should be addressed before or during implementation of their respective features.
+All decisions identified during requirements gathering have been resolved during implementation (Phases 0-7).
 
-| Decision | Options | Impact | When to Decide |
-|---|---|---|---|
-| **Mood scale range** | 1-5 (consistent with health score) vs. 1-10 (more granularity) | Affects mood data resolution and insight quality | Before mood tracking implementation |
-| **Sleep quality scale range** | 1-5 vs. 1-10 | Same as above | Before sleep tracking implementation |
-| **Quote rotation strategy** | Random, sequential, or weighted (less-shown quotes prioritized) | Minor UX impact | Before notification implementation |
-| **Points values per action** | Exact point values for each earnable action (meal logged, habit completed, etc.) | Core to the reward economy — must feel balanced | Before points system implementation |
-| **Achievement library contents** | Specific achievements, trigger conditions, and fun descriptions | Requires creative writing and milestone planning | Before achievements implementation |
-| **Fasting "broken early" indicator** | Gentle notification vs. silent visual indicator only | Affects UX tone | Before fasting implementation |
-| **Bottom tab bar composition** | Which 3-4 screens get tabs vs. side menu | Core navigation UX | Before UI design |
-| **Tech stack** | ~~React Native, Flutter, PWA, or other~~ **Resolved: PWA with React + TypeScript + Vite + Tailwind + Dexie.js** (see [ARCHITECTURE.md](ARCHITECTURE.md)) | Foundational architectural decision | **Decided** |
-| **Backup mechanism** | Encrypted local file export, encrypted cloud (which provider), or self-hosted | Affects privacy and convenience tradeoff | Before backup implementation |
-| **Health insight engine approach** | Statistical rules, local LLM, or hybrid | Affects infrastructure requirements and accuracy | Before insights implementation |
-| **Photo storage thresholds** | Exact storage limit (in MB/GB) that triggers early food photo deletion | Device-dependent | Before photo management implementation |
-| **Minimum data threshold for insights** | How many weeks/entries before correlations are surfaced | Affects when insights become available | Before insights implementation |
-| **Habit completion points escalation** | How streak bonus points scale (linear, logarithmic, capped) | Affects points economy balance | Before points system implementation |
-| **Wake feeling input method** | Free text, predefined options, emoji, or scale | UX decision | Before sleep tracking implementation |
+| Decision | Resolution |
+|---|---|
+| **Mood scale range** | **1-5** (consistent with health score) |
+| **Sleep quality scale range** | **1-5** (consistent with other scales) |
+| **Quote rotation strategy** | **Random** from user's custom pool, falling back to built-in messages |
+| **Points values per action** | **Resolved** — Meal: 5, Weight: 3, Habit: 5, Task: 5, Exercise: 10, Water goal: 5, Fasting goal: 10, Sleep: 3, Mood: 2, Medicine: 2, Streak bonus: 1/day (capped at 21). All meals earn flat points regardless of health score. |
+| **Achievement library contents** | **28 achievements** across 7 categories: weight loss (fun comparisons), meal logging, weight logging, app usage streaks, exercise, water goals, and total points |
+| **Fasting "broken early" indicator** | **Silent visual indicator** — progress bar changes color, no punitive notification |
+| **Bottom tab bar composition** | **4 tabs:** Home, Log, To-Do, Me. Side menu (hamburger) for secondary navigation |
+| **Tech stack** | **PWA:** React 19 + TypeScript + Vite + Tailwind CSS 4 + Dexie.js + Recharts + Zustand |
+| **Backup mechanism** | **Encrypted local file export** (.igb file, AES-256-GCM, password-protected). One-tap create/restore. |
+| **Health insight engine approach** | **Statistical rules** — client-side Pearson-style correlation analysis across 4 metric pairs (sleep↔meals, mood↔meals, exercise↔mood, mood tags↔mood). User confirms/rejects. |
+| **Photo storage thresholds** | Food photos compressed at 3 months (50KB), deleted at 1 year. Progress photos compressed at 1 year (100KB). Lifecycle runs weekly on app open. |
+| **Minimum data threshold for insights** | **7+ entries** per metric minimum (e.g., 7 sleep entries + 14 meal entries to correlate sleep↔meals). 3+ data points required per comparison bucket. |
+| **Habit completion points escalation** | **Linear** streak bonus: 1 point per streak day, capped at 21 days |
+| **Wake feeling input method** | **Free text** — open-ended, user writes whatever they feel |
 
 ---
 
-*This document represents the complete product definition for ItGetsBetter as of 2026-06-18. It is based on a structured requirements interview and should be treated as the source of truth for product decisions. Technical architecture and implementation planning should proceed from this document.*
+*This document represents the complete product definition for ItGetsBetter as of 2026-06-22. All 7 development phases have been implemented. The app is deployed on Cloudflare Pages with Cloudflare Access for privacy. See [IDEAS.md](IDEAS.md) for future feature concepts.*
