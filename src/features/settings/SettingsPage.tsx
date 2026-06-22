@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
@@ -47,6 +47,17 @@ export default function SettingsPage() {
             <div>
               <p className="font-medium text-text-primary">Schedule & Modes</p>
               <p className="text-sm text-muted">Day profiles, exam/quiet mode</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/settings/labels')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Tag className="h-5 w-5 text-accent-600" />
+            <div>
+              <p className="font-medium text-text-primary">Labels</p>
+              <p className="text-sm text-muted">Manage habit & task categories</p>
             </div>
           </button>
 
