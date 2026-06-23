@@ -102,6 +102,7 @@ function HabitForm({ labels, onSave, initial }: {
   const [frequency, setFrequency] = useState<HabitFrequency>(initial?.frequency ?? 'daily')
   const [customDays, setCustomDays] = useState<Weekday[]>(initial?.custom_days ?? [])
   const [selectedLabels, setSelectedLabels] = useState<number[]>(initial?.label_ids ?? [])
+  const [cantFail, setCantFail] = useState(initial?.cant_fail_description ?? '')
   const [isQueued, setIsQueued] = useState(initial?.is_queued ?? false)
 
   function toggleDay(day: Weekday) {
@@ -119,12 +120,14 @@ function HabitForm({ labels, onSave, initial }: {
         label_ids: selectedLabels,
         frequency,
         custom_days: frequency === 'custom' ? customDays : [],
+        cant_fail_description: cantFail.trim() || null,
       })
     } else {
       await addHabit({
         title: title.trim(),
         label_ids: selectedLabels,
         frequency,
+        cant_fail_description: cantFail.trim() || null,
         custom_days: frequency === 'custom' ? customDays : [],
         is_queued: isQueued,
       })
@@ -193,6 +196,17 @@ function HabitForm({ labels, onSave, initial }: {
           <LabelPicker labels={labels} selected={selectedLabels} onChange={setSelectedLabels} />
         </div>
       )}
+
+      <div className="mb-3">
+        <p className="mb-1.5 text-xs font-medium text-muted">Can't fail version (optional)</p>
+        <input
+          type="text"
+          value={cantFail}
+          onChange={e => setCantFail(e.target.value)}
+          placeholder="e.g., 10 min walk instead of 30 min"
+          className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+        />
+      </div>
 
       {!initial && (
         <label className="mb-4 flex items-center gap-2 text-sm text-text-primary cursor-pointer">

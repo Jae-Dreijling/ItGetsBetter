@@ -62,6 +62,7 @@ export interface Habit {
   label_ids: number[]
   frequency: HabitFrequency
   custom_days: Weekday[]
+  cant_fail_description: string | null
   is_active: boolean
   is_queued: boolean
   activated_at: string | null
@@ -72,6 +73,7 @@ export interface HabitCompletion {
   id?: number
   habit_id: number
   date: string
+  is_cant_fail: boolean
   logged_at: string
 }
 
@@ -187,6 +189,36 @@ export interface Achievement {
   trigger_value: number
   is_unlocked: boolean
   unlocked_at: string | null
+}
+
+export interface GroceryList {
+  id?: number
+  name: string
+  is_template: boolean
+  created_at: string
+}
+
+export interface GroceryItem {
+  id?: number
+  list_id: number
+  name: string
+  quantity: string | null
+  is_checked: boolean
+  created_at: string
+}
+
+export interface Book {
+  id?: number
+  title: string
+  author: string | null
+  total_pages: number
+  current_page: number
+  rating: number | null
+  notes: string | null
+  status: 'reading' | 'finished' | 'dropped'
+  started_at: string
+  finished_at: string | null
+  created_at: string
 }
 
 export interface ProgressPhoto {

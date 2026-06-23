@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { X, BarChart3, Lightbulb, CalendarCheck, Trophy, Gift, Camera, FileSpreadsheet, Download, Settings, Heart } from 'lucide-react'
+import { X, BarChart3, Lightbulb, CalendarCheck, Trophy, Gift, Camera, ShoppingCart, BookOpen, FileSpreadsheet, Download, Settings, Heart } from 'lucide-react'
 
 interface SideMenuProps {
   isOpen: boolean
@@ -13,6 +13,8 @@ const links = [
   { label: 'Achievements', icon: Trophy, path: '/me/achievements' },
   { label: 'Reward Shop', icon: Gift, path: '/me/rewards' },
   { label: 'Progress Photos', icon: Camera, path: '/me/photos' },
+  { label: 'Grocery Lists', icon: ShoppingCart, path: '/me/grocery' },
+  { label: 'Books', icon: BookOpen, path: '/me/books' },
   { label: 'Export Data', icon: FileSpreadsheet, path: '/settings/export' },
   { label: 'Backup & Restore', icon: Download, path: '/settings/backup' },
   { label: 'Settings', icon: Settings, path: '/settings' },
