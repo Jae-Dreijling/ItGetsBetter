@@ -262,7 +262,7 @@ function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habi
         {!isDone && habit.cant_fail_description && (
           <button
             onClick={onCantFail}
-            className="mt-1 rounded-full bg-accent-100 px-2.5 py-0.5 text-[10px] font-medium text-accent-700 hover:bg-accent-200 transition-colors"
+            className="mt-1 rounded-full bg-accent-100 px-2.5 py-0.5 text-[11px] font-medium text-accent-700 hover:bg-accent-200 transition-colors"
           >
             Can't fail: {habit.cant_fail_description}
           </button>
@@ -275,13 +275,13 @@ function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habi
                 style={{ width: `${Math.min((daysSinceActivation / 30) * 100, 100)}%` }}
               />
             </div>
-            <span className="text-[10px] text-muted shrink-0">
+            <span className="text-[11px] text-muted shrink-0">
               Day {Math.min(daysSinceActivation, 30)}/30 · {consistency}%
             </span>
           </div>
         )}
         {isFormed && (
-          <p className="mt-0.5 text-[10px] text-success font-medium">✓ Habit formed!</p>
+          <p className="mt-0.5 text-[11px] text-success font-medium">✓ Habit formed!</p>
         )}
       </div>
       <Target className="h-4 w-4 shrink-0 text-muted" />

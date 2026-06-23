@@ -181,7 +181,7 @@ function GroceryListView({ listId, onBack }: { listId: number; onBack: () => voi
 
   return (
     <>
-      <TopBar title={list?.name ?? 'List'} onMenuClick={onBack} />
+      <TopBar title={list?.name ?? 'List'} onBack={onBack} />
       <PageContainer>
         <div className="mb-4 flex gap-2">
           <div className="flex flex-1 gap-2">

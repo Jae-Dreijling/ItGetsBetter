@@ -80,7 +80,7 @@ export default function ScheduleSettings() {
                 }`}
               >
                 <span>{name}</span>
-                <span className="text-[10px]">{weeklyDefaults[i] === 'school_day' ? '📚' : '☀️'}</span>
+                <span className="text-[11px]">{weeklyDefaults[i] === 'school_day' ? '📚' : '☀️'}</span>
               </button>
             ))}
           </div>

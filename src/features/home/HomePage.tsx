@@ -61,9 +61,15 @@ export default function HomePage() {
 
   const today = getLogicalDate()
   const tomorrow = format(addDays(parseISO(today), 1), 'yyyy-MM-dd')
-  const homepageTasks = pendingTasks?.filter(t =>
+  const homepageTasks = (pendingTasks?.filter(t =>
     (t.due_date && t.due_date <= tomorrow) || t.show_in_today
-  ) ?? []
+  ) ?? [])
+    .sort((a, b) => {
+      const aUrgency = !a.due_date ? 2 : a.due_date <= today ? 0 : a.due_date <= tomorrow ? 1 : 3
+      const bUrgency = !b.due_date ? 2 : b.due_date <= today ? 0 : b.due_date <= tomorrow ? 1 : 3
+      return aUrgency - bUrgency
+    })
+    .slice(0, 5)
 
   const displayName = profile?.display_name ?? 'friend'
 
