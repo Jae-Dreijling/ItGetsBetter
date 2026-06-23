@@ -29,6 +29,8 @@ export async function addStarterHabits(selectedIndices: number[]) {
       label_ids: labelId ? [labelId] : [],
       frequency: habit.frequency,
       custom_days: [],
+      cant_fail_description: null,
+      progression: null,
       is_active: true,
       is_queued: false,
       activated_at: nowISO(),

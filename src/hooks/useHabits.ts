@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
+import { shouldAdvance, getNextValue } from '../lib/progression'
 import type { HabitFrequency, Weekday } from '../types'
 
 export function useActiveHabits() {
@@ -68,6 +69,8 @@ export async function addHabit(data: {
   label_ids: number[]
   frequency: HabitFrequency
   custom_days?: Weekday[]
+  cant_fail_description?: string | null
+  progression?: import('../types').HabitProgression | null
   is_queued?: boolean
 }) {
   await db.habits.add({
@@ -75,6 +78,8 @@ export async function addHabit(data: {
     label_ids: data.label_ids,
     frequency: data.frequency,
     custom_days: data.custom_days ?? [],
+    cant_fail_description: data.cant_fail_description ?? null,
+    progression: data.progression ?? null,
     is_active: !data.is_queued,
     is_queued: data.is_queued ?? false,
     activated_at: data.is_queued ? null : nowISO(),
@@ -87,26 +92,75 @@ export async function updateHabit(id: number, changes: Partial<{
   label_ids: number[]
   frequency: HabitFrequency
   custom_days: Weekday[]
+  cant_fail_description: string | null
+  progression: import('../types').HabitProgression | null
   is_active: boolean
   is_queued: boolean
 }>) {
   await db.habits.update(id, changes)
 }
 
-export async function canActivateInCategory(labelIds: number[]): Promise<boolean> {
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-  const weekAgoStr = oneWeekAgo.toISOString()
+export interface HabitFormationStatus {
+  habitId: number
+  habitTitle: string
+  daysSinceActivation: number
+  completionsInWindow: number
+  requiredCompletions: number
+  consistency: number
+  isFormed: boolean
+}
 
-  const recentlyActivated = await db.habits
-    .filter(h => h.is_active === true && h.activated_at !== null && h.activated_at > weekAgoStr)
+export async function getHabitFormationStatus(habitId: number): Promise<HabitFormationStatus | null> {
+  const habit = await db.habits.get(habitId)
+  if (!habit || !habit.is_active || !habit.activated_at) return null
+
+  const activatedDate = new Date(habit.activated_at)
+  const now = new Date()
+  const daysSince = Math.floor((now.getTime() - activatedDate.getTime()) / (1000 * 60 * 60 * 24))
+  const window = Math.min(daysSince, 30)
+
+  if (window < 1) return { habitId: habit.id!, habitTitle: habit.title, daysSinceActivation: 0, completionsInWindow: 0, requiredCompletions: 23, consistency: 0, isFormed: false }
+
+  const fromDate = new Date(now)
+  fromDate.setDate(fromDate.getDate() - window)
+  fromDate.setHours(12, 0, 0, 0)
+  const fromStr = getLogicalDate(fromDate)
+
+  const completions = await db.habitCompletions
+    .where('habit_id').equals(habit.id!)
+    .and(c => c.date >= fromStr)
     .toArray()
 
-  for (const habit of recentlyActivated) {
-    const overlap = habit.label_ids.some(id => labelIds.includes(id))
-    if (overlap) return false
+  const requiredCompletions = Math.ceil(30 * 0.75)
+  const consistency = window > 0 ? Math.round((completions.length / window) * 100) : 0
+  const isFormed = daysSince >= 30 && completions.length >= requiredCompletions
+
+  return {
+    habitId: habit.id!,
+    habitTitle: habit.title,
+    daysSinceActivation: daysSince,
+    completionsInWindow: completions.length,
+    requiredCompletions,
+    consistency,
+    isFormed,
   }
-  return true
+}
+
+export async function canActivateInCategory(labelIds: number[]): Promise<{ allowed: boolean; blockingHabit?: string }> {
+  const activeHabits = await db.habits
+    .filter(h => h.is_active === true && h.activated_at !== null)
+    .toArray()
+
+  for (const habit of activeHabits) {
+    const overlap = habit.label_ids.some(id => labelIds.includes(id))
+    if (!overlap) continue
+
+    const status = await getHabitFormationStatus(habit.id!)
+    if (status && !status.isFormed) {
+      return { allowed: false, blockingHabit: `"${habit.title}" needs ${30 - status.daysSinceActivation} more days (${status.consistency}% consistency)` }
+    }
+  }
+  return { allowed: true }
 }
 
 export async function activateHabit(id: number) {
@@ -124,7 +178,7 @@ export async function deleteHabit(id: number) {
   })
 }
 
-export async function toggleHabitCompletion(habitId: number) {
+export async function toggleHabitCompletion(habitId: number, cantFail: boolean = false) {
   const today = getLogicalDate()
   const existing = await db.habitCompletions
     .where('habit_id').equals(habitId)
@@ -137,8 +191,48 @@ export async function toggleHabitCompletion(habitId: number) {
     const id = await db.habitCompletions.add({
       habit_id: habitId,
       date: today,
+      is_cant_fail: cantFail,
       logged_at: nowISO(),
     })
-    await awardPoints('habit_completed', id as number)
+    await awardPoints(cantFail ? 'habit_cant_fail' : 'habit_completed', id as number)
+  }
+}
+
+export async function checkProgressionAdvancements() {
+  const habits = await db.habits.filter(h =>
+    h.is_active === true && h.progression !== null && h.progression !== undefined
+  ).toArray()
+
+  for (const habit of habits) {
+    const prog = habit.progression
+    if (!prog || !prog.enabled || prog.paused || prog.is_mastered) continue
+
+    const lastAdvanced = prog.last_advanced_at ? new Date(prog.last_advanced_at) : new Date(habit.activated_at ?? habit.created_at)
+    const daysSinceAdvance = Math.floor((Date.now() - lastAdvanced.getTime()) / (1000 * 60 * 60 * 24))
+
+    if (daysSinceAdvance < prog.interval_days) continue
+
+    const fromDate = new Date(lastAdvanced)
+    fromDate.setHours(12, 0, 0, 0)
+    const fromStr = getLogicalDate(fromDate)
+
+    const completions = await db.habitCompletions
+      .where('habit_id').equals(habit.id!)
+      .and(c => c.date >= fromStr)
+      .toArray()
+
+    if (shouldAdvance(prog, completions.length, daysSinceAdvance)) {
+      const nextValue = getNextValue(prog)
+      const isMastered = prog.cap !== null && nextValue >= prog.cap
+
+      await db.habits.update(habit.id!, {
+        progression: {
+          ...prog,
+          current_value: nextValue,
+          last_advanced_at: nowISO(),
+          is_mastered: isMastered,
+        },
+      })
+    }
   }
 }

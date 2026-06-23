@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book } from './types'
 
 const DEFAULT_LABELS = [
   { name: 'Health', color: '#5cb176' },
@@ -31,6 +31,9 @@ class ItGetsBetterDB extends Dexie {
   rewardClaims!: EntityTable<RewardClaim, 'id'>
   achievements!: EntityTable<Achievement, 'id'>
   progressPhotos!: EntityTable<ProgressPhoto, 'id'>
+  groceryLists!: EntityTable<GroceryList, 'id'>
+  groceryItems!: EntityTable<GroceryItem, 'id'>
+  books!: EntityTable<Book, 'id'>
 
   constructor() {
     super('ItGetsBetter')
@@ -167,6 +170,69 @@ class ItGetsBetterDB extends Dexie {
       customQuotes: '++id',
       scheduleProfiles: '++id, &profile_name',
       dayConfigs: '&date',
+    })
+
+    this.version(8).stores({
+      userProfile: '++id',
+      weightEntries: '++id, date, logged_at',
+      mealEntries: '++id, date, meal_slot, logged_at',
+      measurements: '++id, date',
+      appOpenLog: '++id, date',
+      labels: '++id',
+      habits: '++id, is_active, is_queued',
+      habitCompletions: '++id, habit_id, date',
+      tasks: '++id, project_id, parent_task_id, is_completed, due_date, priority, show_in_today',
+      projects: '++id',
+      waterEntries: '++id, date, logged_at',
+      exerciseEntries: '++id, date, exercise_type',
+      moodEntries: '++id, date, logged_at',
+      moodTags: '++id',
+      sleepEntries: '++id, date',
+      medicines: '++id, is_active',
+      medicineLogs: '++id, medicine_id, date',
+      pointsTransactions: '++id, source_type, date',
+      rewards: '++id, is_available',
+      rewardClaims: '++id, reward_id, claimed_at',
+      achievements: '++id, trigger_type, is_unlocked',
+      progressPhotos: '++id, date',
+      healthInsights: '++id, correlation_type, is_confirmed, is_rejected',
+      customQuotes: '++id',
+      scheduleProfiles: '++id, &profile_name',
+      dayConfigs: '&date',
+      groceryLists: '++id, is_template',
+      groceryItems: '++id, list_id, is_checked',
+    })
+
+    this.version(9).stores({
+      userProfile: '++id',
+      weightEntries: '++id, date, logged_at',
+      mealEntries: '++id, date, meal_slot, logged_at',
+      measurements: '++id, date',
+      appOpenLog: '++id, date',
+      labels: '++id',
+      habits: '++id, is_active, is_queued',
+      habitCompletions: '++id, habit_id, date',
+      tasks: '++id, project_id, parent_task_id, is_completed, due_date, priority, show_in_today',
+      projects: '++id',
+      waterEntries: '++id, date, logged_at',
+      exerciseEntries: '++id, date, exercise_type',
+      moodEntries: '++id, date, logged_at',
+      moodTags: '++id',
+      sleepEntries: '++id, date',
+      medicines: '++id, is_active',
+      medicineLogs: '++id, medicine_id, date',
+      pointsTransactions: '++id, source_type, date',
+      rewards: '++id, is_available',
+      rewardClaims: '++id, reward_id, claimed_at',
+      achievements: '++id, trigger_type, is_unlocked',
+      progressPhotos: '++id, date',
+      healthInsights: '++id, correlation_type, is_confirmed, is_rejected',
+      customQuotes: '++id',
+      scheduleProfiles: '++id, &profile_name',
+      dayConfigs: '&date',
+      groceryLists: '++id, is_template',
+      groceryItems: '++id, list_id, is_checked',
+      books: '++id, status',
     })
 
     this.on('populate', () => {

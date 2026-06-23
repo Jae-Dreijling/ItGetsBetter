@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
 import { db, ensureDefaults } from './db'
+import { checkProgressionAdvancements } from './hooks/useHabits'
 import { shouldRunLifecycle, runPhotoLifecycle, markLifecycleRun } from './lib/photoLifecycle'
 import { getLogicalDate, nowISO } from './lib/date'
 import { useProfile } from './hooks/useProfile'
@@ -10,6 +11,7 @@ import UpdatePrompt from './components/UpdatePrompt'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppLock, { isLockEnabled } from './components/AppLock'
 import InstallPrompt from './components/InstallPrompt'
+import PointsToast from './components/PointsToast'
 import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
 import HomePage from './features/home/HomePage'
@@ -34,6 +36,9 @@ import TasksPage from './features/todo/TasksPage'
 const ExportPage = lazy(() => import('./features/settings/ExportPage'))
 const QuoteManager = lazy(() => import('./features/settings/QuoteManager'))
 const ScheduleSettings = lazy(() => import('./features/settings/ScheduleSettings'))
+const LabelManager = lazy(() => import('./features/settings/LabelManager'))
+const GroceryPage = lazy(() => import('./features/grocery/GroceryPage'))
+const BooksPage = lazy(() => import('./features/books/BooksPage'))
 const RewardShopPage = lazy(() => import('./features/rewards/RewardShopPage'))
 const AchievementsPage = lazy(() => import('./features/achievements/AchievementsPage'))
 const GraphsDashboard = lazy(() => import('./features/graphs/GraphsDashboard'))
@@ -112,6 +117,9 @@ function AppContent() {
         <Route path="settings/export" element={<Suspense fallback={<LazyFallback />}><ExportPage /></Suspense>} />
         <Route path="settings/quotes" element={<Suspense fallback={<LazyFallback />}><QuoteManager /></Suspense>} />
         <Route path="settings/schedule" element={<Suspense fallback={<LazyFallback />}><ScheduleSettings /></Suspense>} />
+        <Route path="settings/labels" element={<Suspense fallback={<LazyFallback />}><LabelManager /></Suspense>} />
+        <Route path="me/grocery" element={<Suspense fallback={<LazyFallback />}><GroceryPage /></Suspense>} />
+        <Route path="me/books" element={<Suspense fallback={<LazyFallback />}><BooksPage /></Suspense>} />
       </Route>
     </Routes>
   )
@@ -133,6 +141,7 @@ export default function App() {
       if (shouldRunLifecycle()) {
         runPhotoLifecycle().then(() => markLifecycleRun())
       }
+      checkProgressionAdvancements()
     }
     init()
   }, [])
@@ -147,6 +156,7 @@ export default function App() {
       <ErrorBoundary feature="the app">
         <AppContent />
       </ErrorBoundary>
+      <PointsToast />
       <InstallPrompt />
     </BrowserRouter>
   )

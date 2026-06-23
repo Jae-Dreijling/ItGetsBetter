@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
@@ -14,6 +14,31 @@ export default function SettingsPage() {
   const [lockEnabled, setLockEnabled] = useState(isLockEnabled)
   const [showPinSetup, setShowPinSetup] = useState(false)
   const [newPin, setNewPin] = useState('')
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'current'>('idle')
+
+  async function checkForUpdate() {
+    setUpdateStatus('checking')
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration()
+      if (reg) {
+        await reg.update()
+        if (reg.waiting) {
+          setUpdateStatus('available')
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+          setTimeout(() => window.location.reload(), 1000)
+        } else {
+          setUpdateStatus('current')
+          setTimeout(() => setUpdateStatus('idle'), 3000)
+        }
+      } else {
+        setUpdateStatus('current')
+        setTimeout(() => setUpdateStatus('idle'), 3000)
+      }
+    } catch {
+      setUpdateStatus('current')
+      setTimeout(() => setUpdateStatus('idle'), 3000)
+    }
+  }
 
   async function cycleTheme() {
     if (!profile?.id) return
@@ -47,6 +72,17 @@ export default function SettingsPage() {
             <div>
               <p className="font-medium text-text-primary">Schedule & Modes</p>
               <p className="text-sm text-muted">Day profiles, exam/quiet mode</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/settings/labels')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Tag className="h-5 w-5 text-accent-600" />
+            <div>
+              <p className="font-medium text-text-primary">Labels</p>
+              <p className="text-sm text-muted">Manage habit & task categories</p>
             </div>
           </button>
 
@@ -161,6 +197,18 @@ export default function SettingsPage() {
             </p>
           </div>
         )}
+
+        <button
+          onClick={checkForUpdate}
+          disabled={updateStatus === 'checking'}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-card py-3 shadow-sm text-sm font-medium text-muted transition-colors hover:bg-surface"
+        >
+          <RefreshCw className={`h-4 w-4 ${updateStatus === 'checking' ? 'animate-spin' : ''}`} />
+          {updateStatus === 'checking' ? 'Checking...'
+            : updateStatus === 'available' ? 'Update found! Reloading...'
+            : updateStatus === 'current' ? 'App is up to date ✓'
+            : 'Check for Updates'}
+        </button>
 
         <p className="mt-4 text-center text-xs text-muted">ItGetsBetter v0.1.0</p>
       </PageContainer>

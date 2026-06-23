@@ -1,9 +1,22 @@
 # ItGetsBetter — MoSCoW Feature Prioritization
 
-**Version:** 1.0
-**Date:** 2026-06-18
-**Context:** One developer with AI assistance. Goal is a usable Version 1 as fast as possible.
+**Version:** 2.0
+**Date:** 2026-06-22
+**Context:** One developer with AI assistance. All 7 phases implemented.
 **Companion Documents:** [PRD.md](PRD.md) · [ARCHITECTURE.md](ARCHITECTURE.md)
+
+---
+
+## Current Status (2026-06-22)
+
+**All Must Have, Should Have, and Could Have features have been implemented.** The Won't Have Yet items remain deferred. This document is now a historical record of the prioritization decisions that guided development.
+
+| Priority | Original Count | Status |
+|---|---|---|
+| **Must Have** | 15 | ✅ All built (Phases 0-1) |
+| **Should Have** | 8 | ✅ All built (Phases 2-3) |
+| **Could Have** | 18 | ✅ All built (Phases 4-7) |
+| **Won't Have Yet** | 14 | ⏳ Deferred — see [IDEAS.md](IDEAS.md) for future concepts |
 
 ---
 

@@ -7,6 +7,7 @@ import LabelBadge from '../../components/LabelBadge'
 import PriorityBadge from '../../components/PriorityBadge'
 import StreakDisplay from '../../components/StreakDisplay'
 import { useActiveHabits, useTodaysCompletions, useHabitCompletions, toggleHabitCompletion, isTodayScheduled } from '../../hooks/useHabits'
+import { formatProgressionValue } from '../../lib/progression'
 import { useTasks, useProjects, toggleTask } from '../../hooks/useTasks'
 import { useLabels } from '../../hooks/useLabels'
 import type { Habit, Task, Label, TaskPriority } from '../../types'
@@ -171,6 +172,7 @@ export default function TodoPage() {
                     isDone={isHabitDone(habit.id!)}
                     labels={habit.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
                     onToggle={() => toggleHabitCompletion(habit.id!)}
+                    onCantFail={() => toggleHabitCompletion(habit.id!, true)}
                   />
                 ))}
               </div>
@@ -227,9 +229,16 @@ export default function TodoPage() {
   )
 }
 
-function HabitRow({ habit, isDone, labels, onToggle }: { habit: Habit; isDone: boolean; labels: Label[]; onToggle: () => void }) {
-  const completions = useHabitCompletions(habit.id!, 21)
+function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habit; isDone: boolean; labels: Label[]; onToggle: () => void; onCantFail: () => void }) {
+  const completions = useHabitCompletions(habit.id!, 30)
   const streakCount = completions?.length ?? 0
+
+  const daysSinceActivation = habit.activated_at
+    ? Math.floor((Date.now() - new Date(habit.activated_at).getTime()) / (1000 * 60 * 60 * 24))
+    : 0
+  const formationWindow = Math.min(daysSinceActivation, 30)
+  const consistency = formationWindow > 0 ? Math.round((streakCount / formationWindow) * 100) : 0
+  const isFormed = daysSinceActivation >= 30 && streakCount >= 23
 
   return (
     <div className={`flex items-center gap-3 rounded-lg bg-card px-4 py-3 shadow-sm transition-opacity ${isDone ? 'opacity-60' : ''}`}>
@@ -246,11 +255,42 @@ function HabitRow({ habit, isDone, labels, onToggle }: { habit: Habit; isDone: b
       <div className="flex-1 min-w-0">
         <p className={`font-medium text-text-primary truncate ${isDone ? 'line-through' : ''}`}>
           {habit.title}
+          {habit.progression?.enabled && (
+            <span className={`ml-1.5 text-xs font-normal ${habit.progression.is_mastered ? 'text-success' : 'text-primary-500'}`}>
+              {habit.progression.is_mastered ? '👑 ' : ''}
+              {formatProgressionValue(habit.progression.current_value, habit.progression.unit)}
+              {habit.progression.paused && ' ⏸'}
+            </span>
+          )}
         </p>
         <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
           {labels.map(l => <LabelBadge key={l.id} name={l.name} color={l.color} />)}
-          <StreakDisplay completedCount={streakCount} frequency={habit.frequency} customDays={habit.custom_days} />
+          <StreakDisplay completedCount={streakCount} frequency={habit.frequency} customDays={habit.custom_days} lookbackDays={30} />
         </div>
+        {!isDone && habit.cant_fail_description && (
+          <button
+            onClick={onCantFail}
+            className="mt-1 rounded-full bg-accent-100 px-2.5 py-0.5 text-[11px] font-medium text-accent-700 hover:bg-accent-200 transition-colors"
+          >
+            Can't fail: {habit.cant_fail_description}
+          </button>
+        )}
+        {!isFormed && daysSinceActivation > 0 && (
+          <div className="mt-1 flex items-center gap-1.5">
+            <div className="h-1.5 flex-1 rounded-full bg-surface overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${consistency >= 75 ? 'bg-success' : 'bg-accent-400'}`}
+                style={{ width: `${Math.min((daysSinceActivation / 30) * 100, 100)}%` }}
+              />
+            </div>
+            <span className="text-[11px] text-muted shrink-0">
+              Day {Math.min(daysSinceActivation, 30)}/30 · {consistency}%
+            </span>
+          </div>
+        )}
+        {isFormed && (
+          <p className="mt-0.5 text-[11px] text-success font-medium">✓ Habit formed!</p>
+        )}
       </div>
       <Target className="h-4 w-4 shrink-0 text-muted" />
     </div>

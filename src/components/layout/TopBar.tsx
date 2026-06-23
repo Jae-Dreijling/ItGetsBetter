@@ -1,15 +1,20 @@
-import { Menu } from 'lucide-react'
+import { Menu, ArrowLeft } from 'lucide-react'
 
 interface TopBarProps {
   title: string
   onMenuClick?: () => void
+  onBack?: () => void
 }
 
-export default function TopBar({ title, onMenuClick }: TopBarProps) {
+export default function TopBar({ title, onMenuClick, onBack }: TopBarProps) {
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center border-b border-primary-100 dark:border-primary-900 bg-card px-4">
-      {onMenuClick ? (
-        <button onClick={onMenuClick} className="p-1.5 text-muted hover:text-text-primary mr-2">
+      {onBack ? (
+        <button onClick={onBack} className="p-1.5 text-muted hover:text-text-primary mr-2" aria-label="Go back">
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+      ) : onMenuClick ? (
+        <button onClick={onMenuClick} className="p-1.5 text-muted hover:text-text-primary mr-2" aria-label="Open menu">
           <Menu className="h-5 w-5" />
         </button>
       ) : (

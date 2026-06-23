@@ -1,8 +1,8 @@
 # ItGetsBetter — Technical Architecture Document
 
-**Version:** 1.0
-**Date:** 2026-06-18
-**Status:** Draft
+**Version:** 2.0
+**Date:** 2026-06-22
+**Status:** Implemented — All 7 phases complete
 **Companion Document:** [PRD.md](PRD.md)
 
 ---
@@ -285,62 +285,61 @@ All persistent data is stored in the browser's IndexedDB, accessed through Dexie
 
 ### 5.2 Database Schema (Dexie Definition)
 
-```typescript
-// db.ts — Dexie database definition
-// Each line defines a table with its indexed fields.
-// Fields prefixed with & are unique. Fields prefixed with * are multi-entry.
-// Only indexed fields are listed — all other fields from the PRD data
-// entities are stored but not indexed.
-//
-// IMPORTANT: Only define tables for features currently being built.
-// New tables are added via Dexie's versioned schema migration as
-// features are implemented. Do not pre-create empty tables.
+The database is currently at **version 7** with 25 tables. Schema migrations are handled automatically by Dexie — each version upgrade adds tables without losing data.
 
-const db = new Dexie('ItGetsBetter');
-
-// MVP: weight, meals, measurements, app open log
-db.version(1).stores({
-  userProfile:      '++id',
-  weightEntries:    '++id, date, logged_at',
-  mealEntries:      '++id, date, meal_slot, logged_at',
-  measurements:     '++id, date',
-  appOpenLog:       '++id, date',
-});
-
-// Phase 2 (example — add when building these features):
-// db.version(2).stores({
-//   waterEntries:     '++id, date, logged_at',
-//   fastingRecords:   '++id, date',
-//   labels:           '++id',
-//   habits:           '++id, is_active, is_queued',
-//   habitCompletions: '++id, habit_id, date',
-//   tasks:            '++id, project_id, parent_task_id, is_completed, due_date, priority',
-//   projects:         '++id',
-// });
+```
+Current schema (v7):
+├── userProfile:        ++id
+├── weightEntries:      ++id, date, logged_at
+├── mealEntries:        ++id, date, meal_slot, logged_at
+├── measurements:       ++id, date
+├── appOpenLog:         ++id, date
+├── labels:             ++id
+├── habits:             ++id, is_active, is_queued
+├── habitCompletions:   ++id, habit_id, date
+├── tasks:              ++id, project_id, parent_task_id, is_completed, due_date, priority, show_in_today
+├── projects:           ++id
+├── waterEntries:       ++id, date, logged_at
+├── exerciseEntries:    ++id, date, exercise_type
+├── moodEntries:        ++id, date, logged_at
+├── moodTags:           ++id
+├── sleepEntries:       ++id, date
+├── medicines:          ++id, is_active
+├── medicineLogs:       ++id, medicine_id, date
+├── pointsTransactions: ++id, source_type, date
+├── rewards:            ++id, is_available
+├── rewardClaims:       ++id, reward_id, claimed_at
+├── achievements:       ++id, trigger_type, is_unlocked
+├── progressPhotos:     ++id, date
+├── healthInsights:     ++id, correlation_type, is_confirmed, is_rejected
+├── customQuotes:       ++id
+├── scheduleProfiles:   ++id, &profile_name
+└── dayConfigs:         &date
 ```
 
 ### 5.3 Indexing Strategy
 
-Indexes are chosen based on query patterns derived from the PRD. Only MVP tables are indexed in version 1 — additional indexes are added with their features.
+Indexes are chosen based on query patterns. All tables are indexed for their primary access patterns:
 
-**MVP indexes:**
+**All indexes:**
 
 | Table | Indexed Fields | Why |
 |---|---|---|
 | weightEntries | date, logged_at | Query by date range for graphs. Sort by logged_at for "most recent." |
-| mealEntries | date, meal_slot, logged_at | Filter today's meals by slot. Query date ranges. logged_at drives future fasting calculation. |
+| mealEntries | date, meal_slot, logged_at | Filter today's meals by slot. logged_at drives fasting calculation. |
 | measurements | date | Query by date range for trend lines. |
 | appOpenLog | date | Calculate "X of last Y days" engagement metric. |
-
-**Future indexes (added with their features):**
-
-| Table | Indexed Fields | Why |
-|---|---|---|
-| habitCompletions | habit_id, date | "Show completions for habit X" and "show all completions for date Y." |
-| pointsTransactions | source_type, date | Sum points by date range. Filter by source for weekly review breakdown. |
-| tasks | project_id, parent_task_id, is_completed, due_date, priority | Filter by project, find sub-tasks of a parent, show incomplete, sort by due date or priority. |
-| dayConfigs | date (unique) | Lookup today's schedule profile. |
-| weeklyReviews | week_start (unique) | One review per week, lookup by week. |
+| habitCompletions | habit_id, date | Show completions for habit X and for date Y. |
+| pointsTransactions | source_type, date | Sum points by date range. Filter by source for weekly review. |
+| tasks | project_id, parent_task_id, is_completed, due_date, priority, show_in_today | Filter by project, find sub-tasks, sort by priority/due date. |
+| waterEntries | date, logged_at | Daily water total aggregation. |
+| exerciseEntries | date, exercise_type | Filter by date and type. |
+| moodEntries | date, logged_at | Filter by date for daily mood. |
+| sleepEntries | date | One entry per date lookup. |
+| medicineLogs | medicine_id, date | Check if medicine taken today. |
+| healthInsights | correlation_type, is_confirmed, is_rejected | Filter pending/confirmed/rejected insights. |
+| scheduleProfiles | profile_name (unique) | Lookup by "school_day" or "free_day". |
+| dayConfigs | date (unique) | Lookup today's schedule profile and mode. |
 
 ### 5.4 Day Boundary Implementation
 
@@ -1212,115 +1211,30 @@ On Push to Main:
 
 ---
 
-## 17. Phased Implementation Plan
+## 17. Implementation Status
 
-This plan maps the PRD's phased feature rollout to the technical architecture.
+All 7 phases have been implemented. See [ROADMAP.md](ROADMAP.md) for the detailed phase-by-phase breakdown.
 
-### Phase 1: MVP Foundation
+| Phase | Status | What was built |
+|---|---|---|
+| Phase 0: Project Setup | ✅ Complete | Vite + React + TS + Tailwind + Dexie + PWA + Vitest, deployed to Cloudflare Pages |
+| Phase 1: Core Foundation | ✅ Complete | Weight, meals, measurements, backup, dark mode, supportive messages |
+| Phase 2: Tasks & Habits | ✅ Complete | Habits (daily/weekly/monthly/custom days), tasks (priority, due dates, sub-tasks, labels, projects), unified To-Do view |
+| Phase 3: Health Tracking | ✅ Complete | Water tracking, fasting timer, exercise logging, welcome back messages |
+| Phase 4: Nutrition Tracking | ✅ Complete | Mood, sleep, medicine tracking, points system, reward shop, 28 achievements, homepage mood prompt |
+| Phase 5: Reporting & Insights | ✅ Complete | 8-chart graphs dashboard, weekly review, progress photos with comparison, Excel/ZIP export, health insight correlations |
+| Phase 6: Notifications | ✅ Complete | Custom quote pool, schedule profiles with weekly defaults, modes (exam/social/quiet), in-app notification queue, side menu |
+| Phase 7: Polish & Optimization | ✅ Complete | Auto theme, error boundaries, storage monitoring, lazy-loaded routes (37% bundle reduction), photo lifecycle manager, app lock (PIN), install prompt, habit enforcement, starter kit, accessibility, CI/CD |
+| Post-Phase Fixes | ✅ Complete | Label management CRUD, medicine frequency-aware display, medicine hides when taken, habit formation threshold (30 days/75%), fun weight loss comparisons, points earned toast, "Can't Fail" habit fallback (half credit), grocery lists with templates + shopping mode, book reading tracker |
 
-**Goal:** Weight logging, meal logging, body measurements. Core app shell. Encrypted backup. Usable daily.
+### Future Considerations (Not Yet Built)
 
-```
-Phase 1 Deliverables:
-├── Project setup (Vite + React + TypeScript + Tailwind)
-├── Dexie database (v1 schema: userProfile, weightEntries, mealEntries, measurements, appOpenLog)
-├── PWA setup (manifest, service worker, installable)
-├── navigator.storage.persist() on first launch (data durability)
-├── Platform detection (iOS guidance for "Add to Home Screen")
-├── App shell (bottom tabs, top bar, routing)
-├── Theme system (warm colors, light/dark mode with manual toggle)
-├── Home screen (supportive message, quick actions, mini dashboard)
-├── Weight feature (log, history, graph, BMI display, milestone goal)
-├── Meals feature (log with photo/name + health score, history, trend direction)
-├── Measurements feature (8-field optional form, history, previous values)
-├── Settings (profile: name, height, goal weight, light/dark toggle)
-├── First-launch setup flow (manual field entry)
-├── Encrypted backup (one-tap export/import with AES-256-GCM)
-├── getLogicalDate() with comprehensive unit tests
-└── Deploy to Cloudflare Pages
-```
-
-**Technical foundations built in Phase 1 that support all future phases:**
-- Dexie database with migration strategy
-- `getLogicalDate()` with full test coverage (3AM day boundary)
-- Feature-based folder structure
-- Reusable chart components
-- Photo capture pipeline
-- Encrypted backup infrastructure
-- Platform detection utilities
-- App shell with navigation
-
-### Phase 2: Daily Engagement
-
-**Goal:** Features that make the app worth opening every day.
-
-```
-Phase 2 Deliverables:
-├── Dexie v2 schema (add: waterEntries, fastingRecords, habits, habitCompletions,
-│   tasks, projects)
-├── Water tracking (quick-add buttons, undo, progress display)
-├── Fasting tracker (auto-calculated from meals, live timer, streak)
-├── Labels (shared category system for tasks and habits)
-├── Habits (active list, labels, daily check-off, "X of last Y days" display)
-├── Tasks (scrumboard: title, due date, priority, labels, sub-tasks, projects)
-├── To-Do unified view (habits + tasks combined, filterable by label)
-├── Welcome back message (absence detection)
-├── Auto light/dark mode (prefers-color-scheme + time-based)
-├── Smoothed weight trend line
-├── Measurement trend graphs
-└── Graphs dashboard (weight, meals, measurements across time ranges)
-```
-
-### Phase 3: Awareness & Reflection
-
-**Goal:** Features that create self-awareness and long-term engagement.
-
-```
-Phase 3 Deliverables:
-├── Dexie v3 schema (add: moodEntries, moodTags, sleepEntries, exerciseEntries,
-│   medicineLogs, medicines, healthInsights, weeklyReviews, scheduleProfiles, dayConfigs)
-├── Mood tracking (score + tags)
-├── Sleep tracking (hours, quality, wake feeling)
-├── Exercise tracking (type + optional details)
-├── Medicine tracking (reminders + taken/not taken log)
-├── Schedule profiles (school day / free day, manual assignment)
-├── Modes (exam, social, quiet)
-├── Weekly review generation (data aggregation, summaries, graphs)
-├── Graphs dashboard (all chart types, time range selection)
-├── Progress photos (capture, gallery, side-by-side comparison)
-├── Data export (Excel via SheetJS, PDF via jsPDF)
-├── Photo lifecycle manager (compression, deletion, download reminders)
-├── In-app notification queue (Tier 1 notifications)
-└── Notification rule engine (respects all PRD rules)
-```
-
-### Phase 4: Intelligence (Future)
-
-**Goal:** The app learns from your data and provides personalized insights.
-
-```
-Phase 4 Deliverables:
-├── Statistical correlation engine (client-side)
-│   ├── Simple: Pearson correlation between metric pairs
-│   ├── Medium: Pattern detection (e.g., "mood drops 2 days after X")
-│   └── Complex: Local LLM for natural language insight generation
-├── Health insight surfacing (with confirm/reject flow)
-├── Smart weekly review suggestions (data-driven, not template-based)
-├── Contextual notifications (Tier 2: service worker background checks)
-├── Automated encrypted backup (scheduled)
-└── Emotional support detection (low mood + silence → gentle outreach)
-```
-
-### Phase 5: Platform Expansion (Future)
-
-```
-Phase 5 Deliverables:
-├── Push notification server (Tier 3: Cloudflare Worker)
-├── Desktop-optimized layout (responsive breakpoints already built)
-├── Multi-device sync (Dexie Cloud or self-hosted)
-├── Smartwatch data import (pending privacy verification)
-└── Companion character (long-term, significant effort)
-```
+- Push notification server (Cloudflare Worker for scheduled notifications)
+- Desktop-optimized layout
+- Multi-device sync (Dexie Cloud)
+- Smartwatch data import
+- Companion character
+- See [IDEAS.md](IDEAS.md) for the full list of future feature concepts
 
 ---
 

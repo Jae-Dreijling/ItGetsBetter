@@ -8,6 +8,7 @@ import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
 import { useWeightEntries, useLatestWeight, addWeightEntry } from '../../hooks/useWeightEntries'
 import { getLogicalDate } from '../../lib/date'
+import { getWeightComparison } from '../../lib/weightComparisons'
 
 export default function WeightPage() {
   const navigate = useNavigate()
@@ -59,6 +60,20 @@ export default function WeightPage() {
             )}
           </div>
         )}
+
+        {profile && latest && (() => {
+          const lost = profile.starting_weight_kg - latest.value_kg
+          const comparison = getWeightComparison(lost)
+          if (!comparison || lost <= 0) return null
+          return (
+            <div className="mb-4 rounded-xl bg-success/10 p-4 text-center">
+              <p className="text-2xl mb-1">{comparison.emoji}</p>
+              <p className="text-sm font-medium text-success">
+                You've lost {lost.toFixed(1)}kg — that's {comparison.text}!
+              </p>
+            </div>
+          )
+        })()}
 
         <button
           onClick={() => navigate('/me/measurements')}
