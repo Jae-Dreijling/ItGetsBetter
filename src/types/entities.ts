@@ -56,6 +56,19 @@ export interface Label {
   created_at: string
 }
 
+export interface HabitProgression {
+  enabled: boolean
+  paused: boolean
+  start_value: number
+  current_value: number
+  increment: number
+  interval_days: number
+  cap: number | null
+  unit: string
+  last_advanced_at: string | null
+  is_mastered: boolean
+}
+
 export interface Habit {
   id?: number
   title: string
@@ -63,6 +76,7 @@ export interface Habit {
   frequency: HabitFrequency
   custom_days: Weekday[]
   cant_fail_description: string | null
+  progression: HabitProgression | null
   is_active: boolean
   is_queued: boolean
   activated_at: string | null

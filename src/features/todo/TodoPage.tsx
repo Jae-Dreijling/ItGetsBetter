@@ -7,6 +7,7 @@ import LabelBadge from '../../components/LabelBadge'
 import PriorityBadge from '../../components/PriorityBadge'
 import StreakDisplay from '../../components/StreakDisplay'
 import { useActiveHabits, useTodaysCompletions, useHabitCompletions, toggleHabitCompletion, isTodayScheduled } from '../../hooks/useHabits'
+import { formatProgressionValue } from '../../lib/progression'
 import { useTasks, useProjects, toggleTask } from '../../hooks/useTasks'
 import { useLabels } from '../../hooks/useLabels'
 import type { Habit, Task, Label, TaskPriority } from '../../types'
@@ -254,6 +255,13 @@ function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habi
       <div className="flex-1 min-w-0">
         <p className={`font-medium text-text-primary truncate ${isDone ? 'line-through' : ''}`}>
           {habit.title}
+          {habit.progression?.enabled && (
+            <span className={`ml-1.5 text-xs font-normal ${habit.progression.is_mastered ? 'text-success' : 'text-primary-500'}`}>
+              {habit.progression.is_mastered ? '👑 ' : ''}
+              {formatProgressionValue(habit.progression.current_value, habit.progression.unit)}
+              {habit.progression.paused && ' ⏸'}
+            </span>
+          )}
         </p>
         <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
           {labels.map(l => <LabelBadge key={l.id} name={l.name} color={l.color} />)}
@@ -262,7 +270,7 @@ function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habi
         {!isDone && habit.cant_fail_description && (
           <button
             onClick={onCantFail}
-            className="mt-1 rounded-full bg-accent-100 px-2.5 py-0.5 text-[10px] font-medium text-accent-700 hover:bg-accent-200 transition-colors"
+            className="mt-1 rounded-full bg-accent-100 px-2.5 py-0.5 text-[11px] font-medium text-accent-700 hover:bg-accent-200 transition-colors"
           >
             Can't fail: {habit.cant_fail_description}
           </button>
@@ -275,13 +283,13 @@ function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habi
                 style={{ width: `${Math.min((daysSinceActivation / 30) * 100, 100)}%` }}
               />
             </div>
-            <span className="text-[10px] text-muted shrink-0">
+            <span className="text-[11px] text-muted shrink-0">
               Day {Math.min(daysSinceActivation, 30)}/30 · {consistency}%
             </span>
           </div>
         )}
         {isFormed && (
-          <p className="mt-0.5 text-[10px] text-success font-medium">✓ Habit formed!</p>
+          <p className="mt-0.5 text-[11px] text-success font-medium">✓ Habit formed!</p>
         )}
       </div>
       <Target className="h-4 w-4 shrink-0 text-muted" />

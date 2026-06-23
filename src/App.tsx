@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
 import { db, ensureDefaults } from './db'
+import { checkProgressionAdvancements } from './hooks/useHabits'
 import { shouldRunLifecycle, runPhotoLifecycle, markLifecycleRun } from './lib/photoLifecycle'
 import { getLogicalDate, nowISO } from './lib/date'
 import { useProfile } from './hooks/useProfile'
@@ -140,6 +141,7 @@ export default function App() {
       if (shouldRunLifecycle()) {
         runPhotoLifecycle().then(() => markLifecycleRun())
       }
+      checkProgressionAdvancements()
     }
     init()
   }, [])
