@@ -7,6 +7,7 @@ import LabelBadge from '../../components/LabelBadge'
 import PriorityBadge from '../../components/PriorityBadge'
 import StreakDisplay from '../../components/StreakDisplay'
 import { useActiveHabits, useTodaysCompletions, useHabitCompletions, toggleHabitCompletion, isTodayScheduled } from '../../hooks/useHabits'
+import { formatProgressionValue } from '../../lib/progression'
 import { useTasks, useProjects, toggleTask } from '../../hooks/useTasks'
 import { useLabels } from '../../hooks/useLabels'
 import type { Habit, Task, Label, TaskPriority } from '../../types'
@@ -254,6 +255,13 @@ function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habi
       <div className="flex-1 min-w-0">
         <p className={`font-medium text-text-primary truncate ${isDone ? 'line-through' : ''}`}>
           {habit.title}
+          {habit.progression?.enabled && (
+            <span className={`ml-1.5 text-xs font-normal ${habit.progression.is_mastered ? 'text-success' : 'text-primary-500'}`}>
+              {habit.progression.is_mastered ? '👑 ' : ''}
+              {formatProgressionValue(habit.progression.current_value, habit.progression.unit)}
+              {habit.progression.paused && ' ⏸'}
+            </span>
+          )}
         </p>
         <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
           {labels.map(l => <LabelBadge key={l.id} name={l.name} color={l.color} />)}

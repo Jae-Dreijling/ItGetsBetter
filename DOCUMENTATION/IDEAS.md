@@ -16,7 +16,7 @@ A collection of ideas for features that are not planned for any current phase. T
 | 6 | ~~Points Notification~~ | ✅ **Built** | Toast shows "+X for Y" on earn |
 | 7 | ~~Label Management (CRUD in settings)~~ | ✅ **Built** | Settings → Labels |
 | 8 | ~~Grocery Lists (boodschappenlijstjes)~~ | ✅ **Built** | Templates + shopping mode |
-| 9 | Progressive Habits (auto-increasing difficulty) | ⭐⭐⭐⭐⭐ | ⭐⭐ (data model changes + scheduling logic) |
+| 9 | ~~Progressive Habits (auto-increasing difficulty)~~ | ✅ **Built** | Auto-advance on 75% consistency |
 | 10 | ~~Habit Formation Threshold (30 days, 75% consistency)~~ | ✅ **Built** | Progress bar + enforcement |
 | 11 | Habit Chaining (linked sequences) | ⭐⭐⭐⭐ | ⭐⭐ (data model changes + UX design) |
 | 12 | ~~Medicine Hides When Taken~~ | ✅ **Built** | Shows "All taken ✓" summary |
@@ -105,18 +105,11 @@ Important: this feature requires calorie estimation for meals (either manual inp
 
 ---
 
-## 9. Progressive Habits (Auto-Increasing Difficulty)
+## 9. Progressive Habits (Auto-Increasing Difficulty) — ✅ BUILT
 
-Habits that automatically increase their target over time on a configurable schedule:
-- Example: "Plank" starts at 30 seconds
-- After 2 weeks → 40 seconds
-- After another 2 weeks → 50 seconds
-- After another 2 weeks → 60 seconds
-- Continues indefinitely (or until a cap)
+~~Habits that automatically increase their target over time.~~
 
-Works for: planks, pushups, squats, running distance, meditation minutes, etc.
-
-Requires: adding `progression_config` to the Habit entity (start value, increment, interval, unit, optional cap) and displaying the current target on the habit check-off screen.
+**Implemented:** Configurable progression on any habit: start value, increment, interval (days), unit (free-text with smart time conversion — 60s → 1min), optional cap. Auto-advances when 75% consistency is met in the interval. Pause button to freeze progression. "Mastered" 👑 badge when cap is reached. Current target displayed inline on To-Do page and habit management.
 
 ---
 

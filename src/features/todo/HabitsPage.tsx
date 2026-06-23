@@ -6,6 +6,7 @@ import LabelPicker from '../../components/LabelPicker'
 import LabelBadge from '../../components/LabelBadge'
 import { useActiveHabits, useQueuedHabits, useInactiveHabits, addHabit, updateHabit, activateHabit, deactivateHabit, deleteHabit } from '../../hooks/useHabits'
 import { useLabels } from '../../hooks/useLabels'
+import { formatProgressionValue } from '../../lib/progression'
 import type { HabitFrequency, Weekday, Habit, Label } from '../../types'
 
 const WEEKDAYS: { key: Weekday; label: string }[] = [
@@ -103,6 +104,13 @@ function HabitForm({ labels, onSave, initial }: {
   const [customDays, setCustomDays] = useState<Weekday[]>(initial?.custom_days ?? [])
   const [selectedLabels, setSelectedLabels] = useState<number[]>(initial?.label_ids ?? [])
   const [cantFail, setCantFail] = useState(initial?.cant_fail_description ?? '')
+  const [progEnabled, setProgEnabled] = useState(initial?.progression?.enabled ?? false)
+  const [progStart, setProgStart] = useState(String(initial?.progression?.start_value ?? ''))
+  const [progIncrement, setProgIncrement] = useState(String(initial?.progression?.increment ?? ''))
+  const [progInterval, setProgInterval] = useState(String(initial?.progression?.interval_days ?? '14'))
+  const [progCap, setProgCap] = useState(initial?.progression?.cap ? String(initial.progression.cap) : '')
+  const [progUnit, setProgUnit] = useState(initial?.progression?.unit ?? '')
+  const [progPaused, setProgPaused] = useState(initial?.progression?.paused ?? false)
   const [isQueued, setIsQueued] = useState(initial?.is_queued ?? false)
 
   function toggleDay(day: Weekday) {
@@ -114,6 +122,19 @@ function HabitForm({ labels, onSave, initial }: {
     if (!title.trim()) return
     if (frequency === 'custom' && customDays.length === 0) return
 
+    const progression = progEnabled && progStart && progIncrement && progUnit ? {
+      enabled: true,
+      paused: progPaused,
+      start_value: parseFloat(progStart),
+      current_value: initial?.progression?.current_value ?? parseFloat(progStart),
+      increment: parseFloat(progIncrement),
+      interval_days: parseInt(progInterval) || 14,
+      cap: progCap ? parseFloat(progCap) : null,
+      unit: progUnit.trim(),
+      last_advanced_at: initial?.progression?.last_advanced_at ?? null,
+      is_mastered: initial?.progression?.is_mastered ?? false,
+    } : null
+
     if (initial?.id) {
       await updateHabit(initial.id, {
         title: title.trim(),
@@ -121,6 +142,7 @@ function HabitForm({ labels, onSave, initial }: {
         frequency,
         custom_days: frequency === 'custom' ? customDays : [],
         cant_fail_description: cantFail.trim() || null,
+        progression,
       })
     } else {
       await addHabit({
@@ -128,6 +150,7 @@ function HabitForm({ labels, onSave, initial }: {
         label_ids: selectedLabels,
         frequency,
         cant_fail_description: cantFail.trim() || null,
+        progression,
         custom_days: frequency === 'custom' ? customDays : [],
         is_queued: isQueued,
       })
@@ -208,6 +231,88 @@ function HabitForm({ labels, onSave, initial }: {
         />
       </div>
 
+      <div className="mb-3">
+        <label className="flex items-center gap-2 text-sm text-text-primary cursor-pointer mb-2">
+          <input
+            type="checkbox"
+            checked={progEnabled}
+            onChange={e => setProgEnabled(e.target.checked)}
+            className="rounded"
+          />
+          Progressive (auto-increase difficulty)
+        </label>
+
+        {progEnabled && (
+          <div className="space-y-2 rounded-lg bg-surface p-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-muted mb-0.5">Start value</label>
+                <input
+                  type="number"
+                  value={progStart}
+                  onChange={e => setProgStart(e.target.value)}
+                  placeholder="30"
+                  className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-card px-2.5 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted mb-0.5">Unit</label>
+                <input
+                  type="text"
+                  value={progUnit}
+                  onChange={e => setProgUnit(e.target.value)}
+                  placeholder="seconds"
+                  className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-card px-2.5 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-muted mb-0.5">Increase by</label>
+                <input
+                  type="number"
+                  value={progIncrement}
+                  onChange={e => setProgIncrement(e.target.value)}
+                  placeholder="10"
+                  className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-card px-2.5 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted mb-0.5">Every X days</label>
+                <input
+                  type="number"
+                  value={progInterval}
+                  onChange={e => setProgInterval(e.target.value)}
+                  placeholder="14"
+                  className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-card px-2.5 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-0.5">Cap (optional — leave empty for no cap)</label>
+              <input
+                type="number"
+                value={progCap}
+                onChange={e => setProgCap(e.target.value)}
+                placeholder="No cap"
+                className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-card px-2.5 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+              />
+            </div>
+            {initial?.progression && (
+              <label className="flex items-center gap-2 text-xs text-text-primary cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={progPaused}
+                  onChange={e => setProgPaused(e.target.checked)}
+                  className="rounded"
+                />
+                Pause progression
+              </label>
+            )}
+          </div>
+        )}
+      </div>
+
       {!initial && (
         <label className="mb-4 flex items-center gap-2 text-sm text-text-primary cursor-pointer">
           <input
@@ -246,7 +351,16 @@ function HabitItem({ habit, labelsMap, allLabels, status }: {
   return (
     <div className={`flex items-center gap-3 rounded-lg bg-card px-4 py-3 shadow-sm ${status === 'inactive' ? 'opacity-60' : status === 'queued' ? 'opacity-75' : ''}`}>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-text-primary truncate">{habit.title}</p>
+        <p className="font-medium text-text-primary truncate">
+          {habit.title}
+          {habit.progression?.enabled && (
+            <span className={`ml-1.5 text-xs font-normal ${habit.progression.is_mastered ? 'text-success' : 'text-primary-500'}`}>
+              {habit.progression.is_mastered ? '👑 ' : ''}
+              {formatProgressionValue(habit.progression.current_value, habit.progression.unit)}
+              {habit.progression.paused && ' ⏸'}
+            </span>
+          )}
+        </p>
         <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
           <FrequencyLabel habit={habit} />
           {habit.label_ids.map(id => {

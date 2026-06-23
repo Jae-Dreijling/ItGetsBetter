@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
+import { shouldAdvance, getNextValue } from '../lib/progression'
 import type { HabitFrequency, Weekday } from '../types'
 
 export function useActiveHabits() {
@@ -69,6 +70,7 @@ export async function addHabit(data: {
   frequency: HabitFrequency
   custom_days?: Weekday[]
   cant_fail_description?: string | null
+  progression?: import('../types').HabitProgression | null
   is_queued?: boolean
 }) {
   await db.habits.add({
@@ -77,6 +79,7 @@ export async function addHabit(data: {
     frequency: data.frequency,
     custom_days: data.custom_days ?? [],
     cant_fail_description: data.cant_fail_description ?? null,
+    progression: data.progression ?? null,
     is_active: !data.is_queued,
     is_queued: data.is_queued ?? false,
     activated_at: data.is_queued ? null : nowISO(),
@@ -90,6 +93,7 @@ export async function updateHabit(id: number, changes: Partial<{
   frequency: HabitFrequency
   custom_days: Weekday[]
   cant_fail_description: string | null
+  progression: import('../types').HabitProgression | null
   is_active: boolean
   is_queued: boolean
 }>) {
@@ -191,5 +195,44 @@ export async function toggleHabitCompletion(habitId: number, cantFail: boolean =
       logged_at: nowISO(),
     })
     await awardPoints(cantFail ? 'habit_cant_fail' : 'habit_completed', id as number)
+  }
+}
+
+export async function checkProgressionAdvancements() {
+  const habits = await db.habits.filter(h =>
+    h.is_active === true && h.progression !== null && h.progression !== undefined
+  ).toArray()
+
+  for (const habit of habits) {
+    const prog = habit.progression
+    if (!prog || !prog.enabled || prog.paused || prog.is_mastered) continue
+
+    const lastAdvanced = prog.last_advanced_at ? new Date(prog.last_advanced_at) : new Date(habit.activated_at ?? habit.created_at)
+    const daysSinceAdvance = Math.floor((Date.now() - lastAdvanced.getTime()) / (1000 * 60 * 60 * 24))
+
+    if (daysSinceAdvance < prog.interval_days) continue
+
+    const fromDate = new Date(lastAdvanced)
+    fromDate.setHours(12, 0, 0, 0)
+    const fromStr = getLogicalDate(fromDate)
+
+    const completions = await db.habitCompletions
+      .where('habit_id').equals(habit.id!)
+      .and(c => c.date >= fromStr)
+      .toArray()
+
+    if (shouldAdvance(prog, completions.length, daysSinceAdvance)) {
+      const nextValue = getNextValue(prog)
+      const isMastered = prog.cap !== null && nextValue >= prog.cap
+
+      await db.habits.update(habit.id!, {
+        progression: {
+          ...prog,
+          current_value: nextValue,
+          last_advanced_at: nowISO(),
+          is_mastered: isMastered,
+        },
+      })
+    }
   }
 }
