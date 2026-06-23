@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { Ruler, Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb } from 'lucide-react'
+import { Ruler, Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
@@ -98,6 +98,28 @@ export default function MePage() {
             <div>
               <p className="font-medium text-text-primary">Progress Photos</p>
               <p className="text-sm text-muted">Before & after comparison</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/me/grocery')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <ShoppingCart className="h-5 w-5 text-secondary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Grocery Lists</p>
+              <p className="text-sm text-muted">Shopping lists & templates</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/me/books')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <BookOpen className="h-5 w-5 text-primary-400" />
+            <div>
+              <p className="font-medium text-text-primary">Books</p>
+              <p className="text-sm text-muted">Track your reading</p>
             </div>
           </button>
 

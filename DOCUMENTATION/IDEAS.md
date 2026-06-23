@@ -15,13 +15,13 @@ A collection of ideas for features that are not planned for any current phase. T
 | 5 | Meal Burn-Off Suggestions | ⭐⭐⭐ | ⭐⭐ (depends on #4) |
 | 6 | ~~Points Notification~~ | ✅ **Built** | Toast shows "+X for Y" on earn |
 | 7 | ~~Label Management (CRUD in settings)~~ | ✅ **Built** | Settings → Labels |
-| 8 | Grocery Lists (boodschappenlijstjes) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (new feature area) |
+| 8 | ~~Grocery Lists (boodschappenlijstjes)~~ | ✅ **Built** | Templates + shopping mode |
 | 9 | Progressive Habits (auto-increasing difficulty) | ⭐⭐⭐⭐⭐ | ⭐⭐ (data model changes + scheduling logic) |
 | 10 | ~~Habit Formation Threshold (30 days, 75% consistency)~~ | ✅ **Built** | Progress bar + enforcement |
 | 11 | Habit Chaining (linked sequences) | ⭐⭐⭐⭐ | ⭐⭐ (data model changes + UX design) |
 | 12 | ~~Medicine Hides When Taken~~ | ✅ **Built** | Shows "All taken ✓" summary |
-| 13 | Book Reading Tracker | ⭐⭐⭐ | ⭐⭐⭐ (new feature area, simple model) |
-| 14 | "Can't Fail" Habit Fallback | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (data model addition + UI) |
+| 13 | ~~Book Reading Tracker~~ | ✅ **Built** | Page tracking + rating + notes |
+| 14 | ~~"Can't Fail" Habit Fallback~~ | ✅ **Built** | Half credit, half points |
 
 ---
 
@@ -97,16 +97,11 @@ Important: this feature requires calorie estimation for meals (either manual inp
 
 ---
 
-## 8. Grocery Lists (Boodschappenlijstjes)
+## 8. Grocery Lists (Boodschappenlijstjes) — ✅ BUILT
 
-A grocery list feature with saved templates:
-- Create a grocery list and check off items as you shop
-- Save "standard" lists — ingredients you always want to have at home
-- Save recipe-specific lists — ingredients for specific meals you cook regularly
-- When shopping, combine a standard list + recipe list into one shopping session
-- Simple checklist UI, not a full recipe manager
+~~A grocery list feature with saved templates.~~
 
-Use case: "I have 3-4 saved lists for common meals I repeat. When I go shopping, I pick which ones I need this week and check things off."
+**Implemented:** Saved template lists with items + quantities, "Start Shopping" button to combine templates into a trip, check off while shopping, add items on the fly, reset lists. Accessible from Me → Grocery Lists and side menu.
 
 ---
 
@@ -153,29 +148,19 @@ Requires: a `chain_id` and `chain_order` on habits, plus UI to create/edit chain
 
 ---
 
-## 13. Book Reading Tracker
+## 13. Book Reading Tracker — ✅ BUILT
 
-Track books you're reading:
-- Add a book (title, optional author, total pages)
-- Log reading sessions (pages read, date)
-- See progress: "Page 142 / 350 (41%)"
-- Reading streak: days with at least one reading session
-- Finished books list with completion date
+~~Track books you're reading.~~
 
-Simple and fits the "awareness through logging" philosophy. Reading is a health-adjacent habit (mental health, routine building).
+**Implemented:** Add books with title, author, total pages. Update current page with progress bar. Mark as finished with 1-5 star rating and notes. Currently reading and finished sections. Accessible from Me → Books and side menu.
 
 ---
 
-## 14. "Can't Fail" Habit Fallback
+## 14. "Can't Fail" Habit Fallback — ✅ BUILT
 
-Every habit can have a configured "easy version" fallback:
-- Main habit: "30 minute walk"
-- Can't fail version: "10 minute walk"
-- If you can't do the full version, tap "Can't Fail" instead of skipping entirely
+~~Every habit can have a configured "easy version" fallback.~~
 
-The point: doing something is always better than doing nothing. On bad days, the easy version keeps the streak alive and prevents the "I failed so why bother" spiral.
-
-Configuration: when creating/editing a habit, optionally set a "Can't fail" description. The check-off screen shows two buttons: "Done" and "Can't Fail ✓" — both count as completed for streaks and points.
+**Implemented:** Optional "Can't fail version" field on habits. To-Do view shows amber "Can't fail: [description]" button. Completing via can't-fail earns half points (2 instead of 5) and is tracked as `is_cant_fail: true`. Counts for streaks and formation threshold. Toast shows "+2 can't fail — still counts!"
 
 ---
 

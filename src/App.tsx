@@ -36,6 +36,8 @@ const ExportPage = lazy(() => import('./features/settings/ExportPage'))
 const QuoteManager = lazy(() => import('./features/settings/QuoteManager'))
 const ScheduleSettings = lazy(() => import('./features/settings/ScheduleSettings'))
 const LabelManager = lazy(() => import('./features/settings/LabelManager'))
+const GroceryPage = lazy(() => import('./features/grocery/GroceryPage'))
+const BooksPage = lazy(() => import('./features/books/BooksPage'))
 const RewardShopPage = lazy(() => import('./features/rewards/RewardShopPage'))
 const AchievementsPage = lazy(() => import('./features/achievements/AchievementsPage'))
 const GraphsDashboard = lazy(() => import('./features/graphs/GraphsDashboard'))
@@ -115,6 +117,8 @@ function AppContent() {
         <Route path="settings/quotes" element={<Suspense fallback={<LazyFallback />}><QuoteManager /></Suspense>} />
         <Route path="settings/schedule" element={<Suspense fallback={<LazyFallback />}><ScheduleSettings /></Suspense>} />
         <Route path="settings/labels" element={<Suspense fallback={<LazyFallback />}><LabelManager /></Suspense>} />
+        <Route path="me/grocery" element={<Suspense fallback={<LazyFallback />}><GroceryPage /></Suspense>} />
+        <Route path="me/books" element={<Suspense fallback={<LazyFallback />}><BooksPage /></Suspense>} />
       </Route>
     </Routes>
   )

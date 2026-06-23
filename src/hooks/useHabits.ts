@@ -68,6 +68,7 @@ export async function addHabit(data: {
   label_ids: number[]
   frequency: HabitFrequency
   custom_days?: Weekday[]
+  cant_fail_description?: string | null
   is_queued?: boolean
 }) {
   await db.habits.add({
@@ -75,6 +76,7 @@ export async function addHabit(data: {
     label_ids: data.label_ids,
     frequency: data.frequency,
     custom_days: data.custom_days ?? [],
+    cant_fail_description: data.cant_fail_description ?? null,
     is_active: !data.is_queued,
     is_queued: data.is_queued ?? false,
     activated_at: data.is_queued ? null : nowISO(),
@@ -87,6 +89,7 @@ export async function updateHabit(id: number, changes: Partial<{
   label_ids: number[]
   frequency: HabitFrequency
   custom_days: Weekday[]
+  cant_fail_description: string | null
   is_active: boolean
   is_queued: boolean
 }>) {
@@ -171,7 +174,7 @@ export async function deleteHabit(id: number) {
   })
 }
 
-export async function toggleHabitCompletion(habitId: number) {
+export async function toggleHabitCompletion(habitId: number, cantFail: boolean = false) {
   const today = getLogicalDate()
   const existing = await db.habitCompletions
     .where('habit_id').equals(habitId)
@@ -184,8 +187,9 @@ export async function toggleHabitCompletion(habitId: number) {
     const id = await db.habitCompletions.add({
       habit_id: habitId,
       date: today,
+      is_cant_fail: cantFail,
       logged_at: nowISO(),
     })
-    await awardPoints('habit_completed', id as number)
+    await awardPoints(cantFail ? 'habit_cant_fail' : 'habit_completed', id as number)
   }
 }

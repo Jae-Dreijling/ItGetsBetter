@@ -171,6 +171,7 @@ export default function TodoPage() {
                     isDone={isHabitDone(habit.id!)}
                     labels={habit.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
                     onToggle={() => toggleHabitCompletion(habit.id!)}
+                    onCantFail={() => toggleHabitCompletion(habit.id!, true)}
                   />
                 ))}
               </div>
@@ -227,7 +228,7 @@ export default function TodoPage() {
   )
 }
 
-function HabitRow({ habit, isDone, labels, onToggle }: { habit: Habit; isDone: boolean; labels: Label[]; onToggle: () => void }) {
+function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habit; isDone: boolean; labels: Label[]; onToggle: () => void; onCantFail: () => void }) {
   const completions = useHabitCompletions(habit.id!, 30)
   const streakCount = completions?.length ?? 0
 
@@ -258,6 +259,14 @@ function HabitRow({ habit, isDone, labels, onToggle }: { habit: Habit; isDone: b
           {labels.map(l => <LabelBadge key={l.id} name={l.name} color={l.color} />)}
           <StreakDisplay completedCount={streakCount} frequency={habit.frequency} customDays={habit.custom_days} lookbackDays={30} />
         </div>
+        {!isDone && habit.cant_fail_description && (
+          <button
+            onClick={onCantFail}
+            className="mt-1 rounded-full bg-accent-100 px-2.5 py-0.5 text-[10px] font-medium text-accent-700 hover:bg-accent-200 transition-colors"
+          >
+            Can't fail: {habit.cant_fail_description}
+          </button>
+        )}
         {!isFormed && daysSinceActivation > 0 && (
           <div className="mt-1 flex items-center gap-1.5">
             <div className="h-1.5 flex-1 rounded-full bg-surface overflow-hidden">

@@ -2,6 +2,7 @@ export const POINT_VALUES = {
   meal_logged: 5,
   weight_logged: 3,
   habit_completed: 5,
+  habit_cant_fail: 2,
   task_completed: 5,
   water_goal_met: 5,
   exercise_logged: 10,

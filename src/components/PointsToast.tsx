@@ -19,6 +19,7 @@ const SOURCE_LABELS: Record<string, string> = {
   meal_logged: 'logging a meal',
   weight_logged: 'logging weight',
   habit_completed: 'completing a habit',
+  habit_cant_fail: "can't fail — still counts!",
   task_completed: 'completing a task',
   water_goal_met: 'hitting water goal',
   exercise_logged: 'logging exercise',

@@ -1225,7 +1225,7 @@ All 7 phases have been implemented. See [ROADMAP.md](ROADMAP.md) for the detaile
 | Phase 5: Reporting & Insights | ✅ Complete | 8-chart graphs dashboard, weekly review, progress photos with comparison, Excel/ZIP export, health insight correlations |
 | Phase 6: Notifications | ✅ Complete | Custom quote pool, schedule profiles with weekly defaults, modes (exam/social/quiet), in-app notification queue, side menu |
 | Phase 7: Polish & Optimization | ✅ Complete | Auto theme, error boundaries, storage monitoring, lazy-loaded routes (37% bundle reduction), photo lifecycle manager, app lock (PIN), install prompt, habit enforcement, starter kit, accessibility, CI/CD |
-| Post-Phase Fixes | ✅ Complete | Label management CRUD, medicine frequency-aware display, medicine hides when taken, habit formation threshold (30 days/75%), fun weight loss comparisons on weight page, points earned toast notifications |
+| Post-Phase Fixes | ✅ Complete | Label management CRUD, medicine frequency-aware display, medicine hides when taken, habit formation threshold (30 days/75%), fun weight loss comparisons, points earned toast, "Can't Fail" habit fallback (half credit), grocery lists with templates + shopping mode, book reading tracker |
 
 ### Future Considerations (Not Yet Built)
 
