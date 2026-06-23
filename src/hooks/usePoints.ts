@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { POINT_VALUES, type PointSource } from '../lib/points'
+import { emitPointsEarned } from '../components/PointsToast'
 
 export function usePointsBalance() {
   return useLiveQuery(async () => {
@@ -39,13 +40,15 @@ export async function awardPoints(source: PointSource, sourceId?: number) {
     return
   }
 
+  const amount = POINT_VALUES[source]
   await db.pointsTransactions.add({
-    amount: POINT_VALUES[source],
+    amount,
     source_type: source,
     source_id: sourceId ?? null,
     date: today,
     created_at: nowISO(),
   })
+  emitPointsEarned(amount, source)
 }
 
 export async function awardStreakBonus(streakDays: number) {

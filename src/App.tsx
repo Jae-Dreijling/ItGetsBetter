@@ -10,6 +10,7 @@ import UpdatePrompt from './components/UpdatePrompt'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppLock, { isLockEnabled } from './components/AppLock'
 import InstallPrompt from './components/InstallPrompt'
+import PointsToast from './components/PointsToast'
 import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
 import HomePage from './features/home/HomePage'
@@ -149,6 +150,7 @@ export default function App() {
       <ErrorBoundary feature="the app">
         <AppContent />
       </ErrorBoundary>
+      <PointsToast />
       <InstallPrompt />
     </BrowserRouter>
   )
