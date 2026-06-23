@@ -228,8 +228,15 @@ export default function TodoPage() {
 }
 
 function HabitRow({ habit, isDone, labels, onToggle }: { habit: Habit; isDone: boolean; labels: Label[]; onToggle: () => void }) {
-  const completions = useHabitCompletions(habit.id!, 21)
+  const completions = useHabitCompletions(habit.id!, 30)
   const streakCount = completions?.length ?? 0
+
+  const daysSinceActivation = habit.activated_at
+    ? Math.floor((Date.now() - new Date(habit.activated_at).getTime()) / (1000 * 60 * 60 * 24))
+    : 0
+  const formationWindow = Math.min(daysSinceActivation, 30)
+  const consistency = formationWindow > 0 ? Math.round((streakCount / formationWindow) * 100) : 0
+  const isFormed = daysSinceActivation >= 30 && streakCount >= 23
 
   return (
     <div className={`flex items-center gap-3 rounded-lg bg-card px-4 py-3 shadow-sm transition-opacity ${isDone ? 'opacity-60' : ''}`}>
@@ -249,8 +256,24 @@ function HabitRow({ habit, isDone, labels, onToggle }: { habit: Habit; isDone: b
         </p>
         <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
           {labels.map(l => <LabelBadge key={l.id} name={l.name} color={l.color} />)}
-          <StreakDisplay completedCount={streakCount} frequency={habit.frequency} customDays={habit.custom_days} />
+          <StreakDisplay completedCount={streakCount} frequency={habit.frequency} customDays={habit.custom_days} lookbackDays={30} />
         </div>
+        {!isFormed && daysSinceActivation > 0 && (
+          <div className="mt-1 flex items-center gap-1.5">
+            <div className="h-1.5 flex-1 rounded-full bg-surface overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${consistency >= 75 ? 'bg-success' : 'bg-accent-400'}`}
+                style={{ width: `${Math.min((daysSinceActivation / 30) * 100, 100)}%` }}
+              />
+            </div>
+            <span className="text-[10px] text-muted shrink-0">
+              Day {Math.min(daysSinceActivation, 30)}/30 · {consistency}%
+            </span>
+          </div>
+        )}
+        {isFormed && (
+          <p className="mt-0.5 text-[10px] text-success font-medium">✓ Habit formed!</p>
+        )}
       </div>
       <Target className="h-4 w-4 shrink-0 text-muted" />
     </div>

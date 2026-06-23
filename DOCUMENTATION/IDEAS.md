@@ -9,15 +9,15 @@ A collection of ideas for features that are not planned for any current phase. T
 | # | Idea | Usefulness | Ease of Adding |
 |---|---|---|---|
 | 1 | Companion Mascot | ⭐⭐⭐⭐ | ⭐ (very hard) |
-| 2 | Fun Weight Loss Comparisons | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ (already partially built in achievements) |
-| 3 | Weight Comparison Achievements | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ (already built) |
+| 2 | ~~Fun Weight Loss Comparisons~~ | ✅ **Built** | Shows on weight page with emoji |
+| 3 | ~~Weight Comparison Achievements~~ | ✅ **Built** | 7 achievements (apple → toddler) |
 | 4 | Exercise Calorie Estimation | ⭐⭐⭐ | ⭐⭐ (needs research for accuracy) |
 | 5 | Meal Burn-Off Suggestions | ⭐⭐⭐ | ⭐⭐ (depends on #4) |
-| 6 | Points Notification | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ (toast component exists) |
+| 6 | ~~Points Notification~~ | ✅ **Built** | Toast shows "+X for Y" on earn |
 | 7 | ~~Label Management (CRUD in settings)~~ | ✅ **Built** | Settings → Labels |
 | 8 | Grocery Lists (boodschappenlijstjes) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (new feature area) |
 | 9 | Progressive Habits (auto-increasing difficulty) | ⭐⭐⭐⭐⭐ | ⭐⭐ (data model changes + scheduling logic) |
-| 10 | Habit Formation Threshold (30 days, 75% consistency) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (calculation logic + UI) |
+| 10 | ~~Habit Formation Threshold (30 days, 75% consistency)~~ | ✅ **Built** | Progress bar + enforcement |
 | 11 | Habit Chaining (linked sequences) | ⭐⭐⭐⭐ | ⭐⭐ (data model changes + UX design) |
 | 12 | ~~Medicine Hides When Taken~~ | ✅ **Built** | Shows "All taken ✓" summary |
 | 13 | Book Reading Tracker | ⭐⭐⭐ | ⭐⭐⭐ (new feature area, simple model) |
@@ -37,30 +37,19 @@ Personality examples:
 
 ---
 
-## 2. Fun Weight Loss Comparisons
+## 2. Fun Weight Loss Comparisons — ✅ BUILT
 
-When you lose weight, show relatable comparisons:
-- "You've lost about an apple's worth of weight!"
-- "You've lost a kitten's weight!"
-- "You've lost weight equal to a full grown cat!"
-- "That's a bowling ball gone!"
-- "You've shed a watermelon!"
+~~When you lose weight, show relatable comparisons.~~
 
-These make the abstract number feel real and celebrate milestones in a fun way.
+**Implemented:** Weight page shows a green card with emoji and comparison text when you've lost weight (e.g., "🐱 You've lost 2.3kg — that's a kitten!"). 12 comparisons from apple (0.2kg) to bicycle (20kg).
 
 ---
 
-## 3. Weight Comparison Achievements
+## 3. Weight Comparison Achievements — ✅ BUILT
 
-The fun comparisons above double as unlockable achievements:
-- 🍎 **An Apple a Day** — Lost 0.2kg
-- 🐱 **Kitten Gone** — Lost 2kg
-- 🎳 **Strike!** — Lost 5kg (bowling ball)
-- 🐈 **Cat's Away** — Lost 5kg
-- 🍉 **Melon Drop** — Lost 7kg
-- 🐕 **Puppy Freed** — Lost 10kg
+~~The fun comparisons above double as unlockable achievements.~~
 
-Each achievement comes with a celebratory animation and fun description.
+**Implemented:** 7 weight loss achievements already in the achievement library since Phase 4: Apple (0.2kg), Kitten (2kg), Cat (5kg), Bowling Ball (5kg), Melon (7kg), Puppy (10kg), Toddler (15kg).
 
 ---
 
@@ -92,11 +81,11 @@ Important: this feature requires calorie estimation for meals (either manual inp
 
 ---
 
-## 6. Points Notification
+## 6. Points Notification — ✅ BUILT
 
-When you earn points, show a small celebratory notification/toast: "+5 points for logging a meal!" or "+10 points for hitting your fasting goal!" Makes the reward system feel alive and gives instant positive feedback for good behavior.
+~~When you earn points, show a small celebratory notification/toast.~~
 
-Could animate the points counter briefly or show a small floating number that fades out.
+**Implemented:** Golden toast appears in the top-right corner showing "+X for Y" (e.g., "+5 logging a meal") whenever points are earned. Auto-dismisses after 2.5 seconds. Multiple toasts stack.
 
 ---
 
@@ -136,16 +125,11 @@ Requires: adding `progression_config` to the Habit entity (start value, incremen
 
 ---
 
-## 10. Habit Formation Threshold
+## 10. Habit Formation Threshold — ✅ BUILT
 
-Change the habit enforcement to require **30 days at 75% consistency** before a habit is considered "formed" and a new one can be added in the same category.
+~~Change the habit enforcement to require 30 days at 75% consistency.~~
 
-- 30 days × 75% = must be completed on at least 23 of the last 30 days
-- Shows progress: "Day 18/30 — 78% consistency — on track!"
-- When the threshold is met: celebration + unlock to add a new habit in that category
-- If consistency drops below 75%, the counter doesn't reset — it just pauses until you're back above
-
-This replaces the simple "1-per-category-per-week" enforcement with a scientifically grounded approach.
+**Implemented:** Each habit shows a progress bar (Day X/30 · Y% consistency). Bar turns green at 75%+. "Habit formed!" badge when complete. `canActivateInCategory()` blocks new habits in the same label until existing ones are formed, showing which habit is blocking and how many days remain.
 
 ---
 
