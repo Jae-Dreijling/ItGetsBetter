@@ -236,9 +236,25 @@ function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habi
   const daysSinceActivation = habit.activated_at
     ? Math.floor((Date.now() - new Date(habit.activated_at).getTime()) / (1000 * 60 * 60 * 24))
     : 0
-  const formationWindow = Math.min(daysSinceActivation, 30)
-  const consistency = formationWindow > 0 ? Math.round((streakCount / formationWindow) * 100) : 0
-  const isFormed = daysSinceActivation >= 30 && streakCount >= 23
+
+  const freq = habit.frequency
+  const expectedPerDay = freq === 'daily' ? 1
+    : freq === 'weekly' ? 1 / 7
+    : freq === 'monthly' ? 1 / 30
+    : freq === 'custom' && habit.custom_days?.length ? habit.custom_days.length / 7
+    : 1
+  const formationDays = 30
+  const expectedTotal = Math.max(1, Math.round(expectedPerDay * Math.min(daysSinceActivation, formationDays)))
+  const consistency = expectedTotal > 0 ? Math.min(100, Math.round((streakCount / expectedTotal) * 100)) : 0
+  const isFormed = daysSinceActivation >= formationDays && consistency >= 75
+
+  const periodLabel = freq === 'weekly' ? 'Week' : freq === 'monthly' ? 'Month' : 'Day'
+  const periodCurrent = freq === 'weekly' ? Math.floor(daysSinceActivation / 7)
+    : freq === 'monthly' ? Math.floor(daysSinceActivation / 30)
+    : Math.min(daysSinceActivation, formationDays)
+  const periodTotal = freq === 'weekly' ? Math.ceil(formationDays / 7)
+    : freq === 'monthly' ? 1
+    : formationDays
 
   return (
     <div className={`flex items-center gap-3 rounded-lg bg-card px-4 py-3 shadow-sm transition-opacity ${isDone ? 'opacity-60' : ''}`}>
@@ -280,11 +296,11 @@ function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habi
             <div className="h-1.5 flex-1 rounded-full bg-surface overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${consistency >= 75 ? 'bg-success' : 'bg-accent-400'}`}
-                style={{ width: `${Math.min((daysSinceActivation / 30) * 100, 100)}%` }}
+                style={{ width: `${Math.min((periodCurrent / periodTotal) * 100, 100)}%` }}
               />
             </div>
             <span className="text-[11px] text-muted shrink-0">
-              Day {Math.min(daysSinceActivation, 30)}/30 · {consistency}%
+              {periodLabel} {Math.min(periodCurrent, periodTotal)}/{periodTotal} · {consistency}%
             </span>
           </div>
         )}
