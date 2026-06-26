@@ -13,7 +13,7 @@ import { useTodaysMeals } from '../../hooks/useMealEntries'
 import { useActiveHabits, useTodaysCompletions } from '../../hooks/useHabits'
 import { useTasks } from '../../hooks/useTasks'
 import { useTodaysWaterTotal } from '../../hooks/useWater'
-import { useCurrentFast, formatFastingDuration } from '../../hooks/useFasting'
+import { useCurrentFast, formatFastingDuration, breakFast } from '../../hooks/useFasting'
 import { useTodaysExercise } from '../../hooks/useExercise'
 import { useTodaysMood } from '../../hooks/useMood'
 import { useTodaysMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
@@ -25,6 +25,11 @@ import { useTodaySchedule } from '../../hooks/useSchedule'
 import { useNotifications } from '../../hooks/useNotifications'
 import { getLogicalDate } from '../../lib/date'
 import { addDays, format, parseISO } from 'date-fns'
+
+function parseTimeToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + (m || 0)
+}
 
 type TimeOfDay = 'morning' | 'midday' | 'night'
 
@@ -99,6 +104,17 @@ export default function HomePage() {
   const moodLoggedForPeriod = todaysMood?.some(m => m.tags.includes(timeOfDay)) ?? false
   const showMoodPrompt = !moodDismissed && !moodLoggedForPeriod
 
+  const { profile: scheduleProfile } = useTodaySchedule()
+  const isPhoneFreeTime = (() => {
+    if (!scheduleProfile) return false
+    const now = new Date()
+    const currentMinutes = now.getHours() * 60 + now.getMinutes()
+    const wakeMinutes = parseTimeToMinutes(scheduleProfile.wake_time)
+    const freeUntilMinutes = parseTimeToMinutes(scheduleProfile.phone_free_until)
+    const awayMinutes = parseTimeToMinutes(scheduleProfile.phone_away_at)
+    return (currentMinutes >= wakeMinutes && currentMinutes < freeUntilMinutes) || currentMinutes >= awayMinutes
+  })()
+
   const isMedTaken = useCallback((medId: number) => {
     return todaysMedLogs?.some(l => l.medicine_id === medId) ?? false
   }, [todaysMedLogs])
@@ -115,6 +131,15 @@ export default function HomePage() {
             {message}
           </p>
         </div>
+
+        {isPhoneFreeTime && (
+          <div className="mb-4 flex items-center justify-center gap-2 rounded-2xl bg-secondary-100 py-3 px-4">
+            <span className="text-lg">📵</span>
+            <p className="text-sm font-medium text-secondary-700">
+              This is your phone-free time. Take a break!
+            </p>
+          </div>
+        )}
 
         {mode !== 'none' && (
           <button
@@ -205,28 +230,48 @@ export default function HomePage() {
               </div>
             </button>
 
-            <button
-              onClick={() => navigate('/log/fasting')}
-              className="rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Timer className="h-4 w-4 text-accent-500" />
-                <span className="text-xs text-muted">Fasting</span>
-              </div>
-              <p className={`text-lg font-bold mb-1 ${fast.goalMet ? 'text-success' : 'text-text-primary'}`}>
-                {fast.status === 'fasting'
-                  ? formatFastingDuration(fast.fastingMinutes)
-                  : 'No data'}
-              </p>
-              {fast.status === 'fasting' && (
-                <div className="h-2 rounded-full bg-surface overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${fast.goalMet ? 'bg-success' : 'bg-accent-400'}`}
-                    style={{ width: `${Math.min((fast.fastingMinutes / (fast.goalHours * 60)) * 100, 100)}%` }}
-                  />
+            <div className="rounded-2xl bg-card p-4 shadow-sm text-left">
+              <button onClick={() => navigate('/log/fasting')} className="w-full text-left">
+                <div className="flex items-center gap-2 mb-2">
+                  <Timer className="h-4 w-4 text-accent-500" />
+                  <span className="text-xs text-muted">Fasting</span>
+                </div>
+                <p className={`text-lg font-bold mb-1 ${fast.goalMet ? 'text-success' : fast.status === 'dismissed' ? 'text-muted' : 'text-text-primary'}`}>
+                  {fast.status === 'fasting'
+                    ? formatFastingDuration(fast.fastingMinutes)
+                    : fast.status === 'dismissed'
+                    ? 'Dismissed'
+                    : 'No data'}
+                </p>
+                {fast.status === 'fasting' && (
+                  <div className="h-2 rounded-full bg-surface overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${fast.goalMet ? 'bg-success' : 'bg-accent-400'}`}
+                      style={{ width: `${Math.min((fast.fastingMinutes / (fast.goalHours * 60)) * 100, 100)}%` }}
+                    />
+                  </div>
+                )}
+              </button>
+              {fast.status === 'fasting' && fast.fastingMinutes > 0 && (
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => {
+                      breakFast(fast.lastMealAt!, fast.fastingMinutes, fast.goalHours)
+                      navigate('/log/meal')
+                    }}
+                    className="flex-1 rounded-lg bg-success/15 py-1.5 text-xs font-semibold text-success"
+                  >
+                    Break Fast
+                  </button>
+                  <button
+                    onClick={() => fast.dismiss()}
+                    className="flex-1 rounded-lg bg-surface py-1.5 text-xs font-semibold text-muted"
+                  >
+                    Delete Fast
+                  </button>
                 </div>
               )}
-            </button>
+            </div>
           </div>
 
           {habitsTotal > 0 && (
@@ -324,7 +369,7 @@ export default function HomePage() {
                   >
                     <AlertCircle className={`h-5 w-5 shrink-0 ${isOverdue ? 'text-danger' : isToday ? 'text-warning' : 'text-muted'}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-text-primary truncate">{task.title}</p>
+                      <p className="font-medium text-text-primary">{task.title}</p>
                       <p className={`text-xs ${isOverdue ? 'text-danger font-medium' : 'text-muted'}`}>
                         {dueLine}
                       </p>
