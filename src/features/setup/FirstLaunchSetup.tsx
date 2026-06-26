@@ -26,6 +26,7 @@ export default function FirstLaunchSetup({ onComplete }: FirstLaunchSetupProps) 
       starting_weight_kg: parseFloat(weight),
       goal_weight_milestone_kg: parseFloat(goalWeight),
       theme: 'light',
+      active_companion_id: null,
     })
     onComplete()
   }

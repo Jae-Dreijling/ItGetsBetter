@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { Scale, UtensilsCrossed, Droplets, Timer, AlertCircle, Dumbbell, CheckCircle2, ChevronRight, Pill, Check, Star } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
@@ -7,7 +7,6 @@ import PageContainer from '../../components/layout/PageContainer'
 import MoodPrompt from '../../components/MoodPrompt'
 import NotificationToast from '../../components/NotificationToast'
 import StarterHabitPrompt from '../../components/StarterHabitPrompt'
-import { useProfile } from '../../hooks/useProfile'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
 import { useActiveHabits, useTodaysCompletions } from '../../hooks/useHabits'
@@ -18,9 +17,9 @@ import { useTodaysExercise } from '../../hooks/useExercise'
 import { useTodaysMood } from '../../hooks/useMood'
 import { useTodaysMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
 import { usePointsBalance } from '../../hooks/usePoints'
-import { useIsReturningAfterAbsence, getWelcomeBackMessage } from '../../hooks/useWelcomeBack'
+import { useIsReturningAfterAbsence } from '../../hooks/useWelcomeBack'
+import { triggerCompanionMessage } from '../../components/FloatingCompanion'
 import { wasStarterOffered } from '../../lib/starterHabits'
-import { useQuotes, pickQuote } from '../../hooks/useQuotes'
 import { useTodaySchedule } from '../../hooks/useSchedule'
 import { useNotifications } from '../../hooks/useNotifications'
 import { getLogicalDate } from '../../lib/date'
@@ -41,7 +40,6 @@ function getTimeOfDay(): TimeOfDay {
 }
 
 export default function HomePage() {
-  const { profile } = useProfile()
   const latestWeight = useLatestWeight()
   const todaysMeals = useTodaysMeals()
   const activeHabits = useActiveHabits()
@@ -55,7 +53,7 @@ export default function HomePage() {
   const todaysMedLogs = useTodaysMedicineLogs()
   const points = usePointsBalance()
   const isReturning = useIsReturningAfterAbsence()
-  const customQuotes = useQuotes()
+  if (isReturning) triggerCompanionMessage('welcome_back')
   const { mode } = useTodaySchedule()
   const { notification, dismiss } = useNotifications()
   const navigate = useNavigate()
@@ -75,14 +73,6 @@ export default function HomePage() {
       return aUrgency - bUrgency
     })
     .slice(0, 5)
-
-  const displayName = profile?.display_name ?? 'friend'
-
-  const message = useMemo(() => {
-    if (isReturning) return getWelcomeBackMessage(displayName)
-    return pickQuote(customQuotes, displayName)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayName, isReturning, customQuotes?.length])
 
   const avgScore = todaysMeals?.length
     ? (todaysMeals.reduce((sum, m) => sum + m.health_score, 0) / todaysMeals.length).toFixed(1)
@@ -126,12 +116,6 @@ export default function HomePage() {
     <>
       <TopBar title="Home" onMenuClick={() => SideMenuContext.open()} />
       <PageContainer>
-        <div className={`mb-4 rounded-2xl p-5 shadow-sm ${isReturning ? 'bg-primary-100' : 'bg-card'}`}>
-          <p className="text-center text-lg font-medium text-text-primary leading-relaxed">
-            {message}
-          </p>
-        </div>
-
         {isPhoneFreeTime && (
           <div className="mb-4 flex items-center justify-center gap-2 rounded-2xl bg-secondary-100 py-3 px-4">
             <span className="text-lg">📵</span>

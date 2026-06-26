@@ -2,6 +2,7 @@ import { useEffect, useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
 import { db, ensureDefaults } from './db'
 import { checkProgressionAdvancements } from './hooks/useHabits'
+import { ensureDefaultCompanion } from './hooks/useCompanion'
 import { shouldRunLifecycle, runPhotoLifecycle, markLifecycleRun } from './lib/photoLifecycle'
 import { getLogicalDate, nowISO } from './lib/date'
 import { useProfile } from './hooks/useProfile'
@@ -11,6 +12,7 @@ import UpdatePrompt from './components/UpdatePrompt'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppLock, { isLockEnabled } from './components/AppLock'
 import InstallPrompt from './components/InstallPrompt'
+import FloatingCompanion, { triggerCompanionMessage } from './components/FloatingCompanion'
 import PointsToast from './components/PointsToast'
 import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
@@ -39,6 +41,7 @@ const ScheduleSettings = lazy(() => import('./features/settings/ScheduleSettings
 const LabelManager = lazy(() => import('./features/settings/LabelManager'))
 const GroceryPage = lazy(() => import('./features/grocery/GroceryPage'))
 const BooksPage = lazy(() => import('./features/books/BooksPage'))
+const CompanionPage = lazy(() => import('./features/companion/CompanionPage'))
 const RewardShopPage = lazy(() => import('./features/rewards/RewardShopPage'))
 const AchievementsPage = lazy(() => import('./features/achievements/AchievementsPage'))
 const GraphsDashboard = lazy(() => import('./features/graphs/GraphsDashboard'))
@@ -120,6 +123,7 @@ function AppContent() {
         <Route path="settings/labels" element={<Suspense fallback={<LazyFallback />}><LabelManager /></Suspense>} />
         <Route path="me/grocery" element={<Suspense fallback={<LazyFallback />}><GroceryPage /></Suspense>} />
         <Route path="me/books" element={<Suspense fallback={<LazyFallback />}><BooksPage /></Suspense>} />
+        <Route path="me/companion" element={<Suspense fallback={<LazyFallback />}><CompanionPage /></Suspense>} />
       </Route>
     </Routes>
   )
@@ -142,6 +146,8 @@ export default function App() {
         runPhotoLifecycle().then(() => markLifecycleRun())
       }
       checkProgressionAdvancements()
+      ensureDefaultCompanion()
+      setTimeout(() => triggerCompanionMessage('morning_greeting'), 1500)
     }
     init()
   }, [])
@@ -156,6 +162,7 @@ export default function App() {
       <ErrorBoundary feature="the app">
         <AppContent />
       </ErrorBoundary>
+      <FloatingCompanion />
       <PointsToast />
       <InstallPrompt />
     </BrowserRouter>
