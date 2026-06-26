@@ -18,7 +18,7 @@ A collection of ideas for features that are not planned for any current phase. T
 | 8 | ~~Grocery Lists (boodschappenlijstjes)~~ | ✅ **Built** | Templates + shopping mode |
 | 9 | ~~Progressive Habits (auto-increasing difficulty)~~ | ✅ **Built** | Auto-advance on 75% consistency |
 | 10 | ~~Habit Formation Threshold (30 days, 75% consistency)~~ | ✅ **Built** | Progress bar + enforcement |
-| 11 | Habit Chaining (linked sequences) | ⭐⭐⭐⭐ | ⭐⭐ (data model changes + UX design) |
+| 11 | ~~Habit Chaining (linked sequences)~~ | ✅ **Built** | Chain creation + "Next up" flow |
 | 12 | ~~Medicine Hides When Taken~~ | ✅ **Built** | Shows "All taken ✓" summary |
 | 13 | ~~Book Reading Tracker~~ | ✅ **Built** | Page tracking + rating + notes |
 | 14 | ~~"Can't Fail" Habit Fallback~~ | ✅ **Built** | Half credit, half points |
@@ -121,15 +121,11 @@ Important: this feature requires calorie estimation for meals (either manual inp
 
 ---
 
-## 11. Habit Chaining
+## 11. Habit Chaining — ✅ BUILT
 
-Link habits into sequences so completing one immediately prompts the next:
-- Example chain: "10 min walk" → "Drink a glass of water" → "5 min stretch"
-- After checking off the first, the next one in the chain appears as "Next up"
-- Builds routines naturally — morning routine, evening routine, post-workout routine
-- A chain is just an ordered list of existing habits that trigger in sequence
+~~Link habits into sequences so completing one immediately prompts the next.~~
 
-Requires: a `chain_id` and `chain_order` on habits, plus UI to create/edit chains and a "Next up" prompt after completion.
+**Implemented:** Habits Management → Chains section. Select 2+ unchained habits in order to create a chain. In the To-Do view, chained habits are grouped in a bordered card with 🔗 indicator. The first uncompleted habit shows "Next up →" label. Completed chain habits dim. You can skip any step. Each habit keeps its own points, streaks, and formation tracking. Remove individual habits from a chain or delete the entire chain.
 
 ---
 

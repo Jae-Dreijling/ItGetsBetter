@@ -165,16 +165,75 @@ export default function TodoPage() {
             </div>
             {filteredHabits && filteredHabits.length > 0 ? (
               <div className="space-y-2">
-                {filteredHabits.map(habit => (
-                  <HabitRow
-                    key={habit.id}
-                    habit={habit}
-                    isDone={isHabitDone(habit.id!)}
-                    labels={habit.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
-                    onToggle={() => toggleHabitCompletion(habit.id!)}
-                    onCantFail={() => toggleHabitCompletion(habit.id!, true)}
-                  />
-                ))}
+                {(() => {
+                  const rendered = new Set<number>()
+                  const chainGroups = new Map<string, typeof filteredHabits>()
+                  const standalone: typeof filteredHabits = []
+
+                  for (const h of filteredHabits!) {
+                    if (h.chain_id) {
+                      const arr = chainGroups.get(h.chain_id) ?? []
+                      arr.push(h)
+                      chainGroups.set(h.chain_id, arr)
+                    } else {
+                      standalone.push(h)
+                    }
+                  }
+
+                  for (const [, arr] of chainGroups) {
+                    arr.sort((a, b) => a.chain_order - b.chain_order)
+                  }
+
+                  const elements: React.ReactNode[] = []
+
+                  for (const habit of filteredHabits!) {
+                    if (rendered.has(habit.id!)) continue
+
+                    if (habit.chain_id && chainGroups.has(habit.chain_id)) {
+                      const chain = chainGroups.get(habit.chain_id)!
+                      chain.forEach(h => rendered.add(h.id!))
+
+                      const firstUndone = chain.find(h => !isHabitDone(h.id!))
+
+                      elements.push(
+                        <div key={`chain-${habit.chain_id}`} className="rounded-xl border-2 border-primary-200 dark:border-primary-800 p-2 space-y-1.5">
+                          <p className="text-[11px] font-semibold text-primary-400 px-2">🔗 Chain</p>
+                          {chain.map(h => {
+                            const done = isHabitDone(h.id!)
+                            const isNext = h.id === firstUndone?.id
+                            return (
+                              <div key={h.id} className={isNext ? '' : done ? 'opacity-50' : 'opacity-70'}>
+                                {isNext && !done && (
+                                  <p className="text-[11px] font-semibold text-accent-600 px-2 mb-0.5">Next up →</p>
+                                )}
+                                <HabitRow
+                                  habit={h}
+                                  isDone={done}
+                                  labels={h.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
+                                  onToggle={() => toggleHabitCompletion(h.id!)}
+                                  onCantFail={() => toggleHabitCompletion(h.id!, true)}
+                                />
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    } else {
+                      rendered.add(habit.id!)
+                      elements.push(
+                        <HabitRow
+                          key={habit.id}
+                          habit={habit}
+                          isDone={isHabitDone(habit.id!)}
+                          labels={habit.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
+                          onToggle={() => toggleHabitCompletion(habit.id!)}
+                          onCantFail={() => toggleHabitCompletion(habit.id!, true)}
+                        />
+                      )
+                    }
+                  }
+                  return elements
+                })()}
               </div>
             ) : (
               <p className="text-center text-sm text-muted py-3">

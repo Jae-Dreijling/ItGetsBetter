@@ -71,6 +71,8 @@ export async function addHabit(data: {
   custom_days?: Weekday[]
   cant_fail_description?: string | null
   progression?: import('../types').HabitProgression | null
+  chain_id?: string | null
+  chain_order?: number
   is_queued?: boolean
 }) {
   await db.habits.add({
@@ -80,6 +82,8 @@ export async function addHabit(data: {
     custom_days: data.custom_days ?? [],
     cant_fail_description: data.cant_fail_description ?? null,
     progression: data.progression ?? null,
+    chain_id: data.chain_id ?? null,
+    chain_order: data.chain_order ?? 0,
     is_active: !data.is_queued,
     is_queued: data.is_queued ?? false,
     activated_at: data.is_queued ? null : nowISO(),
@@ -94,6 +98,8 @@ export async function updateHabit(id: number, changes: Partial<{
   custom_days: Weekday[]
   cant_fail_description: string | null
   progression: import('../types').HabitProgression | null
+  chain_id: string | null
+  chain_order: number
   is_active: boolean
   is_queued: boolean
 }>) {

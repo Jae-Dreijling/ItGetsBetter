@@ -77,6 +77,8 @@ export interface Habit {
   custom_days: Weekday[]
   cant_fail_description: string | null
   progression: HabitProgression | null
+  chain_id: string | null
+  chain_order: number
   is_active: boolean
   is_queued: boolean
   activated_at: string | null
