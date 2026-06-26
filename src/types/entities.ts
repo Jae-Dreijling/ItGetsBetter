@@ -7,6 +7,7 @@ export interface UserProfile {
   starting_weight_kg: number
   goal_weight_milestone_kg: number
   theme: 'light' | 'dark' | 'auto'
+  active_companion_id: number | null
   created_at: string
 }
 
@@ -77,6 +78,8 @@ export interface Habit {
   custom_days: Weekday[]
   cant_fail_description: string | null
   progression: HabitProgression | null
+  chain_id: string | null
+  chain_order: number
   is_active: boolean
   is_queued: boolean
   activated_at: string | null
@@ -232,6 +235,30 @@ export interface Book {
   status: 'reading' | 'finished' | 'dropped'
   started_at: string
   finished_at: string | null
+  created_at: string
+}
+
+export interface CompanionMessages {
+  general: string[]
+  morning_greeting: string[]
+  welcome_back: string[]
+  achievement_unlocked: string[]
+  habit_completed: string[]
+  mood_low: string[]
+  fasting_goal: string[]
+  streak_milestone: string[]
+  phone_free: string[]
+  points_earned: string[]
+  weight_loss: string[]
+  idle: string[]
+}
+
+export interface Companion {
+  id?: number
+  name: string
+  avatar: Blob | null
+  is_default: boolean
+  messages: CompanionMessages
   created_at: string
 }
 

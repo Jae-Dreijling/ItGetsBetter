@@ -8,7 +8,7 @@ A collection of ideas for features that are not planned for any current phase. T
 
 | # | Idea | Usefulness | Ease of Adding |
 |---|---|---|---|
-| 1 | Companion Mascot | ⭐⭐⭐⭐ | ⭐ (very hard) |
+| 1 | ~~Companion Mascot~~ | ✅ **Built** | Speech bubble + event messages |
 | 2 | ~~Fun Weight Loss Comparisons~~ | ✅ **Built** | Shows on weight page with emoji |
 | 3 | ~~Weight Comparison Achievements~~ | ✅ **Built** | 7 achievements (apple → toddler) |
 | 4 | Exercise Calorie Estimation | ⭐⭐⭐ | ⭐⭐ (needs research for accuracy) |
@@ -18,22 +18,20 @@ A collection of ideas for features that are not planned for any current phase. T
 | 8 | ~~Grocery Lists (boodschappenlijstjes)~~ | ✅ **Built** | Templates + shopping mode |
 | 9 | ~~Progressive Habits (auto-increasing difficulty)~~ | ✅ **Built** | Auto-advance on 75% consistency |
 | 10 | ~~Habit Formation Threshold (30 days, 75% consistency)~~ | ✅ **Built** | Progress bar + enforcement |
-| 11 | Habit Chaining (linked sequences) | ⭐⭐⭐⭐ | ⭐⭐ (data model changes + UX design) |
+| 11 | ~~Habit Chaining (linked sequences)~~ | ✅ **Built** | Chain creation + "Next up" flow |
 | 12 | ~~Medicine Hides When Taken~~ | ✅ **Built** | Shows "All taken ✓" summary |
 | 13 | ~~Book Reading Tracker~~ | ✅ **Built** | Page tracking + rating + notes |
 | 14 | ~~"Can't Fail" Habit Fallback~~ | ✅ **Built** | Half credit, half points |
+| 15 | ~~Companion Chat (Pattern Matching)~~ | ✅ **Built** | Long-press companion → chat |
+| 16 | Companion AI (Real Conversations) | ⭐⭐⭐⭐⭐ | ⭐ (very hard — API/self-hosted/native options) |
 
 ---
 
-## 1. Companion Mascot
+## 1. Companion Mascot — ✅ BUILT
 
-A cute character that lives in the app and talks to you. You can customize its personality to match your preferred tone — encouraging, sassy, gentle, tough love, etc. The mascot reacts to your progress and celebrates wins with you.
+~~A cute character that lives in the app and talks to you.~~
 
-Personality examples:
-- **Supportive mom:** Warm and gentle, always proud of you
-- **Hype friend:** Excited about everything, over-the-top celebrations
-- **Drill sergeant:** Tough love, pushes you but respects your rest days
-- **Zen monk:** Calm, philosophical, focuses on the journey not the destination
+**Implemented:** Companion system with avatar image upload and 11 event-specific message pools (general, morning greeting, welcome back, achievement, habit completed, low mood, fasting goal, streak, phone-free, points, weight loss). Multiple companions with switching. Default companion pre-loaded with built-in messages. Home screen shows speech bubble with avatar icon. Replaces the old plain-text supportive message system. Accessible from Me → Companions.
 
 ---
 
@@ -121,15 +119,11 @@ Important: this feature requires calorie estimation for meals (either manual inp
 
 ---
 
-## 11. Habit Chaining
+## 11. Habit Chaining — ✅ BUILT
 
-Link habits into sequences so completing one immediately prompts the next:
-- Example chain: "10 min walk" → "Drink a glass of water" → "5 min stretch"
-- After checking off the first, the next one in the chain appears as "Next up"
-- Builds routines naturally — morning routine, evening routine, post-workout routine
-- A chain is just an ordered list of existing habits that trigger in sequence
+~~Link habits into sequences so completing one immediately prompts the next.~~
 
-Requires: a `chain_id` and `chain_order` on habits, plus UI to create/edit chains and a "Next up" prompt after completion.
+**Implemented:** Habits Management → Chains section. Select 2+ unchained habits in order to create a chain. In the To-Do view, chained habits are grouped in a bordered card with 🔗 indicator. The first uncompleted habit shows "Next up →" label. Completed chain habits dim. You can skip any step. Each habit keeps its own points, streaks, and formation tracking. Remove individual habits from a chain or delete the entire chain.
 
 ---
 
@@ -154,6 +148,50 @@ Requires: a `chain_id` and `chain_order` on habits, plus UI to create/edit chain
 ~~Every habit can have a configured "easy version" fallback.~~
 
 **Implemented:** Optional "Can't fail version" field on habits. To-Do view shows amber "Can't fail: [description]" button. Completing via can't-fail earns half points (2 instead of 5) and is tracked as `is_cant_fail: true`. Counts for streaks and formation threshold. Toast shows "+2 can't fail — still counts!"
+
+---
+
+## 15. Companion Chat (Pattern Matching) — ✅ BUILT
+
+~~A chat interface where you can "talk" to your companion character.~~
+
+**Implemented:** Long-press the floating companion icon to open a chat panel (half-screen, expandable to full-screen with maximize button). Type messages and the companion responds using keyword matching against their message pools. Detects mood keywords (sad, stressed → mood_low pool), health keywords (ate, exercise → habit_completed pool), and stat queries ("how am I doing?" → live daily stats, "how many points?" → points balance, "what should I do?" → personalized suggestions based on today's data). Typing indicator with bounce animation. Chat clears on close. Companion greets you on open.
+
+---
+
+## 16. Companion AI (Real Conversations)
+
+Upgrade the companion from pattern matching (#15) to actual AI-powered conversations. The companion understands context, gives real advice, and responds naturally in their configured personality.
+
+Three possible approaches, each with different tradeoffs:
+
+### Option A: External API (Easiest, breaks privacy)
+- Connect to OpenAI, Anthropic, or similar API
+- Fast, high quality, works on any phone
+- **Downside:** Conversations go through third-party servers — breaks the "no third party sees my data" rule
+- Could mitigate by sending only the message text, not health data — but then the AI can't reference your stats
+- Cost: pay-per-use API fees
+
+### Option B: Self-Hosted AI (Privacy-safe, medium effort)
+- Run Ollama, LocalAI, or similar on your own computer/server at home
+- Phone connects to YOUR server over home network or VPN
+- Data stays entirely yours — no third party involved
+- **Downside:** Only works when you're home (unless you set up remote access). Needs a decent computer with a GPU (or patience with CPU inference)
+- Cost: electricity + hardware you already own
+
+### Option C: On-Device Native (Best, hardest)
+- Convert the PWA to a native app (React Native or similar)
+- Run a small model (1-3B parameters) directly on the phone using llama.cpp or MLX
+- Fully offline, fully private, no server needed
+- **Downside:** Leaves the PWA architecture entirely. Requires native app development skills. Only works on newer phones with enough RAM (4GB+). Slow on older devices.
+- Cost: significant development effort
+
+### Recommendation
+Start with Option B (self-hosted) as an optional feature for desktop use. Keep the pattern matching (#15) as the default for phone. Only consider Option C if the app ever moves to native.
+
+| Usefulness | Ease of Adding |
+|---|---|
+| ⭐⭐⭐⭐⭐ | ⭐ (very hard — infrastructure, privacy constraints, hardware requirements) |
 
 ---
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trash2, Play, Pause, Pencil } from 'lucide-react'
+import { Plus, Trash2, Play, Pause, Pencil, Link, X } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import LabelPicker from '../../components/LabelPicker'
@@ -84,6 +84,10 @@ export default function HabitsPage() {
               ))}
             </div>
           </div>
+        )}
+
+        {activeHabits && activeHabits.length >= 2 && (
+          <ChainManager habits={activeHabits} />
         )}
 
         {!activeHabits?.length && !queuedHabits?.length && !inactiveHabits?.length && !showForm && (
@@ -385,6 +389,129 @@ function HabitItem({ habit, labelsMap, allLabels, status }: {
       <button onClick={() => deleteHabit(habit.id!)} className="p-1.5 text-muted hover:text-danger" title="Delete">
         <Trash2 className="h-4 w-4" />
       </button>
+    </div>
+  )
+}
+
+function ChainManager({ habits }: { habits: Habit[] }) {
+  const [showCreate, setShowCreate] = useState(false)
+  const [selectedHabits, setSelectedHabits] = useState<number[]>([])
+
+  const chains = new Map<string, Habit[]>()
+  for (const h of habits) {
+    if (h.chain_id) {
+      const arr = chains.get(h.chain_id) ?? []
+      arr.push(h)
+      chains.set(h.chain_id, arr)
+    }
+  }
+  for (const [, arr] of chains) {
+    arr.sort((a, b) => a.chain_order - b.chain_order)
+  }
+
+  const unchainedHabits = habits.filter(h => !h.chain_id)
+
+  function toggleSelect(id: number) {
+    setSelectedHabits(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
+  async function createChain() {
+    if (selectedHabits.length < 2) return
+    const chainId = `chain_${Date.now()}`
+    for (let i = 0; i < selectedHabits.length; i++) {
+      await updateHabit(selectedHabits[i], { chain_id: chainId, chain_order: i })
+    }
+    setSelectedHabits([])
+    setShowCreate(false)
+  }
+
+  async function removeFromChain(habitId: number) {
+    await updateHabit(habitId, { chain_id: null, chain_order: 0 })
+  }
+
+  async function deleteChain(chainId: string) {
+    const chainHabits = chains.get(chainId) ?? []
+    for (const h of chainHabits) {
+      await updateHabit(h.id!, { chain_id: null, chain_order: 0 })
+    }
+  }
+
+  return (
+    <div className="mb-6">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">
+          <Link className="inline h-3.5 w-3.5 mr-1" />
+          Chains
+        </h2>
+        <button
+          onClick={() => setShowCreate(!showCreate)}
+          className="text-xs text-primary-500 font-medium"
+        >
+          {showCreate ? 'Cancel' : '+ New Chain'}
+        </button>
+      </div>
+
+      {showCreate && (
+        <div className="mb-3 rounded-xl bg-card p-3 shadow-sm">
+          <p className="text-xs text-muted mb-2">Select habits in the order you want them chained:</p>
+          <div className="space-y-1.5 mb-3">
+            {unchainedHabits.map(h => {
+              const index = selectedHabits.indexOf(h.id!)
+              return (
+                <button
+                  key={h.id}
+                  onClick={() => toggleSelect(h.id!)}
+                  className={`flex w-full items-center gap-2 rounded-lg p-2.5 text-left text-sm transition-colors ${
+                    index >= 0 ? 'bg-primary-100 text-primary-700 font-medium' : 'bg-surface text-muted'
+                  }`}
+                >
+                  {index >= 0 ? (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-xs font-bold text-white">{index + 1}</span>
+                  ) : (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-muted" />
+                  )}
+                  {h.title}
+                </button>
+              )
+            })}
+          </div>
+          <button
+            onClick={createChain}
+            disabled={selectedHabits.length < 2}
+            className="w-full rounded-lg bg-secondary-500 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            Create Chain ({selectedHabits.length} habits)
+          </button>
+        </div>
+      )}
+
+      {chains.size > 0 ? (
+        <div className="space-y-3">
+          {Array.from(chains).map(([chainId, chainHabits]) => (
+            <div key={chainId} className="rounded-xl bg-card p-3 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-muted">Chain · {chainHabits.length} habits</p>
+                <button onClick={() => deleteChain(chainId)} className="text-xs text-danger">Remove chain</button>
+              </div>
+              <div className="space-y-1">
+                {chainHabits.map((h, i) => (
+                  <div key={h.id} className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-100 text-[11px] font-bold text-primary-600">{i + 1}</span>
+                    <span className="flex-1 text-sm text-text-primary">{h.title}</span>
+                    <button onClick={() => removeFromChain(h.id!)} className="p-0.5 text-muted hover:text-danger">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        !showCreate && <p className="text-xs text-muted">No chains yet. Chain habits to build routines.</p>
+      )}
     </div>
   )
 }
