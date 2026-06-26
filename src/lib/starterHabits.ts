@@ -31,6 +31,8 @@ export async function addStarterHabits(selectedIndices: number[]) {
       custom_days: [],
       cant_fail_description: null,
       progression: null,
+      chain_id: null,
+      chain_order: 0,
       is_active: true,
       is_queued: false,
       activated_at: nowISO(),
