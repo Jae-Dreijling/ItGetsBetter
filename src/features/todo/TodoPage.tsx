@@ -253,7 +253,7 @@ function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habi
         {isDone && <span className="text-xs">✓</span>}
       </button>
       <div className="flex-1 min-w-0">
-        <p className={`font-medium text-text-primary truncate ${isDone ? 'line-through' : ''}`}>
+        <p className={`font-medium text-text-primary ${isDone ? 'line-through' : ''}`}>
           {habit.title}
           {habit.progression?.enabled && (
             <span className={`ml-1.5 text-xs font-normal ${habit.progression.is_mastered ? 'text-success' : 'text-primary-500'}`}>
@@ -307,7 +307,7 @@ function TaskRow({ task, labels, projectName, onToggle }: { task: Task; labels: 
         className="flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 border-primary-300 hover:border-primary-500 transition-colors"
       />
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-text-primary truncate">{task.title}</p>
+        <p className="font-medium text-text-primary">{task.title}</p>
         <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
           <PriorityBadge priority={task.priority} />
           {labels.map(l => <LabelBadge key={l.id} name={l.name} color={l.color} />)}

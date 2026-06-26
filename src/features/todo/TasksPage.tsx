@@ -277,7 +277,7 @@ export default function TasksPage() {
                     >
                       <Check className="h-3 w-3" />
                     </button>
-                    <p className="flex-1 truncate text-sm line-through text-text-primary">{task.title}</p>
+                    <p className="flex-1 text-sm line-through text-text-primary">{task.title}</p>
                     <button onClick={() => deleteTask(task.id!)} className="p-1 text-muted hover:text-danger">
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -407,7 +407,7 @@ function TaskItem({ task, labelsMap, projects, labels: allLabels }: { task: Task
           className="flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 border-primary-300 hover:border-primary-500 transition-colors"
         />
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-text-primary truncate">{task.title}</p>
+          <p className="font-medium text-text-primary">{task.title}</p>
           <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
             <PriorityBadge priority={task.priority} />
             {task.label_ids.map(id => {
