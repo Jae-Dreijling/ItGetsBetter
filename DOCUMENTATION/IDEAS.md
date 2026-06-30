@@ -24,6 +24,15 @@ A collection of ideas for features that are not planned for any current phase. T
 | 14 | ~~"Can't Fail" Habit Fallback~~ | ✅ **Built** | Half credit, half points |
 | 15 | ~~Companion Chat (Pattern Matching)~~ | ✅ **Built** | Long-press companion → chat |
 | 16 | Companion AI (Real Conversations) | ⭐⭐⭐⭐⭐ | ⭐ (very hard — API/self-hosted/native options) |
+| 17 | Gamification / RPG Progression | ⭐⭐⭐⭐ | ⭐⭐ (extends existing points system) |
+| 18 | Meditation Timer | ⭐⭐⭐ | ⭐⭐⭐ (simple, self-contained) |
+| 19 | Pomodoro Timer | ⭐⭐⭐ | ⭐⭐⭐ (simple, self-contained) |
+| 20 | Skincare & Hair Tracking | ⭐⭐⭐ | ⭐⭐ (mirrors measurements + progress photos pattern) |
+| 21 | Daily Chronological Timeline | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (view layer over existing data) |
+| 22 | Current Focus (Homescreen Spotlight) | ⭐⭐⭐⭐ | ⭐⭐⭐ (mostly UI/config) |
+| 23 | Motivation Vault | ⭐⭐⭐ | ⭐⭐⭐ (simple new entity) |
+| 24 | Weather Check (Optional, Online-Only) | ⭐⭐ | ⭐⭐⭐ (single API call, no tracking) |
+| 25 | Barcode Scanning (Optional Meal Aid) | ⭐⭐⭐ | ⭐⭐ (camera + lightweight API lookup) |
 
 ---
 
@@ -192,6 +201,118 @@ Start with Option B (self-hosted) as an optional feature for desktop use. Keep t
 | Usefulness | Ease of Adding |
 |---|---|
 | ⭐⭐⭐⭐⭐ | ⭐ (very hard — infrastructure, privacy constraints, hardware requirements) |
+
+---
+
+## 17. Gamification / RPG Progression
+
+Layer an RPG-style progression system on top of the existing points economy: levels, XP bars, maybe simple stats (Discipline, Vitality, Consistency) that go up as related habits/logs are completed.
+
+- Reuses `pointsTransactions` as the XP source — no new earning logic needed, just a leveling curve on top.
+- "Leveling up" can trigger the existing achievement toast pattern.
+- Stats could map loosely to feature categories (e.g., meals/water → Vitality, habits → Discipline) for a bit of personality, but should stay decorative — never gate functionality behind a "level requirement," since that would violate the "never punish absence" and "celebrate action not perfection" rules if a level drops or stalls.
+- Keep numbers always non-decreasing, same as points today.
+
+Depends on: Points System (already built).
+
+---
+
+## 18. Meditation Timer
+
+A simple countdown timer for meditation sessions, optionally logging session length to a lightweight history.
+
+- Preset durations (5/10/15/20 min) + custom, consistent with "Preset Over Freeform" (Rulebook 3.2).
+- Optional ambient sound or just silence — keep it simple, this isn't a meditation app, it's a timer.
+- Could log to a generic "mindfulness" or "wellness" label shared with habits/tasks.
+- No streak pressure by default — completing a session is the win, length is secondary.
+
+---
+
+## 19. Pomodoro Timer
+
+A focus-timer (work/break cycles, typically 25/5) for the user's school/work tasks.
+
+- Could optionally link to a specific Task — "focus on this" — so completed pomodoros show up against that task.
+- Simple start/pause/reset UI. No need for deep configuration in v1 (custom interval lengths can be a later refinement).
+- Natural fit alongside Tasks in the To-Do tab, but should live as its own small tool so it doesn't bloat the task UI.
+
+---
+
+## 20. Skincare & Hair Tracking
+
+Track skin and hair progress the same way body measurements and progress photos already work.
+
+- Skin: dated photo log (face, optionally by area), free-text notes (breakouts, products used, reactions), optional 1-5 "skin feeling" score — same pattern as mood.
+- Hair: dated photo log + simple notes (growth, shedding, products).
+- Should reuse the existing Progress Photos lifecycle (compression at 1 year, 6-month download reminder, never auto-deleted) rather than building a new photo pipeline from scratch.
+- Sensitive data — same privacy tier as progress photos (PP-03), should sit behind App Lock if enabled.
+
+Depends on: Progress Photos feature (already built) — this is mostly a new entity using the same lifecycle/storage logic.
+
+---
+
+## 21. Daily Chronological Timeline
+
+A single scrollable timeline view showing everything logged "today" (or any day) in time order, rather than scattered across separate feature pages.
+
+```
+Today
+
+07:42  ⚖ Weight        98.4kg
+08:05  🥣 Breakfast     ⭐⭐⭐⭐☆
+09:30  💧 Water         500ml
+12:15  🚶 Walk          32 min
+20:15  😊 Mood          4/5
+```
+
+- This is a read-only aggregation view — it queries existing tables by `logged_at`/`date` and renders a unified list. No new data model needed, no duplicated state.
+- Naturally surfaces gaps in a day without ever framing them as "missed" — an empty stretch on the timeline just reads as empty, not flagged red (stays consistent with "Backfill Without Guilt," Rulebook 3.4).
+- Good candidate for a tab on the Home screen or a new view inside "Me," since it's a daily ritual not a logging action.
+- Could double as the natural surface for backfilling — tap an empty timeline slot to add a past-time entry.
+
+---
+
+## 22. Current Focus (Homescreen Spotlight)
+
+Let the user designate one feature as their "current focus," which then gets a dedicated, prominent shortcut on the home screen — above the regular quick actions.
+
+- Simple settings toggle: "What are you focusing on right now?" → pick from existing loggable features.
+- This is just UI prioritization on top of existing pages — no new tracking logic.
+- Directly implements Rulebook 2.3 ("Frequency Determines Prominence") but lets the *user* declare prominence instead of the app inferring it from usage stats — a nice complement to (not a replacement for) frequency-based ordering.
+- Should be easy to change or clear at any time — no commitment pressure, no "you abandoned your focus" messaging if it changes weekly.
+
+---
+
+## 23. Motivation Vault
+
+A place to store *why* a goal matters, separate from the goal's tracked numbers.
+
+- User picks a goal (weight milestone, habit, exercise consistency, etc.) and attaches free-text "reasons" — as many as they want, added any time.
+- Tapping the goal anywhere in the app (weight page, habit card) could surface these reasons — a quiet reminder of intent, not a nag.
+- Useful precisely during low-motivation moments; pairs well with the existing supportive-message system without replacing it.
+- New entity is simple: `motivationNotes { id, linked_goal_type, linked_goal_id, text, created_at }`. No dependencies on unbuilt features.
+
+---
+
+## 24. Weather Check (Optional, Online-Only)
+
+A small, strictly optional home-screen weather snippet — today's conditions for a location the user sets, shown only when online.
+
+- Deliberately minimal scope: one outbound API call to a weather provider, on demand or once per app open. No location tracking, no background polling, no history, no storage of past weather.
+- This is the one place in the app that talks to a third party by design — it must be clearly opt-in (off by default), and the privacy tradeoff should be stated plainly in settings ("this sends your chosen location to a weather API; nothing else about your data leaves the device").
+- If there's no network connection, the card simply doesn't render — no error state, no retry nagging, consistent with the app's offline-first philosophy.
+- Not tied to any health metric or insight — purely contextual, decorative information for planning the day (e.g., deciding on a walk).
+
+---
+
+## 25. Barcode Scanning (Optional Meal Aid)
+
+An optional camera-based barcode scanner to speed up meal logging for packaged food — looks up a product name (and optionally calories) via a lightweight public food-database API, then pre-fills the meal name field.
+
+- Strictly an input *shortcut*, not a new tracking paradigm: the result only pre-fills the existing `name` field (and optional `calories` field, ML-03) on the meal form. The required health score (1-5) is still always manual — this must not become a backdoor to automated nutrition scoring, which the PRD explicitly rejected (see "Meal Photo AI Analysis," Won't Have Yet).
+- Single outbound lookup per scan (product barcode → name/calories), nothing cached or sent in the background. Same opt-in/off-by-default treatment as Weather Check — state clearly in settings that scanning sends the barcode to a third-party lookup.
+- Falls back gracefully to manual name entry if offline or the barcode isn't found — never blocks logging.
+- Camera access reuses the same `<input type="file" capture>` / MediaDevices pattern already used for meal photos (Architecture 7.2).
 
 ---
 
