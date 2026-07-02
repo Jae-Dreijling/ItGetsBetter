@@ -7,6 +7,7 @@ import PageContainer from '../../components/layout/PageContainer'
 import MoodPrompt from '../../components/MoodPrompt'
 import NotificationToast from '../../components/NotificationToast'
 import StarterHabitPrompt from '../../components/StarterHabitPrompt'
+import WeatherCard from '../../components/WeatherCard'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
 import { useActiveHabits, useTodaysCompletions } from '../../hooks/useHabits'
@@ -150,6 +151,8 @@ export default function HomePage() {
         {showMoodPrompt && (
           <MoodPrompt timeOfDay={timeOfDay} onDismiss={() => setMoodDismissed(true)} />
         )}
+
+        <WeatherCard />
 
         {points !== undefined && (
           <button

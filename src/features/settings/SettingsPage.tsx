@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
 import { useStorageEstimate, formatBytes } from '../../hooks/useStorage'
 import { isLockEnabled, enableLock, disableLock } from '../../components/AppLock'
+import { isWeatherEnabled, setWeatherEnabled } from '../../hooks/useWeather'
 
 export default function SettingsPage() {
   const { profile } = useProfile()
@@ -13,6 +14,7 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const [lockEnabled, setLockEnabled] = useState(isLockEnabled)
   const [showPinSetup, setShowPinSetup] = useState(false)
+  const [weatherEnabled, setWeatherEnabledState] = useState(isWeatherEnabled)
   const [newPin, setNewPin] = useState('')
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'current'>('idle')
 
@@ -175,6 +177,34 @@ export default function SettingsPage() {
             )}
             {lockEnabled && (
               <p className="mt-1 text-xs text-muted">PIN is required when opening the app.</p>
+            )}
+          </div>
+
+          <div className="rounded-xl bg-card p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Cloud className="h-5 w-5 text-secondary-400" />
+                <div>
+                  <p className="font-medium text-text-primary">Weather</p>
+                  <p className="text-xs text-muted">Shows Velp weather on home screen</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const next = !weatherEnabled
+                  setWeatherEnabled(next)
+                  setWeatherEnabledState(next)
+                  if (!next) sessionStorage.removeItem('igb_weather_cache')
+                }}
+                className={`relative h-6 w-11 rounded-full transition-colors ${weatherEnabled ? 'bg-secondary-400' : 'bg-surface border border-primary-100'}`}
+              >
+                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${weatherEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+            {weatherEnabled && (
+              <p className="mt-2 text-xs text-muted">
+                Your chosen location is sent to Open-Meteo to fetch weather. Nothing else about your data leaves the device.
+              </p>
             )}
           </div>
         </div>

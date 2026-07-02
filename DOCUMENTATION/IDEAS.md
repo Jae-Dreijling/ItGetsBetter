@@ -31,7 +31,7 @@ A collection of ideas for features that are not planned for any current phase. T
 | 21 | Daily Chronological Timeline | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (view layer over existing data) |
 | 22 | Current Focus (Homescreen Spotlight) | ⭐⭐⭐⭐ | ⭐⭐⭐ (mostly UI/config) |
 | 23 | Motivation Vault | ⭐⭐⭐ | ⭐⭐⭐ (simple new entity) |
-| 24 | Weather Check (Optional, Online-Only) | ⭐⭐ | ⭐⭐⭐ (single API call, no tracking) |
+| 24 | ~~Weather Check (Optional, Online-Only)~~ | ✅ **Built** | Open-Meteo, opt-in toggle in settings |
 | 25 | Barcode Scanning (Optional Meal Aid) | ⭐⭐⭐ | ⭐⭐ (camera + lightweight API lookup) |
 
 ---
@@ -294,14 +294,11 @@ A place to store *why* a goal matters, separate from the goal's tracked numbers.
 
 ---
 
-## 24. Weather Check (Optional, Online-Only)
+## 24. Weather Check — ✅ BUILT
 
-A small, strictly optional home-screen weather snippet — today's conditions for a location the user sets, shown only when online.
+~~A small, strictly optional home-screen weather snippet — today's conditions for a location the user sets, shown only when online.~~
 
-- Deliberately minimal scope: one outbound API call to a weather provider, on demand or once per app open. No location tracking, no background polling, no history, no storage of past weather.
-- This is the one place in the app that talks to a third party by design — it must be clearly opt-in (off by default), and the privacy tradeoff should be stated plainly in settings ("this sends your chosen location to a weather API; nothing else about your data leaves the device").
-- If there's no network connection, the card simply doesn't render — no error state, no retry nagging, consistent with the app's offline-first philosophy.
-- Not tied to any health metric or insight — purely contextual, decorative information for planning the day (e.g., deciding on a walk).
+**Implemented:** Open-Meteo API (free, no API key, sends only lat/lon for Velp, Gelderland). Opt-in toggle in Settings with privacy disclaimer. Home screen card shows current temp, feels-like, and WMO weather emoji + label. 30-minute sessionStorage cache to avoid repeat fetches. Card silently hides when offline or disabled — no error state.
 
 ---
 
