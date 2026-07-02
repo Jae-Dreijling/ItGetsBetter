@@ -238,6 +238,13 @@ export interface Book {
   created_at: string
 }
 
+export interface MotivationNote {
+  id?: number
+  category: string
+  text: string
+  created_at: string
+}
+
 export interface CompanionMessages {
   general: string[]
   morning_greeting: string[]

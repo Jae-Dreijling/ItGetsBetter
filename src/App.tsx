@@ -48,6 +48,7 @@ const GraphsDashboard = lazy(() => import('./features/graphs/GraphsDashboard'))
 const WeeklyReviewPage = lazy(() => import('./features/review/WeeklyReviewPage'))
 const ProgressPhotosPage = lazy(() => import('./features/photos/ProgressPhotosPage'))
 const InsightsPage = lazy(() => import('./features/insights/InsightsPage'))
+const MotivationVaultPage = lazy(() => import('./features/me/MotivationVaultPage'))
 
 function LazyFallback() {
   return (
@@ -124,6 +125,7 @@ function AppContent() {
         <Route path="me/grocery" element={<Suspense fallback={<LazyFallback />}><GroceryPage /></Suspense>} />
         <Route path="me/books" element={<Suspense fallback={<LazyFallback />}><BooksPage /></Suspense>} />
         <Route path="me/companion" element={<Suspense fallback={<LazyFallback />}><CompanionPage /></Suspense>} />
+        <Route path="me/vault" element={<Suspense fallback={<LazyFallback />}><MotivationVaultPage /></Suspense>} />
       </Route>
     </Routes>
   )

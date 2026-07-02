@@ -30,7 +30,7 @@ A collection of ideas for features that are not planned for any current phase. T
 | 20 | Skincare & Hair Tracking | ⭐⭐⭐ | ⭐⭐ (mirrors measurements + progress photos pattern) |
 | 21 | Daily Chronological Timeline | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (view layer over existing data) |
 | 22 | Current Focus (Homescreen Spotlight) | ⭐⭐⭐⭐ | ⭐⭐⭐ (mostly UI/config) |
-| 23 | Motivation Vault | ⭐⭐⭐ | ⭐⭐⭐ (simple new entity) |
+| 23 | ~~Motivation Vault~~ | ✅ **Built** | Me → Motivation Vault, grouped by category |
 | 24 | ~~Weather Check (Optional, Online-Only)~~ | ✅ **Built** | Open-Meteo, opt-in toggle in settings |
 | 25 | Barcode Scanning (Optional Meal Aid) | ⭐⭐⭐ | ⭐⭐ (camera + lightweight API lookup) |
 
@@ -283,14 +283,11 @@ Let the user designate one feature as their "current focus," which then gets a d
 
 ---
 
-## 23. Motivation Vault
+## 23. Motivation Vault — ✅ BUILT
 
-A place to store *why* a goal matters, separate from the goal's tracked numbers.
+~~A place to store *why* a goal matters, separate from the goal's tracked numbers.~~
 
-- User picks a goal (weight milestone, habit, exercise consistency, etc.) and attaches free-text "reasons" — as many as they want, added any time.
-- Tapping the goal anywhere in the app (weight page, habit card) could surface these reasons — a quiet reminder of intent, not a nag.
-- Useful precisely during low-motivation moments; pairs well with the existing supportive-message system without replacing it.
-- New entity is simple: `motivationNotes { id, linked_goal_type, linked_goal_id, text, created_at }`. No dependencies on unbuilt features.
+**Implemented:** Me → Motivation Vault. Write free-text reasons grouped by category (General, Weight, Habits, Exercise, Health). Notes displayed grouped by category, newest first. Delete individual notes with trash icon. Fully backed up in .igb backup files. DB version 11.
 
 ---
 
