@@ -242,6 +242,7 @@ export interface MotivationNote {
   id?: number
   category: string
   text: string
+  photo: Blob | null
   created_at: string
 }
 

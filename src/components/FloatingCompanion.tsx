@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useActiveCompanion, getCompanionMessage, type CompanionEvent } from '../hooks/useCompanion'
+import { useActiveCompanion, getCompanionMessage, ensureDefaultCompanion, type CompanionEvent } from '../hooks/useCompanion'
 import { useProfile } from '../hooks/useProfile'
 import CompanionChat from './CompanionChat'
+import { tryGetMotivationMessage } from '../hooks/useMotivationNotes'
 
 const POSITION_KEY = 'igb_companion_position'
 const IDLE_TIMEOUT = 10000
@@ -32,6 +33,10 @@ export default function FloatingCompanion() {
   const name = profile?.display_name ?? 'friend'
 
   useEffect(() => {
+    ensureDefaultCompanion()
+  }, [])
+
+  useEffect(() => {
     if (companion?.avatar) {
       const url = URL.createObjectURL(companion.avatar)
       setAvatarUrl(url)
@@ -55,7 +60,16 @@ export default function FloatingCompanion() {
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimer.current) clearTimeout(idleTimer.current)
-    idleTimer.current = setTimeout(() => {
+    idleTimer.current = setTimeout(async () => {
+      if (Math.random() < 0.35) {
+        const motMsg = await tryGetMotivationMessage()
+        if (motMsg) {
+          setMessage(`💭 "${motMsg}"`)
+          if (messageTimer.current) clearTimeout(messageTimer.current)
+          messageTimer.current = setTimeout(() => setMessage(null), 7000)
+          return
+        }
+      }
       showMessage('idle')
     }, IDLE_TIMEOUT)
   }, [showMessage])
