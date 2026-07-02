@@ -19,8 +19,12 @@ export default function FloatingCompanion() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [position, setPosition] = useState(() => {
+    const clamp = (p: { x: number; y: number }) => ({
+      x: Math.max(0, Math.min(window.innerWidth - 56, p.x)),
+      y: Math.max(56, Math.min(window.innerHeight - 120, p.y)),
+    })
     const saved = localStorage.getItem(POSITION_KEY)
-    if (saved) return JSON.parse(saved) as { x: number; y: number }
+    if (saved) return clamp(JSON.parse(saved) as { x: number; y: number })
     return { x: window.innerWidth - 70, y: window.innerHeight - 200 }
   })
   const [dragging, setDragging] = useState(false)
@@ -73,6 +77,17 @@ export default function FloatingCompanion() {
       showMessage('idle')
     }, IDLE_TIMEOUT)
   }, [showMessage])
+
+  useEffect(() => {
+    function handleResize() {
+      setPosition(p => ({
+        x: Math.max(0, Math.min(window.innerWidth - 56, p.x)),
+        y: Math.max(56, Math.min(window.innerHeight - 120, p.y)),
+      }))
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     const events = ['touchstart', 'mousedown', 'scroll', 'keydown'] as const
@@ -155,8 +170,6 @@ export default function FloatingCompanion() {
     window.addEventListener('mouseup', onMouseUp)
   }
 
-  if (!companion) return null
-
   if (chatOpen) {
     return <CompanionChat isOpen={chatOpen} onClose={() => setChatOpen(false)} />
   }
@@ -178,7 +191,7 @@ export default function FloatingCompanion() {
           onClick={() => setMessage(null)}
         >
           <p className="text-xs font-medium text-text-primary leading-relaxed">{message}</p>
-          <p className="mt-1 text-[11px] text-muted">— {companion.name}</p>
+          <p className="mt-1 text-[11px] text-muted">— {companion?.name ?? 'Companion'}</p>
           <div
             className={`absolute top-4 w-2 h-2 bg-card border border-primary-100 dark:border-primary-900 rotate-45 ${
               bubbleOnLeft ? 'right-[-5px] border-l-0 border-b-0' : 'left-[-5px] border-r-0 border-t-0'
@@ -197,7 +210,7 @@ export default function FloatingCompanion() {
         onMouseDown={handleMouseDown}
       >
         {avatarUrl ? (
-          <img src={avatarUrl} alt={companion.name} className="h-full w-full rounded-full object-cover" />
+          <img src={avatarUrl} alt={companion?.name ?? 'Companion'} className="h-full w-full rounded-full object-cover" />
         ) : (
           <span className="text-xl">💬</span>
         )}
