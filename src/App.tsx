@@ -49,6 +49,8 @@ const WeeklyReviewPage = lazy(() => import('./features/review/WeeklyReviewPage')
 const ProgressPhotosPage = lazy(() => import('./features/photos/ProgressPhotosPage'))
 const InsightsPage = lazy(() => import('./features/insights/InsightsPage'))
 const MotivationVaultPage = lazy(() => import('./features/me/MotivationVaultPage'))
+const TimelinePage = lazy(() => import('./features/me/TimelinePage'))
+const PomodoroPage = lazy(() => import('./features/todo/PomodoroPage'))
 
 function LazyFallback() {
   return (
@@ -107,6 +109,7 @@ function AppContent() {
         <Route path="todo" element={<TodoPage />} />
         <Route path="todo/habits" element={<HabitsPage />} />
         <Route path="todo/tasks" element={<TasksPage />} />
+        <Route path="todo/pomodoro" element={<Suspense fallback={<LazyFallback />}><PomodoroPage /></Suspense>} />
         <Route path="me" element={<MePage />} />
         <Route path="me/measurements" element={<MeasurementsPage />} />
         <Route path="me/rewards" element={<Suspense fallback={<LazyFallback />}><RewardShopPage /></Suspense>} />
@@ -126,6 +129,7 @@ function AppContent() {
         <Route path="me/books" element={<Suspense fallback={<LazyFallback />}><BooksPage /></Suspense>} />
         <Route path="me/companion" element={<Suspense fallback={<LazyFallback />}><CompanionPage /></Suspense>} />
         <Route path="me/vault" element={<Suspense fallback={<LazyFallback />}><MotivationVaultPage /></Suspense>} />
+        <Route path="me/timeline" element={<Suspense fallback={<LazyFallback />}><TimelinePage /></Suspense>} />
       </Route>
     </Routes>
   )

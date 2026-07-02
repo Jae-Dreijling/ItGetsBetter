@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Target, CheckCircle2 } from 'lucide-react'
+import { Plus, Target, CheckCircle2, Timer } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import LabelBadge from '../../components/LabelBadge'
@@ -66,7 +66,18 @@ export default function TodoPage() {
 
   return (
     <>
-      <TopBar title="To-Do" />
+      <TopBar
+        title="To-Do"
+        rightContent={
+          <button
+            onClick={() => navigate('/todo/pomodoro')}
+            className="p-1.5 text-muted hover:text-text-primary"
+            aria-label="Pomodoro timer"
+          >
+            <Timer className="h-5 w-5" />
+          </button>
+        }
+      />
       <PageContainer>
         <div className="mb-4 flex gap-2">
           {(['all', 'habits', 'tasks'] as Filter[]).map(f => (
