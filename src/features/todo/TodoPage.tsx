@@ -166,61 +166,49 @@ export default function TodoPage() {
             {filteredHabits && filteredHabits.length > 0 ? (
               <div className="space-y-2">
                 {(() => {
-                  const rendered = new Set<number>()
                   const chainGroups = new Map<string, typeof filteredHabits>()
-                  const standalone: typeof filteredHabits = []
-
                   for (const h of filteredHabits!) {
                     if (h.chain_id) {
                       const arr = chainGroups.get(h.chain_id) ?? []
                       arr.push(h)
                       chainGroups.set(h.chain_id, arr)
-                    } else {
-                      standalone.push(h)
                     }
                   }
-
                   for (const [, arr] of chainGroups) {
                     arr.sort((a, b) => a.chain_order - b.chain_order)
                   }
 
-                  const elements: React.ReactNode[] = []
+                  type Unit =
+                    | { type: 'standalone'; habit: (typeof filteredHabits)[0] }
+                    | { type: 'chain'; chainId: string; habits: typeof filteredHabits }
 
+                  const units: Unit[] = []
+                  const seenChains = new Set<string>()
                   for (const habit of filteredHabits!) {
-                    if (rendered.has(habit.id!)) continue
-
-                    if (habit.chain_id && chainGroups.has(habit.chain_id)) {
-                      const chain = chainGroups.get(habit.chain_id)!
-                      chain.forEach(h => rendered.add(h.id!))
-
-                      const firstUndone = chain.find(h => !isHabitDone(h.id!))
-
-                      elements.push(
-                        <div key={`chain-${habit.chain_id}`} className="rounded-xl border-2 border-primary-200 dark:border-primary-800 p-2 space-y-1.5">
-                          <p className="text-[11px] font-semibold text-primary-400 px-2">🔗 Chain</p>
-                          {chain.map(h => {
-                            const done = isHabitDone(h.id!)
-                            const isNext = h.id === firstUndone?.id
-                            return (
-                              <div key={h.id} className={isNext ? '' : done ? 'opacity-50' : 'opacity-70'}>
-                                {isNext && !done && (
-                                  <p className="text-[11px] font-semibold text-accent-600 px-2 mb-0.5">Next up →</p>
-                                )}
-                                <HabitRow
-                                  habit={h}
-                                  isDone={done}
-                                  labels={h.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
-                                  onToggle={() => toggleHabitCompletion(h.id!)}
-                                  onCantFail={() => toggleHabitCompletion(h.id!, true)}
-                                />
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )
+                    if (habit.chain_id) {
+                      if (!seenChains.has(habit.chain_id)) {
+                        seenChains.add(habit.chain_id)
+                        units.push({ type: 'chain', chainId: habit.chain_id, habits: chainGroups.get(habit.chain_id)! })
+                      }
                     } else {
-                      rendered.add(habit.id!)
-                      elements.push(
+                      units.push({ type: 'standalone', habit })
+                    }
+                  }
+
+                  units.sort((a, b) => {
+                    const aDone = a.type === 'standalone'
+                      ? isHabitDone(a.habit.id!)
+                      : a.habits.every(h => isHabitDone(h.id!))
+                    const bDone = b.type === 'standalone'
+                      ? isHabitDone(b.habit.id!)
+                      : b.habits.every(h => isHabitDone(h.id!))
+                    return Number(aDone) - Number(bDone)
+                  })
+
+                  return units.map(unit => {
+                    if (unit.type === 'standalone') {
+                      const habit = unit.habit
+                      return (
                         <HabitRow
                           key={habit.id}
                           habit={habit}
@@ -231,8 +219,32 @@ export default function TodoPage() {
                         />
                       )
                     }
-                  }
-                  return elements
+                    const chain = unit.habits
+                    const firstUndone = chain.find(h => !isHabitDone(h.id!))
+                    return (
+                      <div key={`chain-${unit.chainId}`} className="rounded-xl border-2 border-primary-200 dark:border-primary-800 p-2 space-y-1.5">
+                        <p className="text-[11px] font-semibold text-primary-400 px-2">🔗 Chain</p>
+                        {chain.map(h => {
+                          const done = isHabitDone(h.id!)
+                          const isNext = h.id === firstUndone?.id
+                          return (
+                            <div key={h.id} className={isNext ? '' : done ? 'opacity-50' : 'opacity-70'}>
+                              {isNext && !done && (
+                                <p className="text-[11px] font-semibold text-accent-600 px-2 mb-0.5">Next up →</p>
+                              )}
+                              <HabitRow
+                                habit={h}
+                                isDone={done}
+                                labels={h.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
+                                onToggle={() => toggleHabitCompletion(h.id!)}
+                                onCantFail={() => toggleHabitCompletion(h.id!, true)}
+                              />
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })
                 })()}
               </div>
             ) : (
