@@ -58,6 +58,7 @@ const JourneyActivationPage = lazy(() => import('./features/game/JourneyActivati
 const GuildHallPage = lazy(() => import('./features/game/GuildHallPage'))
 const BossPage = lazy(() => import('./features/game/BossPage'))
 const EncounterPage = lazy(() => import('./features/game/EncounterPage'))
+const MapPage = lazy(() => import('./features/game/MapPage'))
 
 function LazyFallback() {
   return (
@@ -144,6 +145,7 @@ function AppContent() {
         <Route path="journey/guild" element={<Suspense fallback={<LazyFallback />}><GuildHallPage /></Suspense>} />
         <Route path="journey/boss/:bossId" element={<Suspense fallback={<LazyFallback />}><BossPage /></Suspense>} />
         <Route path="journey/encounter/:encounterId" element={<Suspense fallback={<LazyFallback />}><EncounterPage /></Suspense>} />
+        <Route path="journey/map" element={<Suspense fallback={<LazyFallback />}><MapPage /></Suspense>} />
       </Route>
     </Routes>
   )

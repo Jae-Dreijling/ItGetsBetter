@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { Sparkles, Coins, RefreshCw, CheckCircle2, Clock, ShieldCheck, Zap, Home, Swords, Heart } from 'lucide-react'
+import { Sparkles, Coins, RefreshCw, CheckCircle2, Clock, ShieldCheck, Zap, Home, Swords, Heart, Map as MapIcon } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useGameState, useActiveQuests, useCustomQuestions, useQuestProgress, useCompanionAffinities, useCompanions } from '../../hooks/useGame'
@@ -618,6 +618,19 @@ export default function JourneyPage() {
             <p className="text-[10px] text-muted mt-0.5">from quests & exploring</p>
           </div>
         </div>
+
+        {/* World Map */}
+        <button
+          onClick={() => navigate('/journey/map')}
+          className="mb-3 flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left transition-all active:scale-[0.98]"
+        >
+          <MapIcon className="h-5 w-5 shrink-0 text-teal-500" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-text-primary">World Map</p>
+            <p className="text-[10px] text-muted">Explore Equestria · see locked regions</p>
+          </div>
+          <span className="text-xs text-muted">🍎 Ponyville</span>
+        </button>
 
         {/* Navigation — Guild Hall + Boss */}
         <div className="mb-5 grid grid-cols-2 gap-3">
