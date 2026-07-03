@@ -11,8 +11,8 @@ A collection of ideas for features that are not planned for any current phase. T
 | 1 | ~~Companion Mascot~~ | ✅ **Built** | Speech bubble + event messages |
 | 2 | ~~Fun Weight Loss Comparisons~~ | ✅ **Built** | Shows on weight page with emoji |
 | 3 | ~~Weight Comparison Achievements~~ | ✅ **Built** | 7 achievements (apple → toddler) |
-| 4 | Exercise Calorie Estimation | ⭐⭐⭐ | ⭐⭐ (needs research for accuracy) |
-| 5 | Meal Burn-Off Suggestions | ⭐⭐⭐ | ⭐⭐ (depends on #4) |
+| 4 | ~~Exercise Calorie Estimation~~ | ✅ **Built** | MET-based math, auto-calculates on log, custom kcal/min for "Other..." types |
+| 5 | ~~Meal Burn-Off Suggestions~~ | ✅ **Built** | Optional calories on meal log + 🔥 button shows burn-off times |
 | 6 | ~~Points Notification~~ | ✅ **Built** | Toast shows "+X for Y" on earn |
 | 7 | ~~Label Management (CRUD in settings)~~ | ✅ **Built** | Settings → Labels |
 | 8 | ~~Grocery Lists (boodschappenlijstjes)~~ | ✅ **Built** | Templates + shopping mode |
@@ -33,7 +33,7 @@ A collection of ideas for features that are not planned for any current phase. T
 | 23 | ~~Motivation Vault~~ | ✅ **Built** | Me → Motivation Vault, grouped by category |
 | 24 | ~~Weather Check (Optional, Online-Only)~~ | ✅ **Built** | Open-Meteo, opt-in toggle in settings |
 | 25 | ~~Barcode Scanning (Optional Meal Aid)~~ | ~~removed~~ | ~~removed~~ |
-| 26 | Pomodoro Sound Alerts | ⭐⭐⭐⭐ | ⭐⭐⭐ (expansion of #19, Web Audio API, no external files needed) |
+| 26 | ~~Pomodoro Sound Alerts~~ | ✅ **Built** | Two configurable sounds (focus end + break end) with Preview, saved in localStorage |
 
 ---
 
@@ -61,31 +61,19 @@ A collection of ideas for features that are not planned for any current phase. T
 
 ---
 
-## 4. Exercise Calorie Estimation
+## 4. Exercise Calorie Estimation — ✅ BUILT
 
-After logging an exercise, automatically estimate how many calories were burned based on:
-- Exercise type
-- Duration
-- Intensity (sets/reps/weight or distance)
-- User's body weight
+~~After logging an exercise, automatically estimate how many calories were burned.~~
 
-Display as: "You burned approximately 320 calories!" 
-
-Note: estimates are inherently inaccurate. Frame it as approximate ("roughly", "around") and never use it as a precise tracking metric.
+**Implemented:** MET-based formula `calories = (kcal_per_min × user_weight_kg / 70) × duration_minutes`. 9 built-in exercise types with researched kcal/min values (Running 9.8, Walking 3.9, Weight Lifting 4.7, Boxing 8.3, Dancing 5.3, Swimming 8.3, Cycling 6.8, Home Workout 5.8, Planking 3.8). "Other..." exercises can set a custom kcal/min value (stored in localStorage, labeled "per 70kg average person"). Only calculates when duration is logged. Uses the user's latest logged weight for personalisation; skips if no weight entry exists. Result shown as `~X kcal` on the exercise card.
 
 ---
 
-## 5. Meal Burn-Off Suggestions
+## 5. Meal Burn-Off Suggestions — ✅ BUILT
 
-After logging a meal, show a fire icon button that opens "ways to burn this off":
-- "Walk for 35 minutes"
-- "Run 2.5km"
-- "15 minutes of jumping jacks"
-- "Dance for 20 minutes"
+~~After logging a meal, show a fire icon button that opens "ways to burn this off".~~
 
-This is NOT about guilt — it's about awareness and fun. The tone should be playful: "If you felt like moving, here are some options" not "You need to burn this off."
-
-Important: this feature requires calorie estimation for meals (either manual input or AI-based), which doesn't exist yet. Consider building this after the calorie estimation feature.
+**Implemented:** Optional "Calories?" field when logging a meal. When calories are entered, a 🔥 fire button appears on the meal card. Tapping it opens a bottom sheet showing 7 exercises (Running, Cycling, Swimming, Boxing, Dancing, Home Workout, Walking) with estimated burn times — adjusted for the user's latest logged weight, or 70kg if none is set. Tone is informational, not guilt-driven. Reuses the MET-based math from #4.
 
 ---
 
@@ -274,29 +262,11 @@ Depends on: Points System (already built).
 
 ---
 
-## 26. Pomodoro Sound Alerts
+## 26. Pomodoro Sound Alerts — ✅ BUILT
 
-An expansion of the Pomodoro timer (#19) that plays a chosen sound at key moments instead of (or alongside) the vibration.
+~~An expansion of the Pomodoro timer (#19) that plays a chosen sound at key moments.~~
 
-**Trigger events to cover:**
-- Focus session ends → break begins
-- Break ends → next focus session begins
-- Long break begins (after N sessions)
-- Optional: a soft tick every minute as a gentle reminder the timer is running
-
-**Sound selection:**
-- A small curated set of sounds bundled in the app (no network request): soft bell, digital beep, chime, bowl gong, ding, forest birds, rain drop.
-- Each event can have its own sound chosen independently, or all can share one setting.
-- A volume slider (or just on/off) so it can be silenced without changing the vibration setting.
-- Sounds generated via the Web Audio API (no audio files needed — synthesized tones) to keep the bundle small and work offline. Each "sound" is a short synth recipe (frequency, envelope, waveform).
-
-**Implementation notes:**
-- `src/lib/sounds.ts` is already built (shared with Meditation Timer #18) — `playSound(id)` is ready to call.
-- Sound preference stored in localStorage alongside the existing Pomodoro settings (e.g. `igb_pomo_sound_work_end`).
-- Picker lives in the existing Configure Timer bottom sheet — add a "Sounds" section with per-event pickers using the same `SoundPicker` pattern from MeditationPage.
-- Falls back silently if the browser blocks autoplay (no crash, no error state shown to user).
-
-**Depends on:** Pomodoro Timer (#19, already built).
+**Implemented:** Two configurable sound events — "Focus session ends" and "Break ends" — using the same 6-option Web Audio API sound library as Meditation Timer (#18). Picker lives inside the Configure Timer bottom sheet under a "Sounds" divider. Each event has an independent sound picker with a Preview button. Settings stored in localStorage (`igb_pomo_sound_work_end`, `igb_pomo_sound_break_end`). Sounds play alongside the existing vibration on auto-advance. Falls back silently if the browser blocks autoplay. Active sounds summarised as a small line below the session info card (e.g. "🔔 focus end · 💫 break end").
 
 ---
 

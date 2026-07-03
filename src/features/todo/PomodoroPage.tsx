@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { Settings, RotateCcw, X } from 'lucide-react'
+import { Settings, RotateCcw, X, Play } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
+import { playSound, SOUND_OPTIONS, type SoundId } from '../../lib/sounds'
 
 const SK = {
   work: 'igb_pomo_work',
   short: 'igb_pomo_short',
   long: 'igb_pomo_long',
   count: 'igb_pomo_count',
+  soundWorkEnd: 'igb_pomo_sound_work_end',
+  soundBreakEnd: 'igb_pomo_sound_break_end',
 }
 
 interface PomodoroSettings {
@@ -18,12 +21,24 @@ interface PomodoroSettings {
   sessionCount: number
 }
 
+interface SoundSettings {
+  workEnd: SoundId
+  breakEnd: SoundId
+}
+
 function loadSettings(): PomodoroSettings {
   return {
     workMins: Number(localStorage.getItem(SK.work) || 25),
     shortMins: Number(localStorage.getItem(SK.short) || 5),
     longMins: Number(localStorage.getItem(SK.long) || 15),
     sessionCount: Number(localStorage.getItem(SK.count) || 4),
+  }
+}
+
+function loadSounds(): SoundSettings {
+  return {
+    workEnd: (localStorage.getItem(SK.soundWorkEnd) as SoundId) || 'soft-bell',
+    breakEnd: (localStorage.getItem(SK.soundBreakEnd) as SoundId) || 'gentle-ping',
   }
 }
 
@@ -48,11 +63,44 @@ const SETTING_ROWS: { key: keyof PomodoroSettings; label: string; unit: string; 
   { key: 'sessionCount', label: 'Sessions before long break', unit: '', min: 1, max: 8 },
 ]
 
+function SoundPicker({ label, value, onChange }: { label: string; value: SoundId; onChange: (id: SoundId) => void }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-sm font-medium text-text-primary">{label}</p>
+        <button
+          onClick={() => playSound(value)}
+          className="flex items-center gap-1 rounded-lg bg-surface px-2 py-1 text-xs text-muted active:scale-95 transition-transform"
+        >
+          <Play className="h-3 w-3" /> Preview
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {SOUND_OPTIONS.map(opt => (
+          <button
+            key={opt.id}
+            onClick={() => onChange(opt.id)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+              value === opt.id
+                ? 'bg-primary-500 text-white'
+                : 'bg-surface text-muted hover:bg-primary-50'
+            }`}
+          >
+            {opt.emoji} {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function PomodoroPage() {
   const navigate = useNavigate()
   const [settings, setSettings] = useState(loadSettings)
+  const [sounds, setSounds] = useState(loadSounds)
   const [showSettings, setShowSettings] = useState(false)
   const [draft, setDraft] = useState<PomodoroSettings>(settings)
+  const [draftSounds, setDraftSounds] = useState<SoundSettings>(sounds)
 
   const [mode, setMode] = useState<Mode>('work')
   const [doneSessions, setDoneSessions] = useState(0)
@@ -76,16 +124,18 @@ export default function PomodoroPage() {
     setRunning(false)
     navigator.vibrate?.(400)
     if (mode === 'work') {
+      playSound(sounds.workEnd)
       const next = doneSessions + 1
       setDoneSessions(next)
       const nextMode: Mode = next % settings.sessionCount === 0 ? 'long' : 'short'
       setMode(nextMode)
       setTimeLeft(modeSeconds(nextMode, settings))
     } else {
+      playSound(sounds.breakEnd)
       setMode('work')
       setTimeLeft(settings.workMins * 60)
     }
-  }, [timeLeft, running, mode, doneSessions, settings])
+  }, [timeLeft, running, mode, doneSessions, settings, sounds])
 
   function reset() {
     setRunning(false)
@@ -104,7 +154,10 @@ export default function PomodoroPage() {
     localStorage.setItem(SK.short, String(draft.shortMins))
     localStorage.setItem(SK.long, String(draft.longMins))
     localStorage.setItem(SK.count, String(draft.sessionCount))
+    localStorage.setItem(SK.soundWorkEnd, draftSounds.workEnd)
+    localStorage.setItem(SK.soundBreakEnd, draftSounds.breakEnd)
     setSettings(draft)
+    setSounds(draftSounds)
     setRunning(false)
     setMode('work')
     setDoneSessions(0)
@@ -116,6 +169,15 @@ export default function PomodoroPage() {
   const ss = String(timeLeft % 60).padStart(2, '0')
   const cyclePos = doneSessions % settings.sessionCount
 
+  const soundSummary = (() => {
+    const we = SOUND_OPTIONS.find(o => o.id === sounds.workEnd)
+    const be = SOUND_OPTIONS.find(o => o.id === sounds.breakEnd)
+    const parts = []
+    if (sounds.workEnd !== 'none') parts.push(`${we?.emoji} focus end`)
+    if (sounds.breakEnd !== 'none') parts.push(`${be?.emoji} break end`)
+    return parts.length ? parts.join(' · ') : 'No sounds'
+  })()
+
   return (
     <>
       <TopBar
@@ -123,7 +185,7 @@ export default function PomodoroPage() {
         onBack={() => navigate(-1)}
         rightContent={
           <button
-            onClick={() => { setDraft(settings); setShowSettings(true) }}
+            onClick={() => { setDraft(settings); setDraftSounds(sounds); setShowSettings(true) }}
             className="p-1.5 text-muted hover:text-text-primary"
             aria-label="Timer settings"
           >
@@ -218,7 +280,7 @@ export default function PomodoroPage() {
             </button>
           )}
 
-          {/* Session info */}
+          {/* Session info + sound summary */}
           <div className="mt-8 w-full rounded-xl bg-card px-4 py-3 shadow-sm">
             <div className="grid grid-cols-3 divide-x divide-primary-100 dark:divide-primary-900 text-center text-xs">
               <div>
@@ -234,6 +296,7 @@ export default function PomodoroPage() {
                 <p className="text-muted">Long break</p>
               </div>
             </div>
+            <p className="mt-2 text-center text-xs text-muted">{soundSummary}</p>
           </div>
         </div>
       </PageContainer>
@@ -245,7 +308,7 @@ export default function PomodoroPage() {
           onClick={() => setShowSettings(false)}
         >
           <div
-            className="w-full rounded-t-2xl bg-card p-5 pb-10 shadow-xl"
+            className="max-h-[85vh] w-full overflow-y-auto rounded-t-2xl bg-card p-5 pb-10 shadow-xl"
             onClick={e => e.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between">
@@ -281,6 +344,21 @@ export default function PomodoroPage() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Sounds section */}
+            <div className="mt-6 border-t border-primary-100 dark:border-primary-900 pt-5 space-y-5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Sounds</p>
+              <SoundPicker
+                label="Focus session ends"
+                value={draftSounds.workEnd}
+                onChange={id => setDraftSounds(d => ({ ...d, workEnd: id }))}
+              />
+              <SoundPicker
+                label="Break ends"
+                value={draftSounds.breakEnd}
+                onChange={id => setDraftSounds(d => ({ ...d, breakEnd: id }))}
+              />
             </div>
 
             <div className="mt-6 flex gap-3">

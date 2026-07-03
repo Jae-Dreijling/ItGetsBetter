@@ -29,6 +29,7 @@ export async function addMealEntry(data: {
   name: string | null
   photo: Blob | null
   health_score: number
+  calories?: number | null
   date?: string
   is_backfill?: boolean
 }) {
@@ -38,6 +39,7 @@ export async function addMealEntry(data: {
     name: data.name,
     photo: data.photo,
     health_score: data.health_score,
+    calories: data.calories ?? null,
     logged_at: nowISO(),
     is_backfill: data.is_backfill ?? false,
   })

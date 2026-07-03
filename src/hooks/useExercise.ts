@@ -4,7 +4,7 @@ import { getLogicalDate, nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
 import type { ExerciseEntry } from '../types'
 
-const DEFAULT_KCAL_PER_MIN: Record<string, number> = {
+export const DEFAULT_KCAL_PER_MIN: Record<string, number> = {
   'Running':       9.8,
   'Walking':       3.9,
   'Weight Lifting': 4.7,
@@ -13,6 +13,7 @@ const DEFAULT_KCAL_PER_MIN: Record<string, number> = {
   'Swimming':      8.3,
   'Cycling':       6.8,
   'Home Workout':  5.8,
+  'Planking':      3.8,
 }
 
 function getCustomKcalMap(): Record<string, number> {

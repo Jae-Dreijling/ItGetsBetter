@@ -26,6 +26,7 @@ export interface MealEntry {
   name: string | null
   photo: Blob | null
   health_score: number
+  calories: number | null
   logged_at: string
   is_backfill: boolean
 }
