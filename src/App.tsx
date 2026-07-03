@@ -53,6 +53,10 @@ const TimelinePage = lazy(() => import('./features/me/TimelinePage'))
 const PomodoroPage = lazy(() => import('./features/todo/PomodoroPage'))
 const MeditationPage = lazy(() => import('./features/me/MeditationPage'))
 const CharacterPage = lazy(() => import('./features/me/CharacterPage'))
+const JourneyPage = lazy(() => import('./features/game/JourneyPage'))
+const JourneyActivationPage = lazy(() => import('./features/game/JourneyActivationPage'))
+const GuildHallPage = lazy(() => import('./features/game/GuildHallPage'))
+const BossPage = lazy(() => import('./features/game/BossPage'))
 
 function LazyFallback() {
   return (
@@ -134,6 +138,10 @@ function AppContent() {
         <Route path="me/timeline" element={<Suspense fallback={<LazyFallback />}><TimelinePage /></Suspense>} />
         <Route path="me/meditation" element={<Suspense fallback={<LazyFallback />}><MeditationPage /></Suspense>} />
         <Route path="me/character" element={<Suspense fallback={<LazyFallback />}><CharacterPage /></Suspense>} />
+        <Route path="journey" element={<Suspense fallback={<LazyFallback />}><JourneyPage /></Suspense>} />
+        <Route path="journey/start" element={<Suspense fallback={<LazyFallback />}><JourneyActivationPage /></Suspense>} />
+        <Route path="journey/guild" element={<Suspense fallback={<LazyFallback />}><GuildHallPage /></Suspense>} />
+        <Route path="journey/boss" element={<Suspense fallback={<LazyFallback />}><BossPage /></Suspense>} />
       </Route>
     </Routes>
   )

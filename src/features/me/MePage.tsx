@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { Ruler, Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield } from 'lucide-react'
+import { Ruler, Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
@@ -46,6 +46,17 @@ export default function MePage() {
         </button>
 
         <div className="space-y-3">
+          <button
+            onClick={() => navigate('/journey')}
+            className="flex w-full items-center gap-3 rounded-xl bg-gradient-to-r from-primary-500 to-secondary-500 p-4 shadow-sm text-left"
+          >
+            <MapPin className="h-5 w-5 text-white" />
+            <div>
+              <p className="font-medium text-white">Journey</p>
+              <p className="text-sm text-white/70">Your adventure awaits</p>
+            </div>
+          </button>
+
           <button
             onClick={() => navigate('/me/character')}
             className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"

@@ -135,13 +135,25 @@ export default function ExercisePage() {
               )}
             </div>
 
+            <div className="mb-3">
+              <label className="mb-1 block text-xs text-muted">Duration (min)</label>
+              <input
+                type="number"
+                value={duration}
+                onChange={e => setDuration(e.target.value)}
+                placeholder="How long? (used to estimate calories)"
+                min="1"
+                className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+              />
+            </div>
+
             <button
               type="button"
               onClick={() => setShowDetails(!showDetails)}
               className="mb-3 flex items-center gap-1 text-xs text-primary-500 font-medium"
             >
               {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              {showDetails ? 'Hide details' : 'Add details (optional)'}
+              {showDetails ? 'Hide details' : 'More details (sets, reps, distance…)'}
             </button>
 
             {showDetails && (
@@ -182,30 +194,17 @@ export default function ExercisePage() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="mb-1 block text-xs text-muted">Duration (min)</label>
-                    <input
-                      type="number"
-                      value={duration}
-                      onChange={e => setDuration(e.target.value)}
-                      placeholder="—"
-                      min="1"
-                      className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-2 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs text-muted">Distance (km)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={distance}
-                      onChange={e => setDistance(e.target.value)}
-                      placeholder="—"
-                      min="0"
-                      className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-2 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
-                    />
-                  </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted">Distance (km)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={distance}
+                    onChange={e => setDistance(e.target.value)}
+                    placeholder="—"
+                    min="0"
+                    className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-2 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs text-muted">Notes</label>
