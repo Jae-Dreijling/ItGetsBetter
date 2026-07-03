@@ -447,7 +447,7 @@ export default function JourneyPage() {
             </div>
           </button>
           <button
-            onClick={() => navigate('/journey/boss')}
+            onClick={() => navigate('/journey/boss/nightmare_moon')}
             className="flex flex-col items-center gap-2 rounded-xl bg-card p-4 shadow-sm text-center transition-all active:scale-95"
           >
             <Swords className="h-6 w-6 text-red-500" />

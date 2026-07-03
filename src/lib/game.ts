@@ -484,9 +484,9 @@ export interface VisitResponse {
 }
 
 export const VISIT_RESPONSES: VisitResponse[] = [
-  { text: "I'm really glad you're here! 💛", delta: 3,  tone: 'warm'    },
-  { text: 'Hey, good to see you. 😊',        delta: 1,  tone: 'neutral'  },
-  { text: 'Oh... hi. 😐',                   delta: -1, tone: 'cool'     },
+  { text: "I'm really glad you're here! 💛", delta: 5,  tone: 'warm'    },
+  { text: 'Hey, good to see you. 😊',        delta: 0,  tone: 'neutral'  },
+  { text: 'Oh... hi. 😐',                   delta: -5, tone: 'cool'     },
 ]
 
 export function getVisitGreeting(): string {
@@ -581,62 +581,6 @@ export async function buildRoom(roomId: string): Promise<boolean> {
 }
 
 // ─── Boss Battle ──────────────────────────────────────────────────────────────
-
-export interface BossActionWeights {
-  attack: number
-  defend: number
-  charge: number
-  heal: number
-}
-
-export interface BossDefinition {
-  id: string
-  name: string
-  emoji: string
-  iconPath?: string          // e.g. '/bosses/nightmare_moon.png' — drop image in public/bosses/
-  hp: number
-  attackMin: number
-  attackMax: number
-  goldReward: number
-  description: string
-  quotes: string[]           // pool of taunts/lines shown during battle
-  actionWeights: BossActionWeights
-  healAmount: number         // HP restored when boss heals
-  chargeMultiplier: number   // damage multiplier on charged strike (1.5, 2, 3…)
-  enrage?: {
-    threshold: number        // HP fraction below which enrage activates, e.g. 0.5
-    actionWeights: BossActionWeights
-  }
-}
-
-// Tutorial boss — gentle, predictable, teaches the mechanics
-export const PONYVILLE_BOSS: BossDefinition = {
-  id: 'nightmare_moon',
-  name: 'Nightmare Moon',
-  emoji: '🌙',
-  iconPath: '/bosses/nightmare_moon.png',
-  hp: 80,
-  attackMin: 5,
-  attackMax: 10,
-  goldReward: 60,
-  description: 'The eternal night threatens Ponyville. Defeat her to restore the sun.',
-  quotes: [
-    'Remember this day, little ponies, for it was your last. From this moment forth, the night will last forever!',
-    'Huzzah! How many points do I receive?',
-    'So say goodnight to this, The final setting of the sun',
-    'See, the Moon is rising, she has come to claim the heavens for her own',
-    'Your light fades before my eternal night!',
-    'Foolish creature — the sun will never rise again!',
-    'Struggle all you want. The night is endless.',
-    'I have waited a thousand years for this moment!',
-    'You are but a candle against my midnight storm!',
-    'mine is NOT the lesser light!'
-  ],
-  actionWeights: { attack: 0.40, defend: 0.30, charge: 0.20, heal: 0.10 },
-  healAmount: 10,
-  chargeMultiplier: 1.5,
-  // No enrage — this is a tutorial fight
-}
 
 export function isBossDefeated(bossId: string): boolean {
   return localStorage.getItem(`igb_boss_${bossId}_won`) === '1'

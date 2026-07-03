@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { Sword, Shield, Zap, Heart } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useCharacter } from '../../hooks/useCharacter'
-import { PONYVILLE_BOSS, isBossDefeated, claimBossVictory, isRoomBuilt } from '../../lib/game'
+import { isBossDefeated, claimBossVictory, isRoomBuilt } from '../../lib/game'
+import { BOSSES, type BossDefinition } from '../../lib/bosses'
 
 // ─── Battle state ─────────────────────────────────────────────────────────────
 
-type BattlePhase = 'intro' | 'fighting' | 'won' | 'lost'
-type BossAction  = 'attack' | 'defend' | 'charge' | 'heal'
+type BattlePhase  = 'intro' | 'fighting' | 'won' | 'lost'
+type BossAction   = 'attack' | 'defend' | 'charge' | 'heal'
 type PlayerAction = 'attack' | 'defend' | 'focus' | 'heal'
 
 interface BattleState {
@@ -17,26 +18,23 @@ interface BattleState {
   playerHp: number
   bossHp: number
   log: string[]
-  focusing: boolean        // next player attack is 2×
-  healsLeft: number        // player heal charges remaining
-  bossCharging: boolean    // boss charged last turn — will hit 2× this turn
-  bossDefending: boolean   // boss defended last turn — shown in log but resolved already
+  focusing: boolean
+  healsLeft: number
+  bossCharging: boolean
+  bossDefending: boolean
   bossQuote: string
   goldEarned: number
 }
 
-const PLAYER_MAX_HP  = 100
-const PLAYER_HEALS   = 2    // heal charges per battle
-const HEAL_AMOUNT    = 25
+const PLAYER_MAX_HP = 100
+const PLAYER_HEALS  = 2
+const HEAL_AMOUNT   = 25
 
-function randomQuote(): string {
-  const pool = PONYVILLE_BOSS.quotes
-  return pool[Math.floor(Math.random() * pool.length)]
+function randomQuote(boss: BossDefinition): string {
+  return boss.quotes[Math.floor(Math.random() * boss.quotes.length)]
 }
 
-// ─── Boss AI ──────────────────────────────────────────────────────────────────
-
-function pickBossAction(boss: typeof PONYVILLE_BOSS, currentHp: number): BossAction {
+function pickBossAction(boss: BossDefinition, currentHp: number): BossAction {
   const weights =
     boss.enrage && currentHp / boss.hp < boss.enrage.threshold
       ? boss.enrage.actionWeights
@@ -63,8 +61,6 @@ function HpBar({ current, max, color }: { current: number; max: number; color: s
   )
 }
 
-// ─── Battle log ───────────────────────────────────────────────────────────────
-
 function BattleLog({ entries }: { entries: string[] }) {
   return (
     <div className="rounded-xl bg-surface px-4 py-3 min-h-[72px]">
@@ -81,77 +77,79 @@ function BattleLog({ entries }: { entries: string[] }) {
 
 export default function BossPage() {
   const navigate  = useNavigate()
+  const { bossId } = useParams<{ bossId: string }>()
   const character = useCharacter()
 
-  const alreadyDefeated = isBossDefeated(PONYVILLE_BOSS.id)
+  const boss: BossDefinition | undefined = bossId ? BOSSES[bossId] : undefined
 
-  const strengthLevel  = character?.statLevels.strength.level ?? 0
-  const trainingBonus  = isRoomBuilt('training') ? 0.10 : 0
-  const baseAttack     = 10 + Math.min(20, strengthLevel)
-  const playerAttack   = Math.round(baseAttack * (1 + trainingBonus))
+  const strengthLevel = character?.statLevels.strength.level ?? 0
+  const trainingBonus = isRoomBuilt('training') ? 0.10 : 0
+  const baseAttack    = 10 + Math.min(20, strengthLevel)
+  const playerAttack  = Math.round(baseAttack * (1 + trainingBonus))
 
-  const [battle, setBattle] = useState<BattleState>({
+  const [battle, setBattle] = useState<BattleState>(() => ({
     phase: 'intro',
     playerHp: PLAYER_MAX_HP,
-    bossHp: PONYVILLE_BOSS.hp,
+    bossHp: boss?.hp ?? 0,
     log: [],
     focusing: false,
     healsLeft: PLAYER_HEALS,
     bossCharging: false,
     bossDefending: false,
-    bossQuote: randomQuote(),
+    bossQuote: boss ? randomQuote(boss) : '',
     goldEarned: 0,
-  })
+  }))
 
   function startBattle() {
+    if (!boss) return
     setBattle({
       phase: 'fighting',
       playerHp: PLAYER_MAX_HP,
-      bossHp: PONYVILLE_BOSS.hp,
-      log: ['The battle begins! Nightmare Moon rises from the shadows…'],
+      bossHp: boss.hp,
+      log: [`The battle begins! ${boss.name} rises from the shadows…`],
       focusing: false,
       healsLeft: PLAYER_HEALS,
       bossCharging: false,
       bossDefending: false,
-      bossQuote: randomQuote(),
+      bossQuote: randomQuote(boss),
       goldEarned: 0,
     })
   }
 
   function resetBattle() {
+    if (!boss) return
     setBattle(prev => ({
       ...prev,
       phase: 'intro',
       playerHp: PLAYER_MAX_HP,
-      bossHp: PONYVILLE_BOSS.hp,
+      bossHp: boss.hp,
       log: [],
       focusing: false,
       healsLeft: PLAYER_HEALS,
       bossCharging: false,
       bossDefending: false,
-      bossQuote: randomQuote(),
+      bossQuote: randomQuote(boss),
     }))
   }
 
   function applyAction(action: PlayerAction) {
+    if (!boss) return
     setBattle(prev => {
       if (prev.phase !== 'fighting') return prev
 
       const log = [...prev.log]
       let { playerHp, bossHp, focusing, healsLeft, bossCharging } = prev
-
-      // ── Player turn ──────────────────────────────────────────────────────────
       let playerDefending = false
 
+      // ── Player turn ──────────────────────────────────────────────────────────
       if (action === 'attack') {
         let dmg = focusing ? playerAttack * 2 : playerAttack
-        // If boss was defending last turn, reduce damage
         if (prev.bossDefending) dmg = Math.ceil(dmg * 0.5)
         bossHp = Math.max(0, bossHp - dmg)
         log.push(
           focusing
             ? `✨ Focus strike! You deal ${dmg} damage!${prev.bossDefending ? ' (boss defended)' : ''}`
-            : `⚔️ You attack for ${dmg} damage.${prev.bossDefending ? ' Nightmare Moon was guarding!' : ''}`
+            : `⚔️ You attack for ${dmg} damage.${prev.bossDefending ? ` ${boss.name} was guarding!` : ''}`
         )
         focusing = false
       } else if (action === 'defend') {
@@ -169,54 +167,52 @@ export default function BossPage() {
         log.push(`💚 You recover ${recovered} HP. (${healsLeft} heals left)`)
       }
 
-      // Boss dead from player attack
       if (bossHp <= 0) {
-        log.push('💥 Nightmare Moon collapses! The sun rises over Ponyville!')
-        return { ...prev, phase: 'won', bossHp: 0, playerHp, log, focusing: false, goldEarned: PONYVILLE_BOSS.goldReward }
+        log.push(`💥 ${boss.name} is defeated! Victory!`)
+        return { ...prev, phase: 'won', bossHp: 0, playerHp, log, focusing: false, goldEarned: boss.goldReward }
       }
 
       // ── Boss turn ────────────────────────────────────────────────────────────
-      const bossAction = pickBossAction(PONYVILLE_BOSS, bossHp)
+      const bossAction = pickBossAction(boss, bossHp)
       let nextBossCharging  = false
       let nextBossDefending = false
 
       if (bossCharging) {
-        // Was charging last turn — unleash charged strike
-        const baseCharge = PONYVILLE_BOSS.attackMin + Math.floor(Math.random() * (PONYVILLE_BOSS.attackMax - PONYVILLE_BOSS.attackMin + 1))
-        const bossDmgCharge = Math.round(baseCharge * PONYVILLE_BOSS.chargeMultiplier)
-        const actualCharge  = playerDefending ? Math.ceil(bossDmgCharge / 2) : bossDmgCharge
-        playerHp = Math.max(0, playerHp - actualCharge)
-        log.push(`🌙⚡ ${PONYVILLE_BOSS.name} unleashes a CHARGED STRIKE for ${actualCharge}!${playerDefending ? ' (you blocked half)' : ''}`)
+        const base = boss.attackMin + Math.floor(Math.random() * (boss.attackMax - boss.attackMin + 1))
+        const charged = Math.round(base * boss.chargeMultiplier)
+        const actual  = playerDefending ? Math.ceil(charged / 2) : charged
+        playerHp = Math.max(0, playerHp - actual)
+        log.push(`🌙⚡ ${boss.name} unleashes a CHARGED STRIKE for ${actual}!${playerDefending ? ' (you blocked half)' : ''}`)
       } else {
         switch (bossAction) {
           case 'attack': {
-            const bossDmg = PONYVILLE_BOSS.attackMin + Math.floor(Math.random() * (PONYVILLE_BOSS.attackMax - PONYVILLE_BOSS.attackMin + 1))
-            const actual  = playerDefending ? Math.ceil(bossDmg / 2) : bossDmg
+            const dmg    = boss.attackMin + Math.floor(Math.random() * (boss.attackMax - boss.attackMin + 1))
+            const actual = playerDefending ? Math.ceil(dmg / 2) : dmg
             playerHp = Math.max(0, playerHp - actual)
-            log.push(`🌙 ${PONYVILLE_BOSS.name} strikes for ${actual} damage!${playerDefending ? ' (you blocked half)' : ''}`)
+            log.push(`🌙 ${boss.name} strikes for ${actual} damage!${playerDefending ? ' (you blocked half)' : ''}`)
             break
           }
           case 'defend': {
             nextBossDefending = true
-            log.push(`🛡️ ${PONYVILLE_BOSS.name} raises a dark barrier! Your next attack deals half damage.`)
+            log.push(`🛡️ ${boss.name} raises a barrier! Your next attack deals half damage.`)
             break
           }
           case 'charge': {
             nextBossCharging = true
-            log.push(`⚡ ${PONYVILLE_BOSS.name} gathers dark power… a charged strike is coming!`)
+            log.push(`⚡ ${boss.name} gathers power… a charged strike is coming!`)
             break
           }
           case 'heal': {
-            const recovered = Math.min(PONYVILLE_BOSS.healAmount, PONYVILLE_BOSS.hp - bossHp)
-            bossHp = Math.min(PONYVILLE_BOSS.hp, bossHp + PONYVILLE_BOSS.healAmount)
-            log.push(`🌙 ${PONYVILLE_BOSS.name} draws power from the stars, recovering ${recovered} HP!`)
+            const recovered = Math.min(boss.healAmount, boss.hp - bossHp)
+            bossHp = Math.min(boss.hp, bossHp + boss.healAmount)
+            log.push(`🌙 ${boss.name} recovers ${recovered} HP!`)
             break
           }
         }
       }
 
       if (playerHp <= 0) {
-        log.push('The darkness consumed you. But you can try again — no penalty.')
+        log.push('You were overwhelmed. But you can try again — no penalty.')
         return { ...prev, phase: 'lost', playerHp: 0, bossHp, log, focusing, healsLeft, bossCharging: false, bossDefending: false }
       }
 
@@ -229,20 +225,37 @@ export default function BossPage() {
         healsLeft,
         bossCharging: nextBossCharging,
         bossDefending: nextBossDefending,
-        bossQuote: randomQuote(),
+        bossQuote: randomQuote(boss),
       }
     })
   }
 
   const [claimed, setClaimed] = useState(false)
   useEffect(() => {
-    if (battle.phase === 'won' && !claimed) {
+    if (battle.phase === 'won' && !claimed && boss) {
       setClaimed(true)
-      claimBossVictory(PONYVILLE_BOSS.id, PONYVILLE_BOSS.goldReward)
+      claimBossVictory(boss.id, boss.goldReward)
     }
-  }, [battle.phase, claimed])
+  }, [battle.phase, claimed, boss])
 
-  const enraged = !!PONYVILLE_BOSS.enrage && battle.phase === 'fighting' && battle.bossHp / PONYVILLE_BOSS.hp < PONYVILLE_BOSS.enrage.threshold
+  // ── Not found ─────────────────────────────────────────────────────────────
+  if (!boss) {
+    return (
+      <>
+        <TopBar title="Boss Battle" onBack={() => navigate('/journey')} />
+        <PageContainer>
+          <div className="py-16 text-center text-muted">
+            <p className="text-4xl mb-3">❓</p>
+            <p className="font-semibold text-text-primary mb-1">Boss not found</p>
+            <p className="text-sm">This boss doesn't exist yet.</p>
+          </div>
+        </PageContainer>
+      </>
+    )
+  }
+
+  const alreadyDefeated = isBossDefeated(boss.id)
+  const enraged = !!boss.enrage && battle.phase === 'fighting' && battle.bossHp / boss.hp < boss.enrage.threshold
 
   return (
     <>
@@ -251,15 +264,15 @@ export default function BossPage() {
 
         {/* Boss header */}
         <div className={`mb-5 rounded-xl p-5 shadow-sm text-center transition-colors ${enraged ? 'bg-red-50 dark:bg-red-950/30' : 'bg-card'}`}>
-          {PONYVILLE_BOSS.iconPath ? (
+          {boss.iconPath ? (
             <img
-              src={PONYVILLE_BOSS.iconPath}
-              alt={PONYVILLE_BOSS.name}
-              className="mx-auto mb-2 h-24 w-24 object-contain"
+              src={boss.iconPath}
+              alt={boss.name}
+              className="mx-auto mb-2 h-36 w-36 rounded-full object-cover"
               onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
             />
           ) : (
-            <p className="text-5xl mb-2">{PONYVILLE_BOSS.emoji}</p>
+            <p className="text-5xl mb-2">{boss.emoji}</p>
           )}
           {battle.phase === 'fighting' && (
             <div className="relative mt-2 mx-auto max-w-xs">
@@ -271,11 +284,11 @@ export default function BossPage() {
               </div>
             </div>
           )}
-          <p className="text-lg font-bold text-text-primary">
-            {PONYVILLE_BOSS.name}
+          <p className="text-lg font-bold text-text-primary mt-2">
+            {boss.name}
             {enraged && <span className="ml-2 text-sm font-medium text-red-500">— ENRAGED</span>}
           </p>
-          <p className="text-xs text-muted mt-1">{PONYVILLE_BOSS.description}</p>
+          <p className="text-xs text-muted mt-1">{boss.description}</p>
         </div>
 
         {battle.phase === 'intro' && (
@@ -285,7 +298,6 @@ export default function BossPage() {
                 ✨ Already defeated! Rematch for glory (no extra gold).
               </div>
             )}
-
             <div className="mb-5 rounded-xl bg-card p-4 shadow-sm">
               <p className="text-sm font-semibold text-text-primary mb-2">Your stats</p>
               <div className="space-y-1.5 text-sm text-muted">
@@ -306,25 +318,23 @@ export default function BossPage() {
                 </div>
               </div>
               <div className="mt-3 rounded-lg bg-surface px-3 py-2 text-xs text-muted space-y-1">
-                <p>🌙 Nightmare Moon randomizes: Attack, Defend, Charge, Heal</p>
-                <p>⚡ When she charges, she warns you — use Defend!</p>
-                <p>🛡️ When she defends, Focus then attack to break through.</p>
-                <p>💀 Below 50% HP she enrages — harder, faster, meaner.</p>
+                <p>{boss.emoji} {boss.name} can Attack, Defend, Charge, or Heal.</p>
+                <p>⚡ When charging is telegraphed — use Defend!</p>
+                <p>🛡️ When the boss defends — Focus then attack to break through.</p>
+                {boss.enrage && <p>💀 Below {Math.round(boss.enrage.threshold * 100)}% HP the boss enrages.</p>}
               </div>
             </div>
-
             <button
               onClick={startBattle}
               className="w-full rounded-2xl bg-red-500 py-4 text-base font-bold text-white shadow-sm transition-all active:scale-[0.98]"
             >
-              ⚔️ Challenge Nightmare Moon
+              ⚔️ Challenge {boss.name}
             </button>
           </>
         )}
 
         {battle.phase === 'fighting' && (
           <>
-            {/* HP bars */}
             <div className="mb-4 space-y-3">
               <div>
                 <div className="mb-1 flex justify-between text-xs text-muted">
@@ -335,14 +345,13 @@ export default function BossPage() {
               </div>
               <div>
                 <div className="mb-1 flex justify-between text-xs text-muted">
-                  <span>{PONYVILLE_BOSS.name} {PONYVILLE_BOSS.emoji} {enraged ? '🔴' : ''}</span>
-                  <span>{battle.bossHp} / {PONYVILLE_BOSS.hp} HP</span>
+                  <span>{boss.name} {boss.emoji} {enraged ? '🔴' : ''}</span>
+                  <span>{battle.bossHp} / {boss.hp} HP</span>
                 </div>
-                <HpBar current={battle.bossHp} max={PONYVILLE_BOSS.hp} color={enraged ? 'bg-red-400' : 'bg-purple-400'} />
+                <HpBar current={battle.bossHp} max={boss.hp} color={enraged ? 'bg-red-400' : 'bg-purple-400'} />
               </div>
             </div>
 
-            {/* Status badges */}
             <div className="mb-3 flex flex-wrap gap-2">
               {battle.focusing && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
@@ -361,43 +370,27 @@ export default function BossPage() {
               )}
             </div>
 
-            {/* Battle log */}
             <div className="mb-4">
               <BattleLog entries={battle.log} />
             </div>
 
-            {/* Action buttons */}
             <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => applyAction('attack')}
-                className="flex flex-col items-center gap-1.5 rounded-2xl bg-red-500 py-4 text-white transition-all active:scale-95"
-              >
+              <button onClick={() => applyAction('attack')} className="flex flex-col items-center gap-1.5 rounded-2xl bg-red-500 py-4 text-white transition-all active:scale-95">
                 <Sword className="h-5 w-5" />
                 <span className="text-sm font-bold">Attack</span>
                 <span className="text-[10px] opacity-75">{battle.focusing ? `${playerAttack * 2} dmg (2×)` : `${playerAttack} dmg`}</span>
               </button>
-              <button
-                onClick={() => applyAction('defend')}
-                className="flex flex-col items-center gap-1.5 rounded-2xl bg-blue-500 py-4 text-white transition-all active:scale-95"
-              >
+              <button onClick={() => applyAction('defend')} className="flex flex-col items-center gap-1.5 rounded-2xl bg-blue-500 py-4 text-white transition-all active:scale-95">
                 <Shield className="h-5 w-5" />
                 <span className="text-sm font-bold">Defend</span>
                 <span className="text-[10px] opacity-75">Half incoming dmg</span>
               </button>
-              <button
-                onClick={() => applyAction('focus')}
-                disabled={battle.focusing}
-                className="flex flex-col items-center gap-1.5 rounded-2xl bg-amber-500 py-4 text-white transition-all active:scale-95 disabled:opacity-40"
-              >
+              <button onClick={() => applyAction('focus')} disabled={battle.focusing} className="flex flex-col items-center gap-1.5 rounded-2xl bg-amber-500 py-4 text-white transition-all active:scale-95 disabled:opacity-40">
                 <Zap className="h-5 w-5" />
                 <span className="text-sm font-bold">Focus</span>
                 <span className="text-[10px] opacity-75">{battle.focusing ? 'Active' : '2× next hit'}</span>
               </button>
-              <button
-                onClick={() => applyAction('heal')}
-                disabled={battle.healsLeft <= 0 || battle.playerHp >= PLAYER_MAX_HP}
-                className="flex flex-col items-center gap-1.5 rounded-2xl bg-green-500 py-4 text-white transition-all active:scale-95 disabled:opacity-40"
-              >
+              <button onClick={() => applyAction('heal')} disabled={battle.healsLeft <= 0 || battle.playerHp >= PLAYER_MAX_HP} className="flex flex-col items-center gap-1.5 rounded-2xl bg-green-500 py-4 text-white transition-all active:scale-95 disabled:opacity-40">
                 <Heart className="h-5 w-5" />
                 <span className="text-sm font-bold">Heal</span>
                 <span className="text-[10px] opacity-75">+{HEAL_AMOUNT} HP ({battle.healsLeft} left)</span>
@@ -410,21 +403,13 @@ export default function BossPage() {
           <div className="text-center">
             <p className="text-6xl mb-3">🎉</p>
             <p className="text-xl font-bold text-text-primary mb-1">Victory!</p>
-            <p className="text-sm text-muted mb-1">Nightmare Moon is defeated. The sun shines over Ponyville.</p>
-            <p className="text-lg font-bold text-yellow-600 dark:text-yellow-400 mb-6">
-              +🪙 {PONYVILLE_BOSS.goldReward} Gold
-            </p>
+            <p className="text-sm text-muted mb-1">{boss.name} is defeated.</p>
+            <p className="text-lg font-bold text-yellow-600 dark:text-yellow-400 mb-6">+🪙 {boss.goldReward} Gold</p>
             <div className="space-y-3">
-              <button
-                onClick={resetBattle}
-                className="w-full rounded-2xl bg-card border border-primary-200 dark:border-primary-800 py-3.5 text-sm font-medium text-text-primary"
-              >
+              <button onClick={resetBattle} className="w-full rounded-2xl bg-card border border-primary-200 dark:border-primary-800 py-3.5 text-sm font-medium text-text-primary">
                 Rematch
               </button>
-              <button
-                onClick={() => navigate('/journey')}
-                className="w-full rounded-2xl bg-primary-500 py-3.5 text-sm font-bold text-white"
-              >
+              <button onClick={() => navigate('/journey')} className="w-full rounded-2xl bg-primary-500 py-3.5 text-sm font-bold text-white">
                 Back to Journey
               </button>
             </div>
@@ -433,22 +418,12 @@ export default function BossPage() {
 
         {battle.phase === 'lost' && (
           <div className="text-center">
-            <p className="text-6xl mb-3">🌙</p>
+            <p className="text-6xl mb-3">{boss.emoji}</p>
             <p className="text-xl font-bold text-text-primary mb-1">You fell in battle.</p>
-            <p className="text-sm text-muted mb-6">The darkness won this round — but you can try again. No penalty.</p>
+            <p className="text-sm text-muted mb-6">No penalty — try again whenever you're ready.</p>
             <div className="space-y-3">
-              <button
-                onClick={startBattle}
-                className="w-full rounded-2xl bg-red-500 py-3.5 text-sm font-bold text-white"
-              >
-                Try again
-              </button>
-              <button
-                onClick={() => navigate('/journey')}
-                className="w-full rounded-2xl bg-surface py-3.5 text-sm font-medium text-muted"
-              >
-                Retreat
-              </button>
+              <button onClick={startBattle} className="w-full rounded-2xl bg-red-500 py-3.5 text-sm font-bold text-white">Try again</button>
+              <button onClick={() => navigate('/journey')} className="w-full rounded-2xl bg-surface py-3.5 text-sm font-medium text-muted">Retreat</button>
             </div>
           </div>
         )}

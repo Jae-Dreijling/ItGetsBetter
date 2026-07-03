@@ -141,7 +141,7 @@ function AppContent() {
         <Route path="journey" element={<Suspense fallback={<LazyFallback />}><JourneyPage /></Suspense>} />
         <Route path="journey/start" element={<Suspense fallback={<LazyFallback />}><JourneyActivationPage /></Suspense>} />
         <Route path="journey/guild" element={<Suspense fallback={<LazyFallback />}><GuildHallPage /></Suspense>} />
-        <Route path="journey/boss" element={<Suspense fallback={<LazyFallback />}><BossPage /></Suspense>} />
+        <Route path="journey/boss/:bossId" element={<Suspense fallback={<LazyFallback />}><BossPage /></Suspense>} />
       </Route>
     </Routes>
   )
