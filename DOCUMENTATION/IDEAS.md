@@ -24,7 +24,7 @@ A collection of ideas for features that are not planned for any current phase. T
 | 14 | ~~"Can't Fail" Habit Fallback~~ | ✅ **Built** | Half credit, half points |
 | 15 | ~~Companion Chat (Pattern Matching)~~ | ✅ **Built** | Long-press companion → chat |
 | 16 | Companion AI (Real Conversations) | ⭐⭐⭐⭐⭐ | ⭐ (very hard — API/self-hosted/native options) |
-| 17 | Gamification / RPG Progression | ⭐⭐⭐⭐ | ⭐⭐ (extends existing points system) |
+| 17 | ~~Gamification / RPG Progression~~ | ✅ **Built** | XP levels + 6 character stats + class identity, Character Sheet in Me |
 | 18 | ~~Meditation Timer~~ | ✅ **Built** | Duration presets + custom, 3 configurable sounds, interval markers |
 | 19 | ~~Pomodoro Timer~~ | ✅ **Built** | Configurable focus/break cycles, timer icon in To-Do tab |
 | 20 | Skincare & Hair Tracking | ⭐⭐⭐ | ⭐⭐ (mirrors measurements + progress photos pattern) |
