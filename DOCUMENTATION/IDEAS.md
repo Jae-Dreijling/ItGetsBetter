@@ -27,12 +27,12 @@ A collection of ideas for features that are not planned for any current phase. T
 | 17 | ~~Gamification / RPG Progression~~ | ✅ **Built** | XP levels + 6 character stats + class identity, Character Sheet in Me |
 | 18 | ~~Meditation Timer~~ | ✅ **Built** | Duration presets + custom, 3 configurable sounds, interval markers |
 | 19 | ~~Pomodoro Timer~~ | ✅ **Built** | Configurable focus/break cycles, timer icon in To-Do tab |
-| 20 | Skincare & Hair Tracking | ⭐⭐⭐ | ⭐⭐ (mirrors measurements + progress photos pattern) |
+| 20 | ~~Skincare & Hair Tracking~~ | ~~removed~~ | ~~removed~~ |
 | 21 | ~~Daily Chronological Timeline~~ | ✅ **Built** | View layer over existing data, no new DB needed |
 | 22 | ~~Current Focus (Homescreen Spotlight)~~ | ✅ **Built** | Bottom-sheet picker, prominent card on home |
 | 23 | ~~Motivation Vault~~ | ✅ **Built** | Me → Motivation Vault, grouped by category |
 | 24 | ~~Weather Check (Optional, Online-Only)~~ | ✅ **Built** | Open-Meteo, opt-in toggle in settings |
-| 25 | Barcode Scanning (Optional Meal Aid) | ⭐⭐⭐ | ⭐⭐ (camera + lightweight API lookup) |
+| 25 | ~~Barcode Scanning (Optional Meal Aid)~~ | ~~removed~~ | ~~removed~~ |
 | 26 | Pomodoro Sound Alerts | ⭐⭐⭐⭐ | ⭐⭐⭐ (expansion of #19, Web Audio API, no external files needed) |
 
 ---
@@ -234,16 +234,7 @@ Depends on: Points System (already built).
 
 ---
 
-## 20. Skincare & Hair Tracking
-
-Track skin and hair progress the same way body measurements and progress photos already work.
-
-- Skin: dated photo log (face, optionally by area), free-text notes (breakouts, products used, reactions), optional 1-5 "skin feeling" score — same pattern as mood.
-- Hair: dated photo log + simple notes (growth, shedding, products).
-- Should reuse the existing Progress Photos lifecycle (compression at 1 year, 6-month download reminder, never auto-deleted) rather than building a new photo pipeline from scratch.
-- Sensitive data — same privacy tier as progress photos (PP-03), should sit behind App Lock if enabled.
-
-Depends on: Progress Photos feature (already built) — this is mostly a new entity using the same lifecycle/storage logic.
+## 20. ~~Skincare & Hair Tracking~~ — Removed
 
 ---
 
@@ -279,14 +270,7 @@ Depends on: Progress Photos feature (already built) — this is mostly a new ent
 
 ---
 
-## 25. Barcode Scanning (Optional Meal Aid)
-
-An optional camera-based barcode scanner to speed up meal logging for packaged food — looks up a product name (and optionally calories) via a lightweight public food-database API, then pre-fills the meal name field.
-
-- Strictly an input *shortcut*, not a new tracking paradigm: the result only pre-fills the existing `name` field (and optional `calories` field, ML-03) on the meal form. The required health score (1-5) is still always manual — this must not become a backdoor to automated nutrition scoring, which the PRD explicitly rejected (see "Meal Photo AI Analysis," Won't Have Yet).
-- Single outbound lookup per scan (product barcode → name/calories), nothing cached or sent in the background. Same opt-in/off-by-default treatment as Weather Check — state clearly in settings that scanning sends the barcode to a third-party lookup.
-- Falls back gracefully to manual name entry if offline or the barcode isn't found — never blocks logging.
-- Camera access reuses the same `<input type="file" capture>` / MediaDevices pattern already used for meal photos (Architecture 7.2).
+## 25. ~~Barcode Scanning (Optional Meal Aid)~~ — Removed
 
 ---
 

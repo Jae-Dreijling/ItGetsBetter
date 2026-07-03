@@ -130,6 +130,7 @@ export interface ExerciseEntry {
   weight_used_kg: number | null
   duration_minutes: number | null
   distance_km: number | null
+  calories_burned: number | null
   notes: string | null
   logged_at: string
 }
