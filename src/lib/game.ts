@@ -80,6 +80,19 @@ export async function spendSparks(amount: number): Promise<boolean> {
   return true
 }
 
+export async function spendGold(amount: number): Promise<boolean> {
+  const state = await getGameState()
+  if (!state || state.gold < amount) return false
+  await db.gameState.update(state.id!, { gold: state.gold - amount })
+  return true
+}
+
+export async function awardSparksDirect(amount: number): Promise<void> {
+  const state = await getGameState()
+  if (!state?.activated) return
+  await db.gameState.update(state.id!, { sparks: state.sparks + amount })
+}
+
 // ─── Beg ──────────────────────────────────────────────────────────────────────
 
 const BEG_DATE_KEY = 'igb_game_beg_date'
@@ -401,8 +414,9 @@ export async function claimQuest(questId: number): Promise<number> {
     status: 'claimed',
     narrative_result: getClaimNarrative(quest.title),
   })
-  await db.gameState.update(state.id!, { gold: state.gold + quest.gold_reward })
-  return quest.gold_reward
+  const forgeBonus = isRoomBuilt('forge') ? 5 : 0
+  await db.gameState.update(state.id!, { gold: state.gold + quest.gold_reward + forgeBonus })
+  return quest.gold_reward + forgeBonus
 }
 
 export async function toggleQuestSafeMode(questId: number): Promise<void> {
@@ -464,8 +478,6 @@ export function affinityLabel(score: number): string {
 
 // ─── Companion visit system ───────────────────────────────────────────────────
 
-const VISIT_COMPANION_KEY = 'igb_game_visit_companion'
-
 const VISIT_GREETINGS = [
   'Hey there! I was just passing through. Mind if I sit for a bit?',
   "There you are! I've been thinking about you.",
@@ -493,33 +505,42 @@ export function getVisitGreeting(): string {
   return VISIT_GREETINGS[Math.floor(Math.random() * VISIT_GREETINGS.length)]
 }
 
-export function hasPendingVisit(): boolean {
-  const raw = localStorage.getItem(VISIT_COMPANION_KEY)
-  if (!raw) return true
-  const [date, , status] = raw.split(':')
-  return date !== getLogicalDate() || status !== 'done'
-}
-
-export async function getOrPickDailyVisitor(): Promise<{ companionId: number; companionName: string } | null> {
+export async function getOrPickDailyVisitor(): Promise<{
+  companionId: number
+  companionName: string
+  partnerId?: number
+  partnerName?: string
+} | null> {
   const state = await getGameState()
   if (!state?.activated) return null
 
-  const today = getLogicalDate()
-  const raw = localStorage.getItem(VISIT_COMPANION_KEY)
+  // 10% chance per Journey open
+  if (Math.random() >= 0.10) return null
 
-  if (raw) {
-    const [date, id, status] = raw.split(':')
-    if (date === today && status === 'done') return null
-    if (date === today && id) {
-      const companion = await db.companions.get(parseInt(id))
-      if (companion) return { companionId: companion.id!, companionName: companion.name }
+  const currentRegion = state.current_region ?? 'ponyville'
+  const allCompanions = await db.companions.toArray()
+  if (allCompanions.length === 0) return null
+
+  // Joint Lover visit: 30% of triggered visits when 2+ Lovers exist
+  const lovers = await db.gameCompanionAffinity.filter(a => a.is_lover).toArray()
+  if (lovers.length >= 2 && Math.random() < 0.30) {
+    const comp1 = await db.companions.get(lovers[0].companion_id)
+    const comp2 = await db.companions.get(lovers[1].companion_id)
+    if (comp1 && comp2) {
+      return { companionId: comp1.id!, companionName: comp1.name, partnerId: comp2.id!, partnerName: comp2.name }
     }
   }
 
-  const companions = await db.companions.toArray()
-  if (companions.length === 0) return null
-  const companion = companions[Math.floor(Math.random() * companions.length)]
-  localStorage.setItem(VISIT_COMPANION_KEY, `${today}:${companion.id}`)
+  // Normal single visitor — filter by region
+  const affinities = await db.gameCompanionAffinity.toArray()
+  const regionMap = new Map(affinities.map(a => [a.companion_id, a.home_region]))
+  const eligible = allCompanions.filter(c => {
+    const region = regionMap.get(c.id!) ?? 'ponyville'
+    return region === 'traveler' || region === currentRegion
+  })
+
+  if (eligible.length === 0) return null
+  const companion = eligible[Math.floor(Math.random() * eligible.length)]
   return { companionId: companion.id!, companionName: companion.name }
 }
 
@@ -546,8 +567,60 @@ export async function recordCompanionVisit(companionId: number, affinityDelta: n
       created_at: now,
     })
   }
-  const today = getLogicalDate()
-  localStorage.setItem(VISIT_COMPANION_KEY, `${today}:${companionId}:done`)
+}
+
+// ─── Lover system ─────────────────────────────────────────────────────────────
+
+export async function setLoverStatus(companionId: number, isLover: boolean): Promise<void> {
+  const existing = await db.gameCompanionAffinity
+    .where('companion_id').equals(companionId)
+    .first()
+  if (existing) {
+    await db.gameCompanionAffinity.update(existing.id!, { is_lover: isLover })
+  }
+}
+
+export async function updateLoverDialogue(companionId: number, lines: string[]): Promise<void> {
+  const existing = await db.gameCompanionAffinity
+    .where('companion_id').equals(companionId)
+    .first()
+  if (existing) {
+    await db.gameCompanionAffinity.update(existing.id!, { lover_dialogue: lines })
+  }
+}
+
+export async function getCompanionAffinityRecord(companionId: number) {
+  return db.gameCompanionAffinity.where('companion_id').equals(companionId).first()
+}
+
+// ─── Companion region ─────────────────────────────────────────────────────────
+
+export async function getCompanionHomeRegion(companionId: number): Promise<string> {
+  const record = await db.gameCompanionAffinity
+    .where('companion_id').equals(companionId)
+    .first()
+  return record?.home_region ?? 'ponyville'
+}
+
+export async function setCompanionHomeRegion(companionId: number, region: string): Promise<void> {
+  const existing = await db.gameCompanionAffinity
+    .where('companion_id').equals(companionId)
+    .first()
+  const now = nowISO()
+  if (existing) {
+    await db.gameCompanionAffinity.update(existing.id!, { home_region: region })
+  } else {
+    await db.gameCompanionAffinity.add({
+      companion_id: companionId,
+      affinity: 0,
+      is_lover: false,
+      lover_dialogue: [],
+      home_region: region,
+      is_discovered: false,
+      last_visit_at: null,
+      created_at: now,
+    })
+  }
 }
 
 // ─── Guild Hall ───────────────────────────────────────────────────────────────
@@ -562,9 +635,13 @@ export interface GuildRoom {
 }
 
 export const GUILD_ROOMS: GuildRoom[] = [
-  { id: 'library',  name: 'Library',        emoji: '📚', cost: 100, bonus: '+10% Wisdom growth',    description: 'A quiet reading room. Wisdom earned from books counts for more.' },
-  { id: 'kitchen',  name: 'Kitchen',         emoji: '🍳', cost: 100, bonus: '+10% Vitality growth',  description: 'A warm hearth for nourishment. Meals and water count extra.' },
-  { id: 'training', name: 'Training Ground', emoji: '⚔️', cost: 150, bonus: '+10% attack in battle', description: 'A sparring area. Deal more damage when facing bosses.' },
+  { id: 'library',    name: 'Library',          emoji: '📚', cost: 100, bonus: '+10% Wisdom growth',         description: 'A quiet reading room. Wisdom earned from books counts for more.' },
+  { id: 'kitchen',    name: 'Kitchen',           emoji: '🍳', cost: 100, bonus: '+10% Vitality growth',       description: 'A warm hearth for nourishment. Meals and water count extra.' },
+  { id: 'training',   name: 'Training Ground',   emoji: '⚔️', cost: 150, bonus: '+10% attack in battle',     description: 'A sparring area. Deal more damage when facing bosses.' },
+  { id: 'garden',     name: 'Garden',            emoji: '🌸', cost: 120, bonus: '+2 affinity per visit',      description: 'A peaceful spot to share with companions. Every visit leaves a warmer impression.' },
+  { id: 'meditation', name: 'Meditation Room',   emoji: '🧘', cost: 150, bonus: '+10 HP in boss fights',     description: 'A still space to centre yourself before battle. You enter fights a little stronger.' },
+  { id: 'observatory',name: 'Observatory',       emoji: '🔭', cost: 175, bonus: '+25% encounter gold',        description: 'A high vantage point. Spotting danger early means better rewards when you win.' },
+  { id: 'forge',      name: 'Forge',             emoji: '⚒️', cost: 200, bonus: '+5 Gold per quest claim',   description: 'A working smithy. The effort of completing quests earns you a little extra each time.' },
 ]
 
 export function isRoomBuilt(roomId: string): boolean {

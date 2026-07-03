@@ -85,49 +85,60 @@ Makes the loop playable end-to-end.
 
 Adds richness once the core loop is solid. Build in any order — these are largely independent.
 
-### 3a — Roaming Encounters (Mini-Bosses)
-When the player opens the Journey page, there is a **1-in-6 chance** of triggering a roaming encounter — a mini-boss ambush from the current region (e.g. bandits, wild creatures, shadowy figures). The encounter interrupts the normal Journey view and takes the player to a dedicated mini-boss battle page.
+### 3a — Roaming Encounters ✅ Complete
 
-- [ ] `MiniBossDefinition` type — same shape as `BossDefinition` but lighter (lower HP, simpler AI, smaller rewards)
-- [ ] Mini-bosses registered per region (only encounters from unlocked regions can appear)
-- [ ] Roll-on-mount logic in JourneyPage: `Math.random() < 1/6` → navigate to `/journey/encounter/:encounterId`
-- [ ] Encounter page (`/journey/encounter/:encounterId`) — reuses most of BossPage layout, but:
-  - No intro screen — starts immediately ("You've been ambushed!")
-  - Shorter battle log format
-  - On win: small Gold/Spark reward, narrative blurb, return to Journey
-  - On loss: no penalty, "They scattered" flavour text, return to Journey
-- [ ] Cooldown: once an encounter fires (win or lose), no new encounter for that calendar day (stored in localStorage)
-- [ ] Ponyville mini-bosses to design: Timberwolves, Diamond Dog scouts, Parasprite swarm, Shadow creatures, Traveling thieves
+When the player opens the Journey page, there is a **1-in-6 chance** of triggering a roaming encounter — a mini-boss ambush from the current region. One encounter maximum per day (localStorage cooldown).
 
-**Design notes:** Keep encounters short (3–5 turns max via lower HP). They should feel like a surprise that breaks the routine pleasantly, not a blocker. Always escapable — a "Flee" option that ends the battle with no penalty.
+- [x] `EncounterDefinition` type in `src/lib/encounters.ts` — lighter than BossDefinition (no heal, no enrage, 3-action AI: attack/defend/charge)
+- [x] Encounters registered per region via `ENCOUNTERS` registry; `rollEncounter(region)` picks a random one
+- [x] Roll-on-mount in JourneyPage: `rollEncounter()` → `navigate('/journey/encounter/:id')` if triggered
+- [x] Encounter page (`/journey/encounter/:encounterId`) — starts immediately in fighting phase, no intro screen
+  - Flee button always visible (no penalty)
+  - On win: small Gold reward, victory narrative, return to Journey
+  - On loss/flee: flavour text, return to Journey
+- [x] Cooldown: `igb_encounter_date` in localStorage — one encounter fires per logical day
+
+**Ponyville encounters** (all in `src/lib/encounters.ts`):
+| ID | Name | HP | Attack | Gold | Notes |
+|---|---|---|---|---|---|
+| `timberwolves` | Timberwolves 🐺 | 30 | 6–12 | 12 | Fast and aggressive |
+| `diamond_dog_scouts` | Diamond Dog Scouts 🐕 | 25 | 5–9 | 15 | Very defensive (45% defend) |
+| `parasprite_swarm` | Parasprite Swarm 🦋 | 20 | 4–7 | 8 | Pure aggression, easiest |
+| `shadow_creature` | Shadow Creature 👤 | 35 | 8–15 | 18 | High charge rate (45%), hardest |
+| `traveling_bandits` | Traveling Bandits 🥷 | 28 | 7–11 | 14 | Balanced |
 
 ---
 
-### 3c — Fortune Events
-Random weekly world event appears on the Journey page. Always gives the player a meaningful choice.
+### 3b — Fortune Events ✅ Complete
 
-- [ ] Fortune Event data structure (title, description, type: positive/negative, choices)
-- [ ] Weekly generation (one event per week, stored in DB or localStorage)
-- [ ] Positive events: bonus merchant (Gold), festival (Sparks bonus), lost traveler (quest XP)
-- [ ] Negative events: bandits (pay Gold or fight mini-game), harsh weather (quest timer extended), rival faction (quest costs more)
-- [ ] Event UI card on Journey page with choice buttons
-- [ ] Narrative outcome text after choice
+A random event appears on the Journey page each week. Always gives the player exactly two choices with clear cost/reward hints. Once resolved, the card stays visible showing the outcome narrative for the rest of the week.
 
-### 3d — Undiscovered Companions
-Companions can be assigned to a specific region and don't appear in the visit rotation until that region is unlocked.
+- [x] `FortuneEventDef` + `FortuneChoice` types in `src/lib/fortune.ts`
+- [x] 6-event pool (mix of positive / negative-ish / neutral): Peculiar Cart, Harvest Festival, Lost Foal, Storm Rolling In, Toll Road, Traveling Scholar
+- [x] Weekly generation via `getOrPickWeeklyEvent()` — avoids repeating last week's event; stored in `igb_fortune_week` localStorage
+- [x] `resolveFortuneChoice()` — applies goldCost/goldReward/sparkReward, guards against insufficient gold
+- [x] Fortune card on Journey page — amber-tinted when pending, fades to neutral when resolved; shows outcome narrative after choice
+- [x] Disabled buttons with "Need X🪙" message when player can't afford a choice
 
-- [ ] Companion creation flow: option to assign to a region (or randomize, or Traveler)
-- [ ] Visit system respects `home_region` — only surfaces companions whose region is unlocked
-- [ ] Discovery encounter: first-meeting intro exchange when a region is unlocked and a companion lives there
-- [ ] Traveler companions: no fixed home, can appear anywhere
+### 3c — Undiscovered Companions ✅ Complete
 
-### 3e — Lover System
-- [ ] Confession option appears in visit sheet when affinity ≥ 100
-- [ ] Max 2 Lovers enforced
-- [ ] Custom lover dialogue: user writes lines in companion page (health app side), stored in `gameCompanionAffinity.lover_dialogue`
-- [ ] Dual Lover visit: when both Lovers visit the Guild Hall simultaneously, they appear together doing an activity that depends on which rooms are built
-- [ ] Joint dialogue: 3-speaker scripted exchanges (pool of ~15) triggered when both Lovers are present
-- [ ] "There's something I want to tell you." confession flow — skippable, no pressure
+Companions can be assigned to a home region. They only appear in the daily visit rotation when that region is unlocked. Traveler companions bypass this and visit anywhere.
+
+- [x] Region picker in `CompanionForm` — horizontal scrollable chip row showing all 12 regions + Traveler. Locked regions show 🔒 but are still selectable (plan ahead)
+- [x] `setCompanionHomeRegion(companionId, region)` in `game.ts` — creates/updates the `gameCompanionAffinity` record with the chosen region
+- [x] `getCompanionHomeRegion(companionId)` — reads stored region, defaults to `'ponyville'`
+- [x] `getOrPickDailyVisitor` updated — filters companions by `home_region === currentRegion || home_region === 'traveler'`; companions with no affinity record default to `'ponyville'`
+- [ ] Discovery encounter (first-meeting intro) — deferred until region unlocking is implemented (Tier 3f)
+
+### 3d — Lover System ✅ Complete
+- [x] Confession button in visit sheet — appears when `affinity ≥ 100`, companion is not already a Lover, and fewer than 2 Lovers exist
+- [x] Max 2 Lovers enforced — confession button hidden once cap is reached
+- [x] "There's something I want to tell you…" confession flow: two choices (confess / smile and move on), fully skippable, no pressure
+- [x] Acceptance: `setLoverStatus(true)` + affinity +20; decline: +0, no penalty
+- [x] Lover Messages in CompanionPage — shown only when `is_lover: true`; lines stored in `gameCompanionAffinity.lover_dialogue`; used as greeting during lover visits instead of generic pool
+- [x] Lover visit styling — rose-tinted sheet, "💕 Your Lover stopped by" subtitle, 💕 emoji on affinity delta
+- [x] Dual Lover visit — 30% chance when 2 Lovers exist; `getOrPickDailyVisitor` returns both; visit sheet shows joint scene with room-dependent flavour text (Library / Kitchen / Training Ground / courtyard fallback)
+- [x] `recordJointVisit` — marks day's visit done without changing affinity (joint visit is a bonus, not a response interaction)
 
 ### 3f — Equestria Sub-Region Map
 Visual map of the island showing all sub-regions, fog of war on locked ones.

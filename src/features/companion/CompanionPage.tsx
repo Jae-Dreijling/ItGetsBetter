@@ -4,7 +4,23 @@ import imageCompression from 'browser-image-compression'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useCompanions, useActiveCompanion, addCompanion, updateCompanion, deleteCompanion, setActiveCompanion, type CompanionEvent } from '../../hooks/useCompanion'
+import { getCompanionHomeRegion, setCompanionHomeRegion, getCompanionAffinityRecord, updateLoverDialogue } from '../../lib/game'
 import type { Companion, CompanionMessages } from '../../types'
+
+const JOURNEY_REGIONS = [
+  { id: 'traveler',        label: 'Traveler',        emoji: '🗺️', available: true  },
+  { id: 'ponyville',       label: 'Ponyville',       emoji: '🍎', available: true  },
+  { id: 'canterlot',       label: 'Canterlot',       emoji: '🏰', available: false },
+  { id: 'cloudsdale',      label: 'Cloudsdale',      emoji: '☁️', available: false },
+  { id: 'everfree_forest', label: 'Everfree Forest', emoji: '🌲', available: false },
+  { id: 'crystal_empire',  label: 'Crystal Empire',  emoji: '💎', available: false },
+  { id: 'manehattan',      label: 'Manehattan',      emoji: '🏙️', available: false },
+  { id: 'appleloosa',      label: 'Appleloosa',      emoji: '🤠', available: false },
+  { id: 'las_pegasus',     label: 'Las Pegasus',     emoji: '🎰', available: false },
+  { id: 'griffonstone',    label: 'Griffonstone',    emoji: '🦅', available: false },
+  { id: 'dragon_lands',    label: 'Dragon Lands',    emoji: '🐉', available: false },
+  { id: 'mount_aris',      label: 'Mount Aris',      emoji: '🐚', available: false },
+]
 
 const EVENT_LABELS: { key: CompanionEvent; label: string }[] = [
   { key: 'general', label: 'General / Default' },
@@ -129,6 +145,10 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
   const [name, setName] = useState(initial?.name ?? '')
   const [avatar, setAvatar] = useState<Blob | null>(initial?.avatar ?? null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [homeRegion, setHomeRegion] = useState('ponyville')
+  const [isLover, setIsLover] = useState(false)
+  const [loverDialogue, setLoverDialogue] = useState<string[]>([])
+  const [newLoverLine, setNewLoverLine] = useState('')
   const [messages, setMessages] = useState<CompanionMessages>(initial?.messages ?? {
     general: [], morning_greeting: [], welcome_back: [], achievement_unlocked: [],
     habit_completed: [], mood_low: [], fasting_goal: [], streak_milestone: [],
@@ -144,6 +164,18 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
       return () => URL.revokeObjectURL(url)
     }
   }, [initial?.avatar])
+
+  useEffect(() => {
+    if (initial?.id) {
+      getCompanionHomeRegion(initial.id).then(setHomeRegion)
+      getCompanionAffinityRecord(initial.id).then(record => {
+        if (record) {
+          setIsLover(record.is_lover)
+          setLoverDialogue(record.lover_dialogue ?? [])
+        }
+      })
+    }
+  }, [initial?.id])
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -172,11 +204,15 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
 
   async function handleSave() {
     if (!name.trim()) return
+    let savedId: number
     if (initial?.id) {
       await updateCompanion(initial.id, { name: name.trim(), avatar, messages })
+      savedId = initial.id
     } else {
-      await addCompanion({ name: name.trim(), avatar, messages })
+      savedId = await addCompanion({ name: name.trim(), avatar, messages }) as number
     }
+    await setCompanionHomeRegion(savedId, homeRegion)
+    if (isLover) await updateLoverDialogue(savedId, loverDialogue)
     onSave()
   }
 
@@ -200,6 +236,32 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
           placeholder="Companion name"
           className="flex-1 rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
         />
+      </div>
+
+      {/* Journey home region */}
+      <div className="mb-4">
+        <p className="mb-1.5 text-xs font-semibold text-muted uppercase tracking-wide">Journey Home Region</p>
+        <p className="mb-2 text-xs text-muted">Where does this companion live? They only visit when their region is unlocked. Traveler companions visit anywhere.</p>
+        <div className="overflow-x-auto -mx-1 px-1">
+          <div className="flex gap-2 pb-1" style={{ width: 'max-content' }}>
+            {JOURNEY_REGIONS.map(r => (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setHomeRegion(r.id)}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                  homeRegion === r.id
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-surface text-muted hover:bg-primary-50 dark:hover:bg-primary-900/20'
+                }`}
+              >
+                <span>{r.emoji}</span>
+                <span>{r.label}</span>
+                {!r.available && <span className="opacity-50">🔒</span>}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-1 mb-4">
@@ -244,6 +306,53 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
           </div>
         ))}
       </div>
+
+      {isLover && (
+        <div className="mb-4">
+          <p className="mb-1.5 text-xs font-semibold text-rose-500 uppercase tracking-wide">💕 Lover Messages</p>
+          <p className="mb-2 text-xs text-muted">Lines this companion says when they visit as your Lover. If empty, default visit greetings are used.</p>
+          <div className="space-y-1.5 mb-2">
+            {loverDialogue.map((line, i) => (
+              <div key={i} className="flex items-start gap-2 rounded-lg bg-surface px-2.5 py-1.5">
+                <p className="flex-1 text-xs text-text-primary">"{line}"</p>
+                <button
+                  onClick={() => setLoverDialogue(prev => prev.filter((_, j) => j !== i))}
+                  className="shrink-0 p-0.5 text-muted hover:text-danger"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-1.5">
+            <input
+              type="text"
+              value={newLoverLine}
+              onChange={e => setNewLoverLine(e.target.value)}
+              placeholder="Add a message…"
+              className="flex-1 rounded-lg border border-rose-100 dark:border-rose-900 bg-surface px-2.5 py-1.5 text-xs text-text-primary placeholder:text-muted focus:border-rose-400 focus:outline-none"
+              onKeyDown={e => {
+                if (e.key === 'Enter' && newLoverLine.trim()) {
+                  setLoverDialogue(prev => [...prev, newLoverLine.trim()])
+                  setNewLoverLine('')
+                }
+              }}
+            />
+            <button
+              onClick={() => {
+                if (newLoverLine.trim()) {
+                  setLoverDialogue(prev => [...prev, newLoverLine.trim()])
+                  setNewLoverLine('')
+                }
+              }}
+              disabled={!newLoverLine.trim()}
+              className="rounded-lg bg-rose-500 px-2.5 py-1.5 text-xs text-white disabled:opacity-50"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      )}
 
       <button
         onClick={handleSave}

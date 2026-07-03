@@ -10,11 +10,18 @@ import {
   generateQuestsIfNeeded, claimQuest, toggleQuestSafeMode,
   ensureGameState,
   PERFORM_DAILY_LIMIT, BEG_GOLD_THRESHOLD,
-  hasPendingVisit, getOrPickDailyVisitor, recordCompanionVisit,
+  getOrPickDailyVisitor, recordCompanionVisit,
   getVisitGreeting, VISIT_RESPONSES,
-  affinityLabel, isBossDefeated, PONYVILLE_BOSS,
+  affinityLabel, isBossDefeated, isRoomBuilt,
+  setLoverStatus,
   type QuizQuestion,
 } from '../../lib/game'
+import { rollEncounter, recordEncounterToday, ENCOUNTERS as ENCOUNTERS_ALL } from '../../lib/encounters'
+import { BOSSES } from '../../lib/bosses'
+import {
+  getOrPickWeeklyEvent, getFortuneEventDef, resolveFortuneChoice,
+  type StoredFortune,
+} from '../../lib/fortune'
 import type { GameQuest } from '../../types'
 
 // ─── Objective labels ──────────────────────────────────────────────────────────
@@ -143,41 +150,147 @@ function QuestCard({ quest, onClaimed }: { quest: GameQuest; onClaimed: () => vo
 
 // ─── Companion visit sheet ─────────────────────────────────────────────────────
 
-interface VisitorInfo { companionId: number; companionName: string }
+interface VisitorInfo {
+  companionId: number
+  companionName: string
+  partnerId?: number
+  partnerName?: string
+}
 
-function CompanionVisitSheet({ visitor, onClose }: { visitor: VisitorInfo; onClose: () => void }) {
-  const [greeting] = useState(() => getVisitGreeting())
-  const [responded, setResponded] = useState(false)
+function pickJointScene(name1: string, name2: string): string {
+  const pool: string[] = [
+    `${name1} and ${name2} are sitting together in the courtyard, talking softly.`,
+    `You find them mid-laugh at something only they know. They wave you over.`,
+    `${name1} is sketching something while ${name2} watches over their shoulder.`,
+    `They're side by side on a bench, watching the clouds drift past.`,
+  ]
+  if (isRoomBuilt('library')) pool.push(
+    `${name1} and ${name2} are curled up in the Library, sharing a blanket over the same book.`,
+    `You find them in the Library arguing softly about a passage. It's clearly not serious.`
+  )
+  if (isRoomBuilt('kitchen')) pool.push(
+    `${name1} is teaching ${name2} a recipe in the Kitchen. There's flour everywhere.`,
+    `The Kitchen smells incredible. ${name1} insists whatever's on the stove is "almost ready."`,
+  )
+  if (isRoomBuilt('training')) pool.push(
+    `${name1} and ${name2} are sparring lightly in the Training Ground. ${name2} is clearly holding back.`,
+    `They've set up a rest spot beside the Training Ground, catching their breath together.`,
+  )
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
+type VisitPhase = 'greeting' | 'responded' | 'confessing' | 'confessed'
+
+function CompanionVisitSheet({
+  visitor,
+  affinityRecord,
+  loverCount,
+  onClose,
+}: {
+  visitor: VisitorInfo
+  affinityRecord: import('../../types').GameCompanionAffinity | null
+  loverCount: number
+  onClose: () => void
+}) {
+  const isJointVisit = !!visitor.partnerId
+  const isLover      = affinityRecord?.is_lover ?? false
+  const affinity     = affinityRecord?.affinity ?? 0
+  const canConfess   = !isLover && affinity >= 100 && loverCount < 2
+
+  const [greeting] = useState(() => {
+    if (isLover && affinityRecord?.lover_dialogue?.length) {
+      const lines = affinityRecord.lover_dialogue
+      return lines[Math.floor(Math.random() * lines.length)]
+    }
+    return getVisitGreeting()
+  })
+  const [jointScene] = useState(() =>
+    isJointVisit && visitor.partnerName
+      ? pickJointScene(visitor.companionName, visitor.partnerName)
+      : ''
+  )
+
+  const [phase, setPhase] = useState<VisitPhase>('greeting')
   const [affinityDelta, setAffinityDelta] = useState(0)
+  const [confessionAccepted, setConfessionAccepted] = useState<boolean | null>(null)
 
   async function handleResponse(delta: number) {
-    setAffinityDelta(delta)
-    setResponded(true)
-    await recordCompanionVisit(visitor.companionId, delta)
+    const gardenBonus = isRoomBuilt('garden') ? 2 : 0
+    const finalDelta = delta + gardenBonus
+    setAffinityDelta(finalDelta)
+    setPhase('responded')
+    await recordCompanionVisit(visitor.companionId, finalDelta)
   }
 
+  async function handleConfess(accepted: boolean) {
+    setConfessionAccepted(accepted)
+    setPhase('confessed')
+    if (accepted) {
+      await setLoverStatus(visitor.companionId, true)
+      await recordCompanionVisit(visitor.companionId, 20)
+    } else {
+      await recordCompanionVisit(visitor.companionId, 0)
+    }
+  }
+
+  function handleJointClose() {
+    onClose()
+  }
+
+  const accentRing   = isLover ? 'ring-2 ring-rose-300 dark:ring-rose-700' : ''
+  const headerBg     = isLover ? 'bg-rose-50 dark:bg-rose-950/30' : 'bg-primary-100 dark:bg-primary-900/30'
+  const headerIcon   = isLover ? 'text-rose-500' : 'text-primary-500'
+  const headerSub    = isLover ? '💕 Your Lover stopped by' : 'A companion stopped by today'
+
+  // ── Joint visit ─────────────────────────────────────────────────────────────
+  if (isJointVisit) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={handleJointClose}>
+        <div className="w-full rounded-t-2xl bg-card p-6 pb-10 shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30">
+              <Heart className="h-5 w-5 text-rose-500" />
+            </div>
+            <div>
+              <p className="font-bold text-text-primary">
+                {visitor.companionName} & {visitor.partnerName} are together!
+              </p>
+              <p className="text-xs text-muted">💕 Your Lovers are at the Guild Hall</p>
+            </div>
+          </div>
+          <div className="mb-6 rounded-xl bg-surface px-4 py-4">
+            <p className="text-sm text-text-primary italic">{jointScene}</p>
+          </div>
+          <button onClick={handleJointClose} className="w-full rounded-xl bg-rose-500 py-3 text-sm font-bold text-white">
+            💕 A lovely sight
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Normal visit ─────────────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
       <div
-        className="w-full rounded-t-2xl bg-card p-6 pb-10 shadow-xl"
+        className={`w-full rounded-t-2xl bg-card p-6 pb-10 shadow-xl ${accentRing}`}
         onClick={e => e.stopPropagation()}
       >
-        {!responded ? (
+
+        {phase === 'greeting' && (
           <>
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
-                <Heart className="h-5 w-5 text-primary-500" />
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${headerBg}`}>
+                <Heart className={`h-5 w-5 ${headerIcon}`} />
               </div>
               <div>
                 <p className="font-bold text-text-primary">{visitor.companionName} is visiting!</p>
-                <p className="text-xs text-muted">A companion stopped by today</p>
+                <p className="text-xs text-muted">{headerSub}</p>
               </div>
             </div>
-
             <div className="mb-5 rounded-xl bg-surface px-4 py-3">
               <p className="text-sm text-text-primary italic">"{greeting}"</p>
             </div>
-
             <p className="mb-3 text-xs text-muted font-medium uppercase tracking-wide">How do you respond?</p>
             <div className="space-y-2">
               {VISIT_RESPONSES.map(r => (
@@ -190,11 +303,21 @@ function CompanionVisitSheet({ visitor, onClose }: { visitor: VisitorInfo; onClo
                 </button>
               ))}
             </div>
+            {canConfess && (
+              <button
+                onClick={() => setPhase('confessing')}
+                className="mt-3 w-full rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/20 px-4 py-3 text-left text-sm font-medium text-rose-600 dark:text-rose-400 transition-colors hover:bg-rose-100 dark:hover:bg-rose-900/30"
+              >
+                💕 There's something I want to tell you…
+              </button>
+            )}
           </>
-        ) : (
+        )}
+
+        {phase === 'responded' && (
           <div className="text-center py-4">
             <p className="text-4xl mb-3">
-              {affinityDelta > 0 ? '💛' : affinityDelta < 0 ? '😶' : '😊'}
+              {affinityDelta > 0 ? (isLover ? '💕' : '💛') : affinityDelta < 0 ? '😶' : '😊'}
             </p>
             <p className="font-bold text-text-primary mb-1">
               {affinityDelta > 0
@@ -204,18 +327,66 @@ function CompanionVisitSheet({ visitor, onClose }: { visitor: VisitorInfo; onClo
                   : 'A quiet moment.'}
             </p>
             {affinityDelta !== 0 && (
-              <p className="text-xs text-muted mb-5">
-                Affinity {affinityDelta > 0 ? `+${affinityDelta}` : affinityDelta}
-              </p>
+              <p className="text-xs text-muted mb-5">Affinity {affinityDelta > 0 ? `+${affinityDelta}` : affinityDelta}</p>
             )}
-            <button
-              onClick={onClose}
-              className="w-full rounded-xl bg-primary-500 py-3 text-sm font-bold text-white"
-            >
+            <button onClick={onClose} className="w-full rounded-xl bg-primary-500 py-3 text-sm font-bold text-white">
               Close
             </button>
           </div>
         )}
+
+        {phase === 'confessing' && (
+          <>
+            <div className="mb-5 rounded-xl bg-rose-50 dark:bg-rose-950/20 px-4 py-4">
+              <p className="text-sm text-text-primary">
+                <span className="font-semibold">You:</span>{' '}
+                "There's something I want to tell you, {visitor.companionName}…"
+              </p>
+            </div>
+            <div className="space-y-2">
+              <button
+                onClick={() => handleConfess(true)}
+                className="w-full rounded-xl bg-rose-500 px-4 py-3 text-sm font-bold text-white transition-all active:scale-[0.98]"
+              >
+                Tell them how you feel 💕
+              </button>
+              <button
+                onClick={() => handleConfess(false)}
+                className="w-full rounded-xl bg-surface px-4 py-3 text-sm font-medium text-muted transition-colors hover:bg-primary-50"
+              >
+                Just smile and move on
+              </button>
+            </div>
+          </>
+        )}
+
+        {phase === 'confessed' && (
+          <div className="text-center py-4">
+            {confessionAccepted ? (
+              <>
+                <p className="text-5xl mb-3">💕</p>
+                <p className="font-bold text-text-primary mb-2">
+                  {visitor.companionName} reaches out. A quiet understanding passes between you.
+                </p>
+                <p className="text-xs text-rose-500 dark:text-rose-400 font-medium mb-5">
+                  💕 {visitor.companionName} is now your Lover. Affinity +20.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-4xl mb-3">😊</p>
+                <p className="font-bold text-text-primary mb-1">A warm moment.</p>
+                <p className="text-xs text-muted mb-5">
+                  You smile and {visitor.companionName} smiles back. Nothing needs to be said.
+                </p>
+              </>
+            )}
+            <button onClick={onClose} className="w-full rounded-xl bg-primary-500 py-3 text-sm font-bold text-white">
+              Close
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   )
@@ -363,15 +534,25 @@ export default function JourneyPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [visitor, setVisitor] = useState<VisitorInfo | null>(null)
   const [showVisitSheet, setShowVisitSheet] = useState(false)
+  const [fortune, setFortune] = useState<StoredFortune | null>(null)
 
-  // Ensure row + check for daily visitor
+  // Ensure row, roll for encounter, then check for daily visitor
   useEffect(() => {
     ensureGameState().then(async state => {
       if (!state.activated) return
-      if (hasPendingVisit()) {
-        const v = await getOrPickDailyVisitor()
-        if (v) setVisitor(v)
+      // Roaming encounter: 1-in-6 chance per day
+      const region = state.current_region ?? 'ponyville'
+      const encounterId = rollEncounter(region)
+      if (encounterId) {
+        recordEncounterToday()
+        navigate(`/journey/encounter/${encounterId}`)
+        return
       }
+      // Weekly fortune event
+      setFortune(getOrPickWeeklyEvent())
+      // Companion visit: 10% chance per Journey open
+      const v = await getOrPickDailyVisitor()
+      if (v) setVisitor(v)
     })
   }, [])
 
@@ -406,10 +587,14 @@ export default function JourneyPage() {
   const weekly = activeQuests?.filter(q => q.is_weekly) ?? []
   const monthly = activeQuests?.filter(q => !q.is_weekly) ?? []
   const showEarlyGame = (gameState?.gold ?? 0) < BEG_GOLD_THRESHOLD
-  const bossDefeated = isBossDefeated(PONYVILLE_BOSS.id)
+  const bossDefeated = isBossDefeated(BOSSES.nightmare_moon.id)
 
   const companionMap = new Map((companions ?? []).map(c => [c.id!, c.name]))
   const discoveredAffinities = (affinities ?? []).filter(a => a.is_discovered)
+  const loverCount = (affinities ?? []).filter(a => a.is_lover).length
+  const visitorAffinity = visitor
+    ? (affinities ?? []).find(a => a.companion_id === visitor.companionId) ?? null
+    : null
 
   return (
     <>
@@ -459,6 +644,57 @@ export default function JourneyPage() {
             </div>
           </button>
         </div>
+
+        {/* Fortune event */}
+        {fortune && (() => {
+          const def = getFortuneEventDef(fortune.eventId)
+          if (!def) return null
+          const resolved = fortune.chosenId !== null
+          const chosenDef = resolved ? def.choices.find(c => c.id === fortune.chosenId) : null
+          const gold = gameState?.gold ?? 0
+
+          return (
+            <div className={`mb-5 rounded-xl shadow-sm overflow-hidden ${resolved ? 'bg-card' : 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800'}`}>
+              <div className="px-4 pt-4 pb-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl">{def.emoji}</span>
+                  <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                    {resolved ? "This week's event" : 'World event this week'}
+                  </p>
+                </div>
+                <p className="font-bold text-text-primary mb-1">{def.title}</p>
+                {!resolved && (
+                  <p className="text-sm text-muted">{def.description}</p>
+                )}
+                {resolved && chosenDef && (
+                  <p className="text-sm text-muted italic">"{chosenDef.outcome}"</p>
+                )}
+              </div>
+
+              {!resolved && (
+                <div className="px-4 pb-4 space-y-2">
+                  {def.choices.map(choice => {
+                    const canAfford = choice.goldCost === 0 || gold >= choice.goldCost
+                    return (
+                      <button
+                        key={choice.id}
+                        disabled={!canAfford}
+                        onClick={async () => {
+                          const updated = await resolveFortuneChoice(fortune, choice.id, gold)
+                          if (updated) setFortune(updated)
+                        }}
+                        className="w-full rounded-xl bg-card px-4 py-3 text-left transition-all active:scale-[0.98] disabled:opacity-40"
+                      >
+                        <p className="text-sm font-medium text-text-primary">{choice.label}</p>
+                        <p className="text-xs text-muted mt-0.5">{canAfford ? choice.hint : `Need ${choice.goldCost}🪙 (you have ${gold}🪙)`}</p>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Claim toast */}
         {claimMsg && (
@@ -589,6 +825,20 @@ export default function JourneyPage() {
           <span className="mx-1">·</span>Equestria
         </div>
 
+        {/* Debug */}
+        <button
+          onClick={() => {
+            const region = gameState?.current_region ?? 'ponyville'
+            const pool = Object.values(ENCOUNTERS_ALL).filter(e => e.region === region)
+            if (pool.length === 0) return
+            const enc = pool[Math.floor(Math.random() * pool.length)]
+            navigate(`/journey/encounter/${enc.id}`)
+          }}
+          className="mt-2 w-full rounded-xl bg-surface py-2 text-[10px] text-muted hover:bg-primary-50 transition-colors"
+        >
+          🧪 Debug: trigger random encounter
+        </button>
+
       </PageContainer>
 
       {showPerform && (
@@ -601,6 +851,8 @@ export default function JourneyPage() {
       {visitor && showVisitSheet && (
         <CompanionVisitSheet
           visitor={visitor}
+          affinityRecord={visitorAffinity}
+          loverCount={loverCount}
           onClose={() => {
             setShowVisitSheet(false)
             setVisitor(null)

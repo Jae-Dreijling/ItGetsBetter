@@ -26,9 +26,9 @@ interface BattleState {
   goldEarned: number
 }
 
-const PLAYER_MAX_HP = 100
-const PLAYER_HEALS  = 2
-const HEAL_AMOUNT   = 25
+const BASE_PLAYER_HP = 100
+const PLAYER_HEALS   = 2
+const HEAL_AMOUNT    = 25
 
 function randomQuote(boss: BossDefinition): string {
   return boss.quotes[Math.floor(Math.random() * boss.quotes.length)]
@@ -83,13 +83,15 @@ export default function BossPage() {
   const boss: BossDefinition | undefined = bossId ? BOSSES[bossId] : undefined
 
   const strengthLevel = character?.statLevels.strength.level ?? 0
-  const trainingBonus = isRoomBuilt('training') ? 0.10 : 0
+  const trainingBonus    = isRoomBuilt('training')   ? 0.10 : 0
+  const meditationBonus  = isRoomBuilt('meditation') ? 10   : 0
   const baseAttack    = 10 + Math.min(20, strengthLevel)
   const playerAttack  = Math.round(baseAttack * (1 + trainingBonus))
+  const playerMaxHp   = BASE_PLAYER_HP + meditationBonus
 
   const [battle, setBattle] = useState<BattleState>(() => ({
     phase: 'intro',
-    playerHp: PLAYER_MAX_HP,
+    playerHp: playerMaxHp,
     bossHp: boss?.hp ?? 0,
     log: [],
     focusing: false,
@@ -104,7 +106,7 @@ export default function BossPage() {
     if (!boss) return
     setBattle({
       phase: 'fighting',
-      playerHp: PLAYER_MAX_HP,
+      playerHp: playerMaxHp,
       bossHp: boss.hp,
       log: [`The battle begins! ${boss.name} rises from the shadows…`],
       focusing: false,
@@ -121,7 +123,7 @@ export default function BossPage() {
     setBattle(prev => ({
       ...prev,
       phase: 'intro',
-      playerHp: PLAYER_MAX_HP,
+      playerHp: playerMaxHp,
       bossHp: boss.hp,
       log: [],
       focusing: false,
@@ -161,8 +163,8 @@ export default function BossPage() {
         log.push('⚡ You focus your energy… next attack deals double damage!')
       } else if (action === 'heal') {
         if (healsLeft <= 0) return prev
-        const recovered = Math.min(HEAL_AMOUNT, PLAYER_MAX_HP - playerHp)
-        playerHp = Math.min(PLAYER_MAX_HP, playerHp + HEAL_AMOUNT)
+        const recovered = Math.min(HEAL_AMOUNT, playerMaxHp - playerHp)
+        playerHp = Math.min(playerMaxHp, playerHp + HEAL_AMOUNT)
         healsLeft -= 1
         log.push(`💚 You recover ${recovered} HP. (${healsLeft} heals left)`)
       }
@@ -303,7 +305,7 @@ export default function BossPage() {
               <div className="space-y-1.5 text-sm text-muted">
                 <div className="flex justify-between">
                   <span>HP</span>
-                  <span className="font-medium text-text-primary">{PLAYER_MAX_HP}</span>
+                  <span className="font-medium text-text-primary">{playerMaxHp}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Attack</span>
@@ -339,9 +341,9 @@ export default function BossPage() {
               <div>
                 <div className="mb-1 flex justify-between text-xs text-muted">
                   <span>You</span>
-                  <span>{battle.playerHp} / {PLAYER_MAX_HP} HP</span>
+                  <span>{battle.playerHp} / {playerMaxHp} HP</span>
                 </div>
-                <HpBar current={battle.playerHp} max={PLAYER_MAX_HP} color="bg-green-400" />
+                <HpBar current={battle.playerHp} max={playerMaxHp} color="bg-green-400" />
               </div>
               <div>
                 <div className="mb-1 flex justify-between text-xs text-muted">
@@ -390,7 +392,7 @@ export default function BossPage() {
                 <span className="text-sm font-bold">Focus</span>
                 <span className="text-[10px] opacity-75">{battle.focusing ? 'Active' : '2× next hit'}</span>
               </button>
-              <button onClick={() => applyAction('heal')} disabled={battle.healsLeft <= 0 || battle.playerHp >= PLAYER_MAX_HP} className="flex flex-col items-center gap-1.5 rounded-2xl bg-green-500 py-4 text-white transition-all active:scale-95 disabled:opacity-40">
+              <button onClick={() => applyAction('heal')} disabled={battle.healsLeft <= 0 || battle.playerHp >= playerMaxHp} className="flex flex-col items-center gap-1.5 rounded-2xl bg-green-500 py-4 text-white transition-all active:scale-95 disabled:opacity-40">
                 <Heart className="h-5 w-5" />
                 <span className="text-sm font-bold">Heal</span>
                 <span className="text-[10px] opacity-75">+{HEAL_AMOUNT} HP ({battle.healsLeft} left)</span>
