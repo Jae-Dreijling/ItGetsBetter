@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { Ruler, Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock } from 'lucide-react'
+import { Ruler, Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
@@ -54,6 +54,17 @@ export default function MePage() {
             <div>
               <p className="font-medium text-text-primary">My Day</p>
               <p className="text-sm text-muted">Everything you logged, in order</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/me/meditation')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Wind className="h-5 w-5 text-secondary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Meditation</p>
+              <p className="text-sm text-muted">Timed sessions with custom sounds</p>
             </div>
           </button>
 

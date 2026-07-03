@@ -25,7 +25,7 @@ A collection of ideas for features that are not planned for any current phase. T
 | 15 | ~~Companion Chat (Pattern Matching)~~ | ✅ **Built** | Long-press companion → chat |
 | 16 | Companion AI (Real Conversations) | ⭐⭐⭐⭐⭐ | ⭐ (very hard — API/self-hosted/native options) |
 | 17 | Gamification / RPG Progression | ⭐⭐⭐⭐ | ⭐⭐ (extends existing points system) |
-| 18 | Meditation Timer | ⭐⭐⭐ | ⭐⭐⭐ (simple, self-contained) |
+| 18 | ~~Meditation Timer~~ | ✅ **Built** | Duration presets + custom, 3 configurable sounds, interval markers |
 | 19 | ~~Pomodoro Timer~~ | ✅ **Built** | Configurable focus/break cycles, timer icon in To-Do tab |
 | 20 | Skincare & Hair Tracking | ⭐⭐⭐ | ⭐⭐ (mirrors measurements + progress photos pattern) |
 | 21 | ~~Daily Chronological Timeline~~ | ✅ **Built** | View layer over existing data, no new DB needed |
@@ -218,14 +218,11 @@ Depends on: Points System (already built).
 
 ---
 
-## 18. Meditation Timer
+## 18. Meditation Timer — ✅ BUILT
 
-A simple countdown timer for meditation sessions, optionally logging session length to a lightweight history.
+~~A simple countdown timer for meditation sessions, optionally logging session length to a lightweight history.~~
 
-- Preset durations (5/10/15/20 min) + custom, consistent with "Preset Over Freeform" (Rulebook 3.2).
-- Optional ambient sound or just silence — keep it simple, this isn't a meditation app, it's a timer.
-- Could log to a generic "mindfulness" or "wellness" label shared with habits/tasks.
-- No streak pressure by default — completing a session is the win, length is secondary.
+**Implemented:** Me → Meditation. Preset durations (5, 10, 15, 20, 30 min) + custom input (1–180 min). Three fully configurable sounds (Start, End, Interval marker) chosen from 6 synthesized Web Audio API tones: Soft Bell, Bowl Gong, Chime, Deep Tone, Gentle Ping, Ding — or None. Interval marker fires every 1, 2, 5, or 10 minutes during the session. Settings gear → bottom sheet with per-slot pickers + Preview buttons. Clean 3-phase UI: setup (duration + ring preview) → active (depleting ring, Pause/Stop) → done (completion screen). No streaks, no logging pressure.
 
 ---
 
@@ -310,9 +307,9 @@ An expansion of the Pomodoro timer (#19) that plays a chosen sound at key moment
 - Sounds generated via the Web Audio API (no audio files needed — synthesized tones) to keep the bundle small and work offline. Each "sound" is a short synth recipe (frequency, envelope, waveform).
 
 **Implementation notes:**
-- Sounds live entirely in a `usePomodoroSound.ts` hook that exposes `playSound(event)`.
-- Sound preference stored in localStorage alongside the existing Pomodoro settings (`igb_pomo_sound`).
-- Picker lives in the existing Configure Timer bottom sheet — just add a "Sound" row with a small preview button per option.
+- `src/lib/sounds.ts` is already built (shared with Meditation Timer #18) — `playSound(id)` is ready to call.
+- Sound preference stored in localStorage alongside the existing Pomodoro settings (e.g. `igb_pomo_sound_work_end`).
+- Picker lives in the existing Configure Timer bottom sheet — add a "Sounds" section with per-event pickers using the same `SoundPicker` pattern from MeditationPage.
 - Falls back silently if the browser blocks autoplay (no crash, no error state shown to user).
 
 **Depends on:** Pomodoro Timer (#19, already built).
