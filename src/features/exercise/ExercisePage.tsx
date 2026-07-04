@@ -3,7 +3,7 @@ import { format } from 'date-fns'
 import { Dumbbell, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
-import { useTodaysExercise, useExerciseHistory, useExerciseTypes, addExerciseEntry, deleteExerciseEntry, saveCustomKcal, getKcalPerMin } from '../../hooks/useExercise'
+import { useTodaysExercise, useExerciseHistory, useExerciseTypes, addExerciseEntry, deleteExerciseEntry, saveCustomKcal } from '../../hooks/useExercise'
 import { getLogicalDate } from '../../lib/date'
 
 const DEFAULT_TYPES = ['Running', 'Walking', 'Weight Lifting', 'Boxing', 'Dancing', 'Swimming', 'Cycling', 'Home Workout']

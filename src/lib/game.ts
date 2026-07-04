@@ -626,7 +626,7 @@ export async function setCompanionHomeRegion(companionId: number, region: string
 // ─── Guild Hall ───────────────────────────────────────────────────────────────
 
 export interface GuildRoom {
-  id: 'library' | 'kitchen' | 'training'
+  id: 'library' | 'kitchen' | 'training' | 'garden' | 'meditation' | 'observatory' | 'forge'
   name: string
   emoji: string
   cost: number

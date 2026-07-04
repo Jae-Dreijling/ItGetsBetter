@@ -51,7 +51,7 @@ export function useExerciseTypes() {
   })
 }
 
-type ExerciseInput = Omit<ExerciseEntry, 'id' | 'date' | 'logged_at'>
+type ExerciseInput = Omit<ExerciseEntry, 'id' | 'date' | 'logged_at' | 'calories_burned'>
 
 export async function addExerciseEntry(data: ExerciseInput & { date?: string }) {
   let calories_burned: number | null = null
