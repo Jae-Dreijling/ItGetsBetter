@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Target, X } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
 import { useStorageEstimate, formatBytes } from '../../hooks/useStorage'
 import { isLockEnabled, enableLock, disableLock } from '../../components/AppLock'
+import { isWeatherEnabled, setWeatherEnabled } from '../../hooks/useWeather'
+import { useFocus, FOCUS_OPTIONS } from '../../hooks/useFocus'
 
 export default function SettingsPage() {
   const { profile } = useProfile()
@@ -13,7 +15,10 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const [lockEnabled, setLockEnabled] = useState(isLockEnabled)
   const [showPinSetup, setShowPinSetup] = useState(false)
+  const [weatherEnabled, setWeatherEnabledState] = useState(isWeatherEnabled)
   const [newPin, setNewPin] = useState('')
+  const { focus, setFocus } = useFocus()
+  const [showFocusPicker, setShowFocusPicker] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'current'>('idle')
 
   async function checkForUpdate() {
@@ -177,6 +182,65 @@ export default function SettingsPage() {
               <p className="mt-1 text-xs text-muted">PIN is required when opening the app.</p>
             )}
           </div>
+
+          <div className="rounded-xl bg-card p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Cloud className="h-5 w-5 text-secondary-400" />
+                <div>
+                  <p className="font-medium text-text-primary">Weather</p>
+                  <p className="text-xs text-muted">Shows Velp weather on home screen</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const next = !weatherEnabled
+                  setWeatherEnabled(next)
+                  setWeatherEnabledState(next)
+                  if (!next) sessionStorage.removeItem('igb_weather_cache')
+                }}
+                className={`relative h-6 w-11 rounded-full transition-colors ${weatherEnabled ? 'bg-secondary-400' : 'bg-surface border border-primary-100'}`}
+              >
+                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${weatherEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+            {weatherEnabled && (
+              <p className="mt-2 text-xs text-muted">
+                Your chosen location is sent to Open-Meteo to fetch weather. Nothing else about your data leaves the device.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-xl bg-card p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Target className="h-5 w-5 text-primary-500" />
+                <div>
+                  <p className="font-medium text-text-primary">Current Focus</p>
+                  <p className="text-xs text-muted">
+                    {focus ? `${focus.emoji} ${focus.label}` : 'None set'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {focus && (
+                  <button
+                    onClick={() => setFocus(null)}
+                    className="rounded-lg p-1.5 text-muted hover:text-danger transition-colors"
+                    aria-label="Clear focus"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowFocusPicker(true)}
+                  className="rounded-lg bg-surface px-3 py-1.5 text-sm font-medium text-muted hover:bg-primary-50 transition-colors"
+                >
+                  {focus ? 'Change' : 'Set'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {storage && (
@@ -212,6 +276,44 @@ export default function SettingsPage() {
 
         <p className="mt-4 text-center text-xs text-muted">ItGetsBetter v0.1.0</p>
       </PageContainer>
+
+      {showFocusPicker && (
+        <div
+          className="fixed inset-0 z-50 flex items-end bg-black/40"
+          onClick={() => setShowFocusPicker(false)}
+        >
+          <div
+            className="w-full rounded-t-2xl bg-card p-4 pb-8 shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-text-primary">Set Current Focus</h2>
+              <button onClick={() => setShowFocusPicker(false)} className="p-1.5 text-muted">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {FOCUS_OPTIONS.map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => { setFocus(opt.key); setShowFocusPicker(false) }}
+                  className={`flex items-center gap-3 rounded-xl p-3 text-left transition-colors ${
+                    focus?.key === opt.key
+                      ? 'bg-primary-100 ring-2 ring-primary-400'
+                      : 'bg-surface hover:bg-primary-50'
+                  }`}
+                >
+                  <span className="text-2xl leading-none">{opt.emoji}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-text-primary">{opt.label}</p>
+                    <p className="text-[11px] text-muted leading-tight">{opt.description}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

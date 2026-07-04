@@ -26,6 +26,7 @@ export interface MealEntry {
   name: string | null
   photo: Blob | null
   health_score: number
+  calories: number | null
   logged_at: string
   is_backfill: boolean
 }
@@ -130,6 +131,7 @@ export interface ExerciseEntry {
   weight_used_kg: number | null
   duration_minutes: number | null
   distance_km: number | null
+  calories_burned: number | null
   notes: string | null
   logged_at: string
 }
@@ -238,6 +240,14 @@ export interface Book {
   created_at: string
 }
 
+export interface MotivationNote {
+  id?: number
+  category: string
+  text: string
+  photo: Blob | null
+  created_at: string
+}
+
 export interface CompanionMessages {
   general: string[]
   morning_greeting: string[]
@@ -268,4 +278,65 @@ export interface ProgressPhoto {
   photo: Blob
   pose_type: string
   logged_at: string
+}
+
+// ─── Game Layer ───────────────────────────────────────────────────────────────
+
+export interface GameState {
+  id?: number
+  activated: boolean
+  activated_at: string | null
+  sparks: number
+  gold: number
+  current_region: string
+  risk_action_count: number
+  last_risk_at: string | null
+}
+
+export type GameQuestTier = 'routine' | 'adventure' | 'legend'
+export type GameQuestStatus = 'active' | 'claimed' | 'expired'
+export type GameQuestObjective =
+  | 'log_exercise'
+  | 'log_meals'
+  | 'log_water'
+  | 'log_sleep'
+  | 'log_mood'
+  | 'log_weight'
+  | 'log_medicine'
+  | 'complete_habits'
+
+export interface GameQuest {
+  id?: number
+  title: string
+  description: string
+  tier: GameQuestTier
+  is_weekly: boolean
+  objective_type: GameQuestObjective
+  objective_target: number
+  start_date: string
+  end_date: string
+  is_safe_mode: boolean
+  gold_reward: number
+  status: GameQuestStatus
+  narrative_result: string | null
+  created_at: string
+}
+
+export interface GameCompanionAffinity {
+  id?: number
+  companion_id: number
+  affinity: number
+  is_lover: boolean
+  lover_dialogue: string[]
+  home_region: string | null
+  is_discovered: boolean
+  last_visit_at: string | null
+  created_at: string
+}
+
+export interface GameCustomQuestion {
+  id?: number
+  question: string
+  answer: string
+  created_at: string
 }

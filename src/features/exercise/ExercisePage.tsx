@@ -3,7 +3,7 @@ import { format } from 'date-fns'
 import { Dumbbell, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
-import { useTodaysExercise, useExerciseHistory, useExerciseTypes, addExerciseEntry, deleteExerciseEntry } from '../../hooks/useExercise'
+import { useTodaysExercise, useExerciseHistory, useExerciseTypes, addExerciseEntry, deleteExerciseEntry, saveCustomKcal } from '../../hooks/useExercise'
 import { getLogicalDate } from '../../lib/date'
 
 const DEFAULT_TYPES = ['Running', 'Walking', 'Weight Lifting', 'Boxing', 'Dancing', 'Swimming', 'Cycling', 'Home Workout']
@@ -21,6 +21,7 @@ export default function ExercisePage() {
   const [duration, setDuration] = useState('')
   const [distance, setDistance] = useState('')
   const [notes, setNotes] = useState('')
+  const [customKcal, setCustomKcal] = useState('')
   const [date, setDate] = useState(getLogicalDate())
   const [saving, setSaving] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
@@ -32,6 +33,9 @@ export default function ExercisePage() {
     e.preventDefault()
     if (!selectedType || saving) return
     setSaving(true)
+    if (exerciseType === '__custom' && customKcal && parseFloat(customKcal) > 0) {
+      saveCustomKcal(selectedType, parseFloat(customKcal))
+    }
     await addExerciseEntry({
       exercise_type: selectedType,
       sets: sets ? parseInt(sets) : null,
@@ -50,6 +54,7 @@ export default function ExercisePage() {
     setDuration('')
     setDistance('')
     setNotes('')
+    setCustomKcal('')
     setShowDetails(false)
     setSaving(false)
     setShowForm(false)
@@ -108,15 +113,38 @@ export default function ExercisePage() {
                 </button>
               </div>
               {exerciseType === '__custom' && (
-                <input
-                  type="text"
-                  value={customType}
-                  onChange={e => setCustomType(e.target.value)}
-                  placeholder="Exercise name"
-                  className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
-                  autoFocus
-                />
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={customType}
+                    onChange={e => setCustomType(e.target.value)}
+                    placeholder="Exercise name"
+                    className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+                    autoFocus
+                  />
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={customKcal}
+                    onChange={e => setCustomKcal(e.target.value)}
+                    placeholder="Calories per minute (70kg average person)? (optional)"
+                    className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+                  />
+                </div>
               )}
+            </div>
+
+            <div className="mb-3">
+              <label className="mb-1 block text-xs text-muted">Duration (min)</label>
+              <input
+                type="number"
+                value={duration}
+                onChange={e => setDuration(e.target.value)}
+                placeholder="How long? (used to estimate calories)"
+                min="1"
+                className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+              />
             </div>
 
             <button
@@ -125,7 +153,7 @@ export default function ExercisePage() {
               className="mb-3 flex items-center gap-1 text-xs text-primary-500 font-medium"
             >
               {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              {showDetails ? 'Hide details' : 'Add details (optional)'}
+              {showDetails ? 'Hide details' : 'More details (sets, reps, distance…)'}
             </button>
 
             {showDetails && (
@@ -166,30 +194,17 @@ export default function ExercisePage() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="mb-1 block text-xs text-muted">Duration (min)</label>
-                    <input
-                      type="number"
-                      value={duration}
-                      onChange={e => setDuration(e.target.value)}
-                      placeholder="—"
-                      min="1"
-                      className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-2 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs text-muted">Distance (km)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={distance}
-                      onChange={e => setDistance(e.target.value)}
-                      placeholder="—"
-                      min="0"
-                      className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-2 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
-                    />
-                  </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted">Distance (km)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={distance}
+                    onChange={e => setDistance(e.target.value)}
+                    placeholder="—"
+                    min="0"
+                    className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-2 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs text-muted">Notes</label>
@@ -251,7 +266,7 @@ export default function ExercisePage() {
   )
 }
 
-function ExerciseCard({ entry, onDelete }: { entry: { id?: number; date: string; exercise_type: string; sets: number | null; reps: number | null; weight_used_kg: number | null; duration_minutes: number | null; distance_km: number | null; notes: string | null; logged_at: string }; onDelete: () => void }) {
+function ExerciseCard({ entry, onDelete }: { entry: { id?: number; date: string; exercise_type: string; sets: number | null; reps: number | null; weight_used_kg: number | null; duration_minutes: number | null; distance_km: number | null; calories_burned: number | null; notes: string | null; logged_at: string }; onDelete: () => void }) {
   const details: string[] = []
   if (entry.sets && entry.reps) details.push(`${entry.sets}×${entry.reps}`)
   else if (entry.sets) details.push(`${entry.sets} sets`)
@@ -259,6 +274,7 @@ function ExerciseCard({ entry, onDelete }: { entry: { id?: number; date: string;
   if (entry.weight_used_kg) details.push(`${entry.weight_used_kg}kg`)
   if (entry.duration_minutes) details.push(`${entry.duration_minutes}min`)
   if (entry.distance_km) details.push(`${entry.distance_km}km`)
+  if (entry.calories_burned) details.push(`~${entry.calories_burned} kcal`)
 
   return (
     <div className="flex items-center gap-3 rounded-lg bg-card px-4 py-3 shadow-sm">

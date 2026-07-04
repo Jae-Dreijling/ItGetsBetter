@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { X, BarChart3, Lightbulb, CalendarCheck, Trophy, Gift, Camera, ShoppingCart, BookOpen, FileSpreadsheet, Download, Settings, Heart } from 'lucide-react'
+import { X, BarChart3, Lightbulb, CalendarCheck, Trophy, Gift, Camera, ShoppingCart, BookOpen, FileSpreadsheet, Download, Settings, Heart, MapPin } from 'lucide-react'
 
 interface SideMenuProps {
   isOpen: boolean
@@ -7,6 +7,7 @@ interface SideMenuProps {
 }
 
 const links = [
+  { label: 'Journey', icon: MapPin, path: '/journey' },
   { label: 'Graphs', icon: BarChart3, path: '/me/graphs' },
   { label: 'Health Insights', icon: Lightbulb, path: '/me/insights' },
   { label: 'Weekly Review', icon: CalendarCheck, path: '/me/review' },

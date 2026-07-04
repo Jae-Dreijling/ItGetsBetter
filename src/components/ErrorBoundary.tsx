@@ -29,12 +29,20 @@ export default class ErrorBoundary extends Component<Props, State> {
             Something went wrong{this.props.feature ? ` with ${this.props.feature}` : ''}
           </p>
           <p className="text-sm text-muted mb-4">Your data is safe.</p>
-          <button
-            onClick={() => this.setState({ hasError: false })}
-            className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white"
-          >
-            Try Again
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => { window.history.back(); this.setState({ hasError: false }) }}
+              className="rounded-lg bg-surface px-4 py-2 text-sm font-medium text-muted"
+            >
+              ← Go back
+            </button>
+            <button
+              onClick={() => this.setState({ hasError: false })}
+              className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       )
     }

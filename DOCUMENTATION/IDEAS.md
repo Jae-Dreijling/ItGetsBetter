@@ -11,8 +11,8 @@ A collection of ideas for features that are not planned for any current phase. T
 | 1 | ~~Companion Mascot~~ | ✅ **Built** | Speech bubble + event messages |
 | 2 | ~~Fun Weight Loss Comparisons~~ | ✅ **Built** | Shows on weight page with emoji |
 | 3 | ~~Weight Comparison Achievements~~ | ✅ **Built** | 7 achievements (apple → toddler) |
-| 4 | Exercise Calorie Estimation | ⭐⭐⭐ | ⭐⭐ (needs research for accuracy) |
-| 5 | Meal Burn-Off Suggestions | ⭐⭐⭐ | ⭐⭐ (depends on #4) |
+| 4 | ~~Exercise Calorie Estimation~~ | ✅ **Built** | MET-based math, auto-calculates on log, custom kcal/min for "Other..." types |
+| 5 | ~~Meal Burn-Off Suggestions~~ | ✅ **Built** | Optional calories on meal log + 🔥 button shows burn-off times |
 | 6 | ~~Points Notification~~ | ✅ **Built** | Toast shows "+X for Y" on earn |
 | 7 | ~~Label Management (CRUD in settings)~~ | ✅ **Built** | Settings → Labels |
 | 8 | ~~Grocery Lists (boodschappenlijstjes)~~ | ✅ **Built** | Templates + shopping mode |
@@ -24,15 +24,16 @@ A collection of ideas for features that are not planned for any current phase. T
 | 14 | ~~"Can't Fail" Habit Fallback~~ | ✅ **Built** | Half credit, half points |
 | 15 | ~~Companion Chat (Pattern Matching)~~ | ✅ **Built** | Long-press companion → chat |
 | 16 | Companion AI (Real Conversations) | ⭐⭐⭐⭐⭐ | ⭐ (very hard — API/self-hosted/native options) |
-| 17 | Gamification / RPG Progression | ⭐⭐⭐⭐ | ⭐⭐ (extends existing points system) |
-| 18 | Meditation Timer | ⭐⭐⭐ | ⭐⭐⭐ (simple, self-contained) |
-| 19 | Pomodoro Timer | ⭐⭐⭐ | ⭐⭐⭐ (simple, self-contained) |
-| 20 | Skincare & Hair Tracking | ⭐⭐⭐ | ⭐⭐ (mirrors measurements + progress photos pattern) |
-| 21 | Daily Chronological Timeline | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (view layer over existing data) |
-| 22 | Current Focus (Homescreen Spotlight) | ⭐⭐⭐⭐ | ⭐⭐⭐ (mostly UI/config) |
-| 23 | Motivation Vault | ⭐⭐⭐ | ⭐⭐⭐ (simple new entity) |
-| 24 | Weather Check (Optional, Online-Only) | ⭐⭐ | ⭐⭐⭐ (single API call, no tracking) |
-| 25 | Barcode Scanning (Optional Meal Aid) | ⭐⭐⭐ | ⭐⭐ (camera + lightweight API lookup) |
+| 17 | ~~Gamification / RPG Progression~~ | ✅ **Built** | XP levels + 6 character stats + class identity, Character Sheet in Me |
+| 18 | ~~Meditation Timer~~ | ✅ **Built** | Duration presets + custom, 3 configurable sounds, interval markers |
+| 19 | ~~Pomodoro Timer~~ | ✅ **Built** | Configurable focus/break cycles, timer icon in To-Do tab |
+| 20 | ~~Skincare & Hair Tracking~~ | ~~removed~~ | ~~removed~~ |
+| 21 | ~~Daily Chronological Timeline~~ | ✅ **Built** | View layer over existing data, no new DB needed |
+| 22 | ~~Current Focus (Homescreen Spotlight)~~ | ✅ **Built** | Bottom-sheet picker, prominent card on home |
+| 23 | ~~Motivation Vault~~ | ✅ **Built** | Me → Motivation Vault, grouped by category |
+| 24 | ~~Weather Check (Optional, Online-Only)~~ | ✅ **Built** | Open-Meteo, opt-in toggle in settings |
+| 25 | ~~Barcode Scanning (Optional Meal Aid)~~ | ~~removed~~ | ~~removed~~ |
+| 26 | ~~Pomodoro Sound Alerts~~ | ✅ **Built** | Two configurable sounds (focus end + break end) with Preview, saved in localStorage |
 
 ---
 
@@ -60,31 +61,19 @@ A collection of ideas for features that are not planned for any current phase. T
 
 ---
 
-## 4. Exercise Calorie Estimation
+## 4. Exercise Calorie Estimation — ✅ BUILT
 
-After logging an exercise, automatically estimate how many calories were burned based on:
-- Exercise type
-- Duration
-- Intensity (sets/reps/weight or distance)
-- User's body weight
+~~After logging an exercise, automatically estimate how many calories were burned.~~
 
-Display as: "You burned approximately 320 calories!" 
-
-Note: estimates are inherently inaccurate. Frame it as approximate ("roughly", "around") and never use it as a precise tracking metric.
+**Implemented:** MET-based formula `calories = (kcal_per_min × user_weight_kg / 70) × duration_minutes`. 9 built-in exercise types with researched kcal/min values (Running 9.8, Walking 3.9, Weight Lifting 4.7, Boxing 8.3, Dancing 5.3, Swimming 8.3, Cycling 6.8, Home Workout 5.8, Planking 3.8). "Other..." exercises can set a custom kcal/min value (stored in localStorage, labeled "per 70kg average person"). Only calculates when duration is logged. Uses the user's latest logged weight for personalisation; skips if no weight entry exists. Result shown as `~X kcal` on the exercise card.
 
 ---
 
-## 5. Meal Burn-Off Suggestions
+## 5. Meal Burn-Off Suggestions — ✅ BUILT
 
-After logging a meal, show a fire icon button that opens "ways to burn this off":
-- "Walk for 35 minutes"
-- "Run 2.5km"
-- "15 minutes of jumping jacks"
-- "Dance for 20 minutes"
+~~After logging a meal, show a fire icon button that opens "ways to burn this off".~~
 
-This is NOT about guilt — it's about awareness and fun. The tone should be playful: "If you felt like moving, here are some options" not "You need to burn this off."
-
-Important: this feature requires calorie estimation for meals (either manual input or AI-based), which doesn't exist yet. Consider building this after the calorie estimation feature.
+**Implemented:** Optional "Calories?" field when logging a meal. When calories are entered, a 🔥 fire button appears on the meal card. Tapping it opens a bottom sheet showing 7 exercises (Running, Cycling, Swimming, Boxing, Dancing, Home Workout, Walking) with estimated burn times — adjusted for the user's latest logged weight, or 70kg if none is set. Tone is informational, not guilt-driven. Reuses the MET-based math from #4.
 
 ---
 
@@ -217,102 +206,67 @@ Depends on: Points System (already built).
 
 ---
 
-## 18. Meditation Timer
+## 18. Meditation Timer — ✅ BUILT
 
-A simple countdown timer for meditation sessions, optionally logging session length to a lightweight history.
+~~A simple countdown timer for meditation sessions, optionally logging session length to a lightweight history.~~
 
-- Preset durations (5/10/15/20 min) + custom, consistent with "Preset Over Freeform" (Rulebook 3.2).
-- Optional ambient sound or just silence — keep it simple, this isn't a meditation app, it's a timer.
-- Could log to a generic "mindfulness" or "wellness" label shared with habits/tasks.
-- No streak pressure by default — completing a session is the win, length is secondary.
+**Implemented:** Me → Meditation. Preset durations (5, 10, 15, 20, 30 min) + custom input (1–180 min). Three fully configurable sounds (Start, End, Interval marker) chosen from 6 synthesized Web Audio API tones: Soft Bell, Bowl Gong, Chime, Deep Tone, Gentle Ping, Ding — or None. Interval marker fires every 1, 2, 5, or 10 minutes during the session. Settings gear → bottom sheet with per-slot pickers + Preview buttons. Clean 3-phase UI: setup (duration + ring preview) → active (depleting ring, Pause/Stop) → done (completion screen). No streaks, no logging pressure.
 
 ---
 
-## 19. Pomodoro Timer
+## 19. Pomodoro Timer — ✅ BUILT
 
-A focus-timer (work/break cycles, typically 25/5) for the user's school/work tasks.
+~~A focus-timer (work/break cycles, typically 25/5) for the user's school/work tasks.~~
 
-- Could optionally link to a specific Task — "focus on this" — so completed pomodoros show up against that task.
-- Simple start/pause/reset UI. No need for deep configuration in v1 (custom interval lengths can be a later refinement).
-- Natural fit alongside Tasks in the To-Do tab, but should live as its own small tool so it doesn't bloat the task UI.
+**Implemented:** To-Do tab has a Timer icon (top right) → launches Pomodoro page. Fully configurable: focus duration (1–90 min, default 25), short break (1–30 min, default 5), long break (5–60 min, default 15), sessions before long break (1–8, default 4). Settings stored in localStorage, persist across sessions. SVG ring countdown, session progress dots, Start/Pause/Reset controls. Auto-advances through work → short break → long break cycle with vibration on completion. "Start over" to reset the full cycle.
 
 ---
 
-## 20. Skincare & Hair Tracking
-
-Track skin and hair progress the same way body measurements and progress photos already work.
-
-- Skin: dated photo log (face, optionally by area), free-text notes (breakouts, products used, reactions), optional 1-5 "skin feeling" score — same pattern as mood.
-- Hair: dated photo log + simple notes (growth, shedding, products).
-- Should reuse the existing Progress Photos lifecycle (compression at 1 year, 6-month download reminder, never auto-deleted) rather than building a new photo pipeline from scratch.
-- Sensitive data — same privacy tier as progress photos (PP-03), should sit behind App Lock if enabled.
-
-Depends on: Progress Photos feature (already built) — this is mostly a new entity using the same lifecycle/storage logic.
+## 20. ~~Skincare & Hair Tracking~~ — Removed
 
 ---
 
-## 21. Daily Chronological Timeline
+## 21. Daily Chronological Timeline — ✅ BUILT
 
-A single scrollable timeline view showing everything logged "today" (or any day) in time order, rather than scattered across separate feature pages.
+~~A single scrollable timeline view showing everything logged "today" (or any day) in time order, rather than scattered across separate feature pages.~~
 
-```
-Today
-
-07:42  ⚖ Weight        98.4kg
-08:05  🥣 Breakfast     ⭐⭐⭐⭐☆
-09:30  💧 Water         500ml
-12:15  🚶 Walk          32 min
-20:15  😊 Mood          4/5
-```
-
-- This is a read-only aggregation view — it queries existing tables by `logged_at`/`date` and renders a unified list. No new data model needed, no duplicated state.
-- Naturally surfaces gaps in a day without ever framing them as "missed" — an empty stretch on the timeline just reads as empty, not flagged red (stays consistent with "Backfill Without Guilt," Rulebook 3.4).
-- Good candidate for a tab on the Home screen or a new view inside "Me," since it's a daily ritual not a logging action.
-- Could double as the natural surface for backfilling — tap an empty timeline slot to add a past-time entry.
+**Implemented:** Me → My Day. Aggregates Weight, Meals, Water, Exercise, Mood, Sleep, Medicine (taken only), Habit completions, Measurements, and completed Tasks for any selected day. Entries sorted chronologically with time labels (HH:MM), a vertical line with dots, and cards showing emoji + label + detail. Prev/Next day navigation. Empty state for days with no logs. No new DB schema needed — pure read-only view over existing tables.
 
 ---
 
-## 22. Current Focus (Homescreen Spotlight)
+## 22. Current Focus (Homescreen Spotlight) — ✅ BUILT
 
-Let the user designate one feature as their "current focus," which then gets a dedicated, prominent shortcut on the home screen — above the regular quick actions.
+~~Let the user designate one feature as their "current focus," which then gets a dedicated, prominent shortcut on the home screen — above the regular quick actions.~~
 
-- Simple settings toggle: "What are you focusing on right now?" → pick from existing loggable features.
-- This is just UI prioritization on top of existing pages — no new tracking logic.
-- Directly implements Rulebook 2.3 ("Frequency Determines Prominence") but lets the *user* declare prominence instead of the app inferring it from usage stats — a nice complement to (not a replacement for) frequency-based ordering.
-- Should be easy to change or clear at any time — no commitment pressure, no "you abandoned your focus" messaging if it changes weekly.
+**Implemented:** Home screen shows a dashed "Set a current focus…" prompt when unset. Tapping opens a bottom-sheet picker with 10 options (Weight, Meals, Water, Fasting, Exercise, Habits, Mood, Sleep, Medicine, Reading). When set, a prominent gradient card appears at the top with emoji, label, description, and a "Go →" button. "Change" and "Clear" links directly on the card. Stored in localStorage — no DB needed.
 
 ---
 
-## 23. Motivation Vault
+## 23. Motivation Vault — ✅ BUILT
 
-A place to store *why* a goal matters, separate from the goal's tracked numbers.
+~~A place to store *why* a goal matters, separate from the goal's tracked numbers.~~
 
-- User picks a goal (weight milestone, habit, exercise consistency, etc.) and attaches free-text "reasons" — as many as they want, added any time.
-- Tapping the goal anywhere in the app (weight page, habit card) could surface these reasons — a quiet reminder of intent, not a nag.
-- Useful precisely during low-motivation moments; pairs well with the existing supportive-message system without replacing it.
-- New entity is simple: `motivationNotes { id, linked_goal_type, linked_goal_id, text, created_at }`. No dependencies on unbuilt features.
+**Implemented:** Me → Motivation Vault. Write free-text reasons grouped by category (General, Weight, Habits, Exercise, Health). Notes displayed grouped by category, newest first. Delete individual notes with trash icon. Fully backed up in .igb backup files. DB version 11.
 
 ---
 
-## 24. Weather Check (Optional, Online-Only)
+## 24. Weather Check — ✅ BUILT
 
-A small, strictly optional home-screen weather snippet — today's conditions for a location the user sets, shown only when online.
+~~A small, strictly optional home-screen weather snippet — today's conditions for a location the user sets, shown only when online.~~
 
-- Deliberately minimal scope: one outbound API call to a weather provider, on demand or once per app open. No location tracking, no background polling, no history, no storage of past weather.
-- This is the one place in the app that talks to a third party by design — it must be clearly opt-in (off by default), and the privacy tradeoff should be stated plainly in settings ("this sends your chosen location to a weather API; nothing else about your data leaves the device").
-- If there's no network connection, the card simply doesn't render — no error state, no retry nagging, consistent with the app's offline-first philosophy.
-- Not tied to any health metric or insight — purely contextual, decorative information for planning the day (e.g., deciding on a walk).
+**Implemented:** Open-Meteo API (free, no API key, sends only lat/lon for Velp, Gelderland). Opt-in toggle in Settings with privacy disclaimer. Home screen card shows current temp, feels-like, and WMO weather emoji + label. 30-minute sessionStorage cache to avoid repeat fetches. Card silently hides when offline or disabled — no error state.
 
 ---
 
-## 25. Barcode Scanning (Optional Meal Aid)
+## 25. ~~Barcode Scanning (Optional Meal Aid)~~ — Removed
 
-An optional camera-based barcode scanner to speed up meal logging for packaged food — looks up a product name (and optionally calories) via a lightweight public food-database API, then pre-fills the meal name field.
+---
 
-- Strictly an input *shortcut*, not a new tracking paradigm: the result only pre-fills the existing `name` field (and optional `calories` field, ML-03) on the meal form. The required health score (1-5) is still always manual — this must not become a backdoor to automated nutrition scoring, which the PRD explicitly rejected (see "Meal Photo AI Analysis," Won't Have Yet).
-- Single outbound lookup per scan (product barcode → name/calories), nothing cached or sent in the background. Same opt-in/off-by-default treatment as Weather Check — state clearly in settings that scanning sends the barcode to a third-party lookup.
-- Falls back gracefully to manual name entry if offline or the barcode isn't found — never blocks logging.
-- Camera access reuses the same `<input type="file" capture>` / MediaDevices pattern already used for meal photos (Architecture 7.2).
+## 26. Pomodoro Sound Alerts — ✅ BUILT
+
+~~An expansion of the Pomodoro timer (#19) that plays a chosen sound at key moments.~~
+
+**Implemented:** Two configurable sound events — "Focus session ends" and "Break ends" — using the same 6-option Web Audio API sound library as Meditation Timer (#18). Picker lives inside the Configure Timer bottom sheet under a "Sounds" divider. Each event has an independent sound picker with a Preview button. Settings stored in localStorage (`igb_pomo_sound_work_end`, `igb_pomo_sound_break_end`). Sounds play alongside the existing vibration on auto-advance. Falls back silently if the browser blocks autoplay. Active sounds summarised as a small line below the session info card (e.g. "🔔 focus end · 💫 break end").
 
 ---
 

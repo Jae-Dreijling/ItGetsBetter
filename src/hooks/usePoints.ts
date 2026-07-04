@@ -3,6 +3,7 @@ import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { POINT_VALUES, type PointSource } from '../lib/points'
 import { emitPointsEarned } from '../components/PointsToast'
+import { awardSparks } from '../lib/game'
 
 export function usePointsBalance() {
   return useLiveQuery(async () => {
@@ -49,6 +50,7 @@ export async function awardPoints(source: PointSource, sourceId?: number) {
     created_at: nowISO(),
   })
   emitPointsEarned(amount, source)
+  await awardSparks(source)
 }
 
 export async function awardStreakBonus(streakDays: number) {

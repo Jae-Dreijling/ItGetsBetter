@@ -7,6 +7,8 @@ import PageContainer from '../../components/layout/PageContainer'
 import MoodPrompt from '../../components/MoodPrompt'
 import NotificationToast from '../../components/NotificationToast'
 import StarterHabitPrompt from '../../components/StarterHabitPrompt'
+import FocusSpotlight from '../../components/FocusSpotlight'
+import { useWeather, isWeatherEnabled } from '../../hooks/useWeather'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
 import { useActiveHabits, useTodaysCompletions } from '../../hooks/useHabits'
@@ -56,6 +58,7 @@ export default function HomePage() {
   if (isReturning) triggerCompanionMessage('welcome_back')
   const { mode } = useTodaySchedule()
   const { notification, dismiss } = useNotifications()
+  const { data: weatherData, emoji: weatherEmoji } = useWeather(isWeatherEnabled())
   const navigate = useNavigate()
 
   const [moodDismissed, setMoodDismissed] = useState(false)
@@ -114,7 +117,13 @@ export default function HomePage() {
 
   return (
     <>
-      <TopBar title="Home" onMenuClick={() => SideMenuContext.open()} />
+      <TopBar
+        title="Home"
+        onMenuClick={() => SideMenuContext.open()}
+        rightContent={weatherData ? (
+          <span className="text-xs text-muted">{weatherEmoji} {weatherData.temp}°</span>
+        ) : undefined}
+      />
       <PageContainer>
         {isPhoneFreeTime && (
           <div className="mb-4 flex items-center justify-center gap-2 rounded-2xl bg-secondary-100 py-3 px-4">
@@ -150,6 +159,8 @@ export default function HomePage() {
         {showMoodPrompt && (
           <MoodPrompt timeOfDay={timeOfDay} onDismiss={() => setMoodDismissed(true)} />
         )}
+
+        <FocusSpotlight />
 
         {points !== undefined && (
           <button
