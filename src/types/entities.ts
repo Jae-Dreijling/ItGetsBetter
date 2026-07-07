@@ -288,6 +288,7 @@ export interface Companion {
 export interface PersonalityGroup {
   id?: number
   name: string
+  description: string
   messages: CompanionMessages
   created_at: string
 }

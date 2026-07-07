@@ -86,7 +86,10 @@ export default function PersonalityGroupsPage() {
                     </div>
                     <div className="flex-1">
                       <p className="font-semibold text-text-primary">{g.name}</p>
-                      <p className="text-xs text-muted">
+                      {g.description && (
+                        <p className="text-xs text-muted mt-0.5">{g.description}</p>
+                      )}
+                      <p className="text-xs text-muted mt-0.5">
                         {totalMessages} messages · {companionCounts.get(g.id!) ?? 0} companion{(companionCounts.get(g.id!) ?? 0) === 1 ? '' : 's'} using it
                       </p>
                     </div>
@@ -113,11 +116,12 @@ export default function PersonalityGroupsPage() {
 
 function PersonalityGroupForm({ group, onClose }: { group: PersonalityGroup; onClose: () => void }) {
   const [name, setName] = useState(group.name)
+  const [description, setDescription] = useState(group.description)
   const [messages, setMessages] = useState<CompanionMessages>(group.messages)
 
   async function handleSave() {
     if (!name.trim()) return
-    await updatePersonalityGroup(group.id!, { name: name.trim(), messages })
+    await updatePersonalityGroup(group.id!, { name: name.trim(), description: description.trim(), messages })
     onClose()
   }
 
@@ -128,7 +132,14 @@ function PersonalityGroupForm({ group, onClose }: { group: PersonalityGroup; onC
         value={name}
         onChange={e => setName(e.target.value)}
         placeholder="Group name"
-        className="mb-4 w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+        className="mb-2 w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+      />
+      <input
+        type="text"
+        value={description}
+        onChange={e => setDescription(e.target.value)}
+        placeholder="Short description (optional)"
+        className="mb-4 w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
       />
 
       <MessagePoolEditor messages={messages} onChange={updater => setMessages(updater)} />

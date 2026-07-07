@@ -11,6 +11,15 @@ from alongside their own custom lines — editing a group's messages updates
 every companion using it immediately. A companion's final message pool for
 any category is its own lines PLUS its group's lines (if it belongs to one).
 
+12 personality groups come built in (Me > Companions > Personality Groups),
+seeded automatically the first time the app opens: The Scholar, The
+Daredevil, The Gentle Soul, The Diva, The Party Starter, The Steadfast, and
+The Regal Guide (personality archetypes, not likenesses, inspired by the
+classic "one of each type" friend-group dynamic), plus five originals —
+The Coach, The Zen Guide, The Sidekick, The Cheerleader, and The Sage.
+Delete any you don't want; they won't be re-seeded. See
+src/lib/defaultPersonalityGroups.ts for the full source of truth.
+
 Rules the importer understands:
 
 1. A header line starts a new category. Any of these formats work:

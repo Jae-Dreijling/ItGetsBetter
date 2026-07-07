@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router'
 import { db, ensureDefaults } from './db'
 import { checkProgressionAdvancements } from './hooks/useHabits'
 import { ensureDefaultCompanion } from './hooks/useCompanion'
+import { ensureDefaultPersonalityGroups } from './hooks/usePersonalityGroups'
 import { checkLevelUpAndClassChange } from './hooks/useCharacter'
 import { shouldRunLifecycle, runPhotoLifecycle, markLifecycleRun } from './lib/photoLifecycle'
 import { getLogicalDate, nowISO } from './lib/date'
@@ -174,6 +175,7 @@ export default function App() {
       }
       checkProgressionAdvancements()
       ensureDefaultCompanion()
+      ensureDefaultPersonalityGroups()
       checkLevelUpAndClassChange()
       setTimeout(() => {
         const hour = new Date().getHours() + new Date().getMinutes() / 60
