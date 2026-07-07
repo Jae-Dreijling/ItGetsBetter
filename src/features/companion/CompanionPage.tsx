@@ -141,6 +141,20 @@ function CompanionCard({ companion, isActive, onActivate, onEdit, onDelete }: {
   )
 }
 
+const WRAPPING_QUOTE_CHARS = ['"', "'", '“', '”', '‘', '’']
+
+function stripWrappingQuotes(raw: string): string {
+  let text = raw.trim()
+  while (
+    text.length >= 2 &&
+    WRAPPING_QUOTE_CHARS.includes(text[0]) &&
+    WRAPPING_QUOTE_CHARS.includes(text[text.length - 1])
+  ) {
+    text = text.slice(1, -1).trim()
+  }
+  return text
+}
+
 function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () => void }) {
   const [name, setName] = useState(initial?.name ?? '')
   const [avatar, setAvatar] = useState<Blob | null>(initial?.avatar ?? null)
@@ -187,10 +201,11 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
   }
 
   function addMessage(event: CompanionEvent) {
-    if (!newMessage.trim()) return
+    const cleaned = stripWrappingQuotes(newMessage)
+    if (!cleaned) return
     setMessages(prev => ({
       ...prev,
-      [event]: [...(prev[event] ?? []), newMessage.trim()],
+      [event]: [...(prev[event] ?? []), cleaned],
     }))
     setNewMessage('')
   }
@@ -332,16 +347,20 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
               placeholder="Add a message…"
               className="flex-1 rounded-lg border border-rose-100 dark:border-rose-900 bg-surface px-2.5 py-1.5 text-xs text-text-primary placeholder:text-muted focus:border-rose-400 focus:outline-none"
               onKeyDown={e => {
-                if (e.key === 'Enter' && newLoverLine.trim()) {
-                  setLoverDialogue(prev => [...prev, newLoverLine.trim()])
-                  setNewLoverLine('')
+                if (e.key === 'Enter') {
+                  const cleaned = stripWrappingQuotes(newLoverLine)
+                  if (cleaned) {
+                    setLoverDialogue(prev => [...prev, cleaned])
+                    setNewLoverLine('')
+                  }
                 }
               }}
             />
             <button
               onClick={() => {
-                if (newLoverLine.trim()) {
-                  setLoverDialogue(prev => [...prev, newLoverLine.trim()])
+                const cleaned = stripWrappingQuotes(newLoverLine)
+                if (cleaned) {
+                  setLoverDialogue(prev => [...prev, cleaned])
                   setNewLoverLine('')
                 }
               }}
