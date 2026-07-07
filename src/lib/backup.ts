@@ -16,7 +16,10 @@ async function dataURLToBlob(dataURL: string): Promise<Blob> {
   return res.blob()
 }
 
-async function encodeBlobField<T extends Record<string, unknown>>(rows: T[], field: keyof T): Promise<T[]> {
+// `data` here is always dynamic (it comes from db.table().toArray() ahead of
+// JSON.stringify, or from JSON.parse of an untrusted/legacy file on restore),
+// so these operate on plain records rather than the strict entity types.
+async function encodeBlobField(rows: Record<string, any>[], field: string): Promise<Record<string, any>[]> {
   return Promise.all(rows.map(async row => {
     const value = row[field]
     if (value instanceof Blob) return { ...row, [field]: await blobToDataURL(value) }
@@ -27,7 +30,7 @@ async function encodeBlobField<T extends Record<string, unknown>>(rows: T[], fie
 // Restores real Blobs from data URLs; any other value (including the `{}`
 // left behind by backups made before this fix) is nulled out rather than
 // carried forward as a fake Blob that would crash on URL.createObjectURL.
-async function decodeBlobField<T extends Record<string, unknown>>(rows: T[], field: keyof T): Promise<T[]> {
+async function decodeBlobField(rows: Record<string, any>[], field: string): Promise<Record<string, any>[]> {
   return Promise.all(rows.map(async row => {
     const value = row[field]
     if (typeof value === 'string' && value.startsWith('data:')) {
@@ -35,6 +38,20 @@ async function decodeBlobField<T extends Record<string, unknown>>(rows: T[], fie
     }
     return { ...row, [field]: null }
   }))
+}
+
+// For fields that must always be a real Blob (e.g. progress photos): rows
+// that can't be decoded (corrupted by a pre-fix backup) are dropped instead
+// of being kept around with a null/fake photo that would crash the viewer.
+async function decodeRequiredBlobField(rows: Record<string, any>[], field: string): Promise<Record<string, any>[]> {
+  const decoded = await Promise.all(rows.map(async row => {
+    const value = row[field]
+    if (typeof value === 'string' && value.startsWith('data:')) {
+      return { ...row, [field]: await dataURLToBlob(value) }
+    }
+    return null
+  }))
+  return decoded.filter((row): row is Record<string, any> => row !== null)
 }
 
 async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
@@ -151,6 +168,11 @@ export async function restoreBackup(file: File, password: string): Promise<void>
   if (!data.version || !data.userProfile) {
     throw new Error('Invalid backup file format')
   }
+
+  if (data.mealEntries?.length) data.mealEntries = await decodeBlobField(data.mealEntries, 'photo')
+  if (data.progressPhotos?.length) data.progressPhotos = await decodeRequiredBlobField(data.progressPhotos, 'photo')
+  if (data.companions?.length) data.companions = await decodeBlobField(data.companions, 'avatar')
+  if (data.motivationNotes?.length) data.motivationNotes = await decodeBlobField(data.motivationNotes, 'photo')
 
   const allTables = [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries, db.moodEntries, db.moodTags, db.sleepEntries, db.medicines, db.medicineLogs, db.pointsTransactions, db.rewards, db.rewardClaims, db.achievements, db.progressPhotos, db.table('healthInsights'), db.table('customQuotes'), db.table('scheduleProfiles'), db.table('dayConfigs'), db.groceryLists, db.groceryItems, db.books, db.companions, db.motivationNotes]
 
