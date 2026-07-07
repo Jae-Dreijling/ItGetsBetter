@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Target, X } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Target, X, Wrench } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
@@ -110,6 +110,17 @@ export default function SettingsPage() {
             <div>
               <p className="font-medium text-text-primary">Backup & Restore</p>
               <p className="text-sm text-muted">Export or import your data</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/settings/devtools')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Wrench className="h-5 w-5 text-muted" />
+            <div>
+              <p className="font-medium text-text-primary">Dev Tools</p>
+              <p className="text-sm text-muted">Manually edit journey data (gold, affinity, quests…)</p>
             </div>
           </button>
 
@@ -274,7 +285,9 @@ export default function SettingsPage() {
             : 'Check for Updates'}
         </button>
 
-        <p className="mt-4 text-center text-xs text-muted">ItGetsBetter v0.1.0</p>
+        <p className="mt-4 text-center text-xs text-muted">
+          ItGetsBetter · build {__APP_COMMIT__} · {new Date(__APP_BUILD_TIME__).toLocaleDateString()}
+        </p>
       </PageContainer>
 
       {showFocusPicker && (

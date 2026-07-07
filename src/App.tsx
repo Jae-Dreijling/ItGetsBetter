@@ -36,6 +36,7 @@ import HabitsPage from './features/todo/HabitsPage'
 import TasksPage from './features/todo/TasksPage'
 
 const ExportPage = lazy(() => import('./features/settings/ExportPage'))
+const DevToolsPage = lazy(() => import('./features/settings/DevToolsPage'))
 const QuoteManager = lazy(() => import('./features/settings/QuoteManager'))
 const ScheduleSettings = lazy(() => import('./features/settings/ScheduleSettings'))
 const LabelManager = lazy(() => import('./features/settings/LabelManager'))
@@ -130,6 +131,7 @@ function AppContent() {
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
         <Route path="settings/export" element={<Suspense fallback={<LazyFallback />}><ExportPage /></Suspense>} />
+        <Route path="settings/devtools" element={<Suspense fallback={<LazyFallback />}><DevToolsPage /></Suspense>} />
         <Route path="settings/quotes" element={<Suspense fallback={<LazyFallback />}><QuoteManager /></Suspense>} />
         <Route path="settings/schedule" element={<Suspense fallback={<LazyFallback />}><ScheduleSettings /></Suspense>} />
         <Route path="settings/labels" element={<Suspense fallback={<LazyFallback />}><LabelManager /></Suspense>} />
