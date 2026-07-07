@@ -1,0 +1,103 @@
+HOW TO USE THIS TEMPLATE
+========================
+
+This file is a template for the "Import All Categories" button on the
+Companions page (Me > Companions > New Companion / edit a companion).
+
+Rules the importer understands:
+
+1. A header line starts a new category. Any of these formats work:
+     [Achievement Unlocked]
+     Achievement Unlocked:
+     # Achievement Unlocked
+   Matching is case-insensitive and ignores spaces/punctuation, so
+   "achievement_unlocked", "Achievement Unlocked", and
+   "[ACHIEVEMENT-UNLOCKED]" all match the same category.
+
+2. Every line under a header becomes one message in that category,
+   one message per line. Blank lines are ignored.
+
+3. Any lines BEFORE the first header go into "General".
+
+4. Wrapping quotes are stripped automatically, so it's fine to write
+   lines either as  Hello there  or  "Hello there".
+
+5. Use {name} anywhere you want the user's own name inserted.
+
+6. [Lover] is a special 13th category — only used if this companion is
+   marked as a Lover. It fills the "Lover Messages" pool, not a normal
+   event category.
+
+7. Importing ADDS to whatever messages the companion already has, it
+   does not replace them. Safe to re-run with more lines later.
+
+The 12 real category names (must match one of these, spelling doesn't
+matter as long as the words are the same):
+
+  General / Default
+  Morning Greeting
+  Welcome Back
+  Achievement Unlocked
+  Habit Completed
+  Low Mood Support
+  Fasting Goal Met
+  Streak Milestone
+  Phone-Free Reminder
+  Points Earned
+  Weight Loss
+  Idle / AFK
+
+--- COPY EVERYTHING BELOW THIS LINE INTO THE IMPORT BOX ---
+
+[General / Default]
+Good to see you, {name}. You're doing great.
+Welcome back, {name}. I'm proud of you for showing up.
+{name}, you're building something beautiful — one day at a time.
+
+[Morning Greeting]
+Good morning, {name}. Today is a fresh start.
+Rise and shine, {name}. Whatever today brings, you can handle it.
+
+[Welcome Back]
+Welcome back, {name}. I missed you. No questions, no guilt — just glad you're here.
+Hey {name}. You came back, and that takes courage.
+
+[Achievement Unlocked]
+Look at you, {name}! You earned that!
+{name}, you just unlocked something awesome!
+
+[Habit Completed]
+Nice one, {name}! Keep that momentum going.
+Checked off! {name}, consistency is your superpower.
+
+[Low Mood Support]
+It's okay, {name}. Log when you're ready. Even imperfect is progress.
+{name}, bad days happen. You're not alone in this.
+
+[Fasting Goal Met]
+Fasting goal hit! {name}, your discipline is showing.
+{name}, you made it through. That takes real strength.
+
+[Streak Milestone]
+{name}, look at that streak! You're unstoppable.
+Streak milestone! {name}, consistency is everything.
+
+[Phone-Free Reminder]
+Hey {name}, this is your phone-free time. Take a break!
+{name}, put the phone down. You earned this rest.
+
+[Points Earned]
+Points earned, {name}! Every action counts.
+Cha-ching! {name}, you're building up rewards.
+
+[Weight Loss]
+{name}, you're making progress! The trend is going the right way.
+Weight coming down, {name}! Your body thanks you.
+
+[Idle / AFK]
+Still here, {name}? Need anything?
+Take your time, {name}. I'm not going anywhere.
+
+[Lover]
+I'm really glad you're here, {name}.
+Hey, good to see you.
