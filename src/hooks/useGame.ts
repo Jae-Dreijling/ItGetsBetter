@@ -27,6 +27,13 @@ export function useCompanionAffinities() {
   return useLiveQuery(() => db.gameCompanionAffinity.toArray())
 }
 
+export function useCompanionAffinityFor(companionId: number | undefined) {
+  return useLiveQuery(async () => {
+    if (companionId === undefined) return undefined
+    return db.gameCompanionAffinity.where('companion_id').equals(companionId).first()
+  }, [companionId])
+}
+
 export function useCompanions() {
   return useLiveQuery(() => db.companions.toArray())
 }

@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
 import { ACHIEVEMENT_LIBRARY } from '../lib/achievements'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 
 export function useAchievements() {
   return useLiveQuery(() => db.achievements.toArray())
@@ -36,6 +37,8 @@ export async function checkAndUnlockAchievements(): Promise<string[]> {
       newlyUnlocked.push(def.name)
     }
   }
+
+  if (newlyUnlocked.length > 0) triggerCompanionMessage('achievement_unlocked')
 
   return newlyUnlocked
 }

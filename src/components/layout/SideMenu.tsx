@@ -1,21 +1,14 @@
 import { useNavigate } from 'react-router'
-import { X, BarChart3, Lightbulb, CalendarCheck, Trophy, Gift, Camera, ShoppingCart, BookOpen, FileSpreadsheet, Download, Settings, Heart, MapPin } from 'lucide-react'
+import { X, FileSpreadsheet, Download, Settings, Heart } from 'lucide-react'
 
 interface SideMenuProps {
   isOpen: boolean
   onClose: () => void
 }
 
+// Everything else (Journey, Graphs, Achievements, etc.) lives on the Me tab —
+// this drawer is deliberately just app-level utilities, reachable from anywhere.
 const links = [
-  { label: 'Journey', icon: MapPin, path: '/journey' },
-  { label: 'Graphs', icon: BarChart3, path: '/me/graphs' },
-  { label: 'Health Insights', icon: Lightbulb, path: '/me/insights' },
-  { label: 'Weekly Review', icon: CalendarCheck, path: '/me/review' },
-  { label: 'Achievements', icon: Trophy, path: '/me/achievements' },
-  { label: 'Reward Shop', icon: Gift, path: '/me/rewards' },
-  { label: 'Progress Photos', icon: Camera, path: '/me/photos' },
-  { label: 'Grocery Lists', icon: ShoppingCart, path: '/me/grocery' },
-  { label: 'Books', icon: BookOpen, path: '/me/books' },
   { label: 'Export Data', icon: FileSpreadsheet, path: '/settings/export' },
   { label: 'Backup & Restore', icon: Download, path: '/settings/backup' },
   { label: 'Settings', icon: Settings, path: '/settings' },

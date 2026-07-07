@@ -1,0 +1,252 @@
+HOW TO USE THIS TEMPLATE
+========================
+
+This file is a template for the "Import All Categories" button, which
+appears in two places:
+  - Companions page (Me > Companions > New Companion / edit a companion)
+  - Personality Groups page (Me > Companions > Personality Groups)
+
+Personality Groups are a shared message pool multiple companions can draw
+from alongside their own custom lines — editing a group's messages updates
+every companion using it immediately. A companion's final message pool for
+any category is its own lines PLUS its group's lines (if it belongs to one).
+
+Rules the importer understands:
+
+1. A header line starts a new category. Any of these formats work:
+     [Achievement Unlocked]
+     Achievement Unlocked:
+     # Achievement Unlocked
+   Matching is case-insensitive and ignores spaces/punctuation, so
+   "achievement_unlocked", "Achievement Unlocked", and
+   "[ACHIEVEMENT-UNLOCKED]" all match the same category.
+
+2. Every line under a header becomes one message in that category,
+   one message per line. Blank lines are ignored.
+
+3. Any lines BEFORE the first header go into "General".
+
+4. Wrapping quotes are stripped automatically, so it's fine to write
+   lines either as  Hello there  or  "Hello there".
+
+5. Use {name} anywhere you want the user's own name inserted.
+
+6. [Lover] is a special extra category — only available when importing
+   into a companion (not a Personality Group), and only takes effect if
+   that companion is marked as a Lover. It fills the "Lover Messages" pool,
+   not a normal event category.
+
+7. Importing ADDS to whatever messages are already there, it does not
+   replace them. Safe to re-run with more lines later.
+
+WHAT EACH CATEGORY IS ACTUALLY USED FOR
+========================================
+
+General / Default
+  Said when you tap the companion bubble directly. Also the fallback
+  used for any category below that has no messages of its own.
+
+Morning Greeting
+  On app open, between 03:00–11:30, with a high (~70%) chance.
+
+Welcome Back
+  On app open outside the morning window, and every time you open
+  the Journey.
+
+Achievement Unlocked
+  When you unlock an achievement (checked when visiting the
+  Achievements page), or when you successfully claim a finished quest
+  or defeat a boss in the Journey.
+
+Habit Completed
+  When you check off a habit on the To-Do page.
+
+Task Completed
+  When you check off a task on the To-Do page. Separate pool from
+  Habit Completed so you can give tasks and habits different tones.
+
+Low Mood Support
+  During idle moments, if your most recently logged mood score was 3
+  or below — high (~70%) chance of showing instead of a plain idle
+  message.
+
+Fasting Goal Met
+  When you break a fast that reached its goal length.
+
+Streak Milestone
+  Not wired to an automatic trigger yet — reserved for a future streak
+  milestone feature. Messages here currently only show if something
+  else calls this category directly.
+
+Phone-Free Reminder
+  Repeats continuously (not just once) during your phone-free window:
+  from 1 hour before your set sleep time through 1 hour after your
+  wake time.
+
+Points Earned
+  Any time you earn points from any logged action.
+
+Weight Loss
+  When a new (non-backfilled) weight entry is lower than your
+  previous one.
+
+Weight Gain / Plateau
+  When a new (non-backfilled) weight entry is higher than your
+  previous one. Kept gentle, not guilt-driven.
+
+Exercise Logged
+  Any time you log an exercise session.
+
+Water Goal Met
+  The moment your water total for the day crosses the 2L goal.
+
+Sleep Logged
+  Any time you log last night's sleep.
+
+Personal Best
+  When you set a new all-time record — currently tracked for longest
+  fast and most weight lost to date. Meant to feel rare and special.
+
+Level Up
+  Checked once per app open — fires if your Character level went up,
+  or your character class changed, since the last time you opened
+  the app. See Me > Character.
+
+Boss Defeated
+  When you claim victory over a Journey boss.
+
+Goodnight
+  A one-time wind-down nudge in the 30 minutes right before your
+  Phone-Free window starts (90–60 minutes before your set sleep time).
+
+First-Time Milestone
+  The very first time you ever log a meal, exercise session, weight
+  entry, habit completion, task completion, or finish a book.
+
+Idle / AFK
+  Fallback shown after ~10 seconds of no interaction, when none of
+  the higher-priority conditions above (phone-free, goodnight, mood,
+  affinity) apply. Sometimes replaced by a data-aware nudge (e.g.
+  overdue tasks, low water) or, for a Lover companion with high
+  affinity, one of their Lover Messages instead.
+
+The 22 real category names (must match one of these, spelling doesn't
+matter as long as the words are the same):
+
+  General / Default
+  Morning Greeting
+  Welcome Back
+  Achievement Unlocked
+  Habit Completed
+  Task Completed
+  Low Mood Support
+  Fasting Goal Met
+  Streak Milestone
+  Phone-Free Reminder
+  Points Earned
+  Weight Loss
+  Weight Gain / Plateau
+  Exercise Logged
+  Water Goal Met
+  Sleep Logged
+  Personal Best
+  Level Up
+  Boss Defeated
+  Goodnight
+  First-Time Milestone
+  Idle / AFK
+
+--- COPY EVERYTHING BELOW THIS LINE INTO THE IMPORT BOX ---
+
+[General / Default]
+Good to see you, {name}. You're doing great.
+Welcome back, {name}. I'm proud of you for showing up.
+{name}, you're building something beautiful — one day at a time.
+
+[Morning Greeting]
+Good morning, {name}. Today is a fresh start.
+Rise and shine, {name}. Whatever today brings, you can handle it.
+
+[Welcome Back]
+Welcome back, {name}. I missed you. No questions, no guilt — just glad you're here.
+Hey {name}. You came back, and that takes courage.
+
+[Achievement Unlocked]
+Look at you, {name}! You earned that!
+{name}, you just unlocked something awesome!
+
+[Habit Completed]
+Nice one, {name}! Keep that momentum going.
+Checked off! {name}, consistency is your superpower.
+
+[Task Completed]
+One more thing off your plate, {name}!
+Task done! {name}, look at you getting things sorted.
+
+[Low Mood Support]
+It's okay, {name}. Log when you're ready. Even imperfect is progress.
+{name}, bad days happen. You're not alone in this.
+
+[Fasting Goal Met]
+Fasting goal hit! {name}, your discipline is showing.
+{name}, you made it through. That takes real strength.
+
+[Streak Milestone]
+{name}, look at that streak! You're unstoppable.
+Streak milestone! {name}, consistency is everything.
+
+[Phone-Free Reminder]
+Hey {name}, this is your phone-free time. Take a break!
+{name}, put the phone down. You earned this rest.
+
+[Points Earned]
+Points earned, {name}! Every action counts.
+Cha-ching! {name}, you're building up rewards.
+
+[Weight Loss]
+{name}, you're making progress! The trend is going the right way.
+Weight coming down, {name}! Your body thanks you.
+
+[Weight Gain / Plateau]
+Numbers move both ways, {name}. This doesn't undo your progress.
+{name}, one entry isn't the whole story. Keep going.
+
+[Exercise Logged]
+Nice work moving today, {name}!
+Logged and done, {name}. Your body thanks you.
+
+[Water Goal Met]
+Water goal hit, {name}! Nicely hydrated.
+{name}, that's your water goal for today. Well done.
+
+[Sleep Logged]
+Rest logged, {name}. Taking care of yourself counts too.
+{name}, thanks for tracking that. Sleep matters.
+
+[Personal Best]
+{name}, that's a new personal best! Incredible.
+New record, {name}! You just outdid yourself.
+
+[Level Up]
+Level up, {name}! Look how far you've come.
+{name}, you've grown. That's not nothing.
+
+[Boss Defeated]
+Victory, {name}! That boss didn't stand a chance.
+{name}, you did it! On to the next chapter.
+
+[Goodnight]
+Getting close to bedtime, {name}. Start winding down.
+{name}, good night's coming up. Take it easy from here.
+
+[First-Time Milestone]
+{name}, that's your first one! Here's to many more.
+First time's always special, {name}. Nicely done.
+
+[Idle / AFK]
+Still here, {name}? Need anything?
+Take your time, {name}. I'm not going anywhere.
+
+[Lover]
+I'm really glad you're here, {name}.
+Hey, good to see you.

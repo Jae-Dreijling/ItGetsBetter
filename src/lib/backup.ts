@@ -1,4 +1,6 @@
 import { db } from '../db'
+import { GUILD_ROOMS } from './game'
+import { BOSSES } from './bosses'
 
 // JSON.stringify silently turns Blob fields into `{}` — encode them as data
 // URLs before stringifying, and decode them back to Blobs on restore.
@@ -80,7 +82,7 @@ async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promi
 
 export async function createBackup(password: string): Promise<Blob> {
   const data = {
-    version: 4,
+    version: 5,
     exportedAt: new Date().toISOString(),
     userProfile: await db.userProfile.toArray(),
     weightEntries: await db.weightEntries.toArray(),
@@ -113,6 +115,14 @@ export async function createBackup(password: string): Promise<Blob> {
     books: await db.books.toArray(),
     companions: await encodeBlobField(await db.companions.toArray(), 'avatar'),
     motivationNotes: await encodeBlobField(await db.motivationNotes.toArray(), 'photo'),
+    gameState: await db.gameState.toArray(),
+    gameQuests: await db.gameQuests.toArray(),
+    gameCompanionAffinity: await db.gameCompanionAffinity.toArray(),
+    gameCustomQuestions: await db.gameCustomQuestions.toArray(),
+    fastingRecords: await db.fastingRecords.toArray(),
+    personalityGroups: await db.personalityGroups.toArray(),
+    guildRoomsBuilt: GUILD_ROOMS.filter(r => localStorage.getItem(`igb_guild_${r.id}`) === '1').map(r => r.id),
+    bossesDefeated: Object.keys(BOSSES).filter(id => localStorage.getItem(`igb_boss_${id}_won`) === '1'),
   }
 
   const json = JSON.stringify(data)
@@ -174,7 +184,7 @@ export async function restoreBackup(file: File, password: string): Promise<void>
   if (data.companions?.length) data.companions = await decodeBlobField(data.companions, 'avatar')
   if (data.motivationNotes?.length) data.motivationNotes = await decodeBlobField(data.motivationNotes, 'photo')
 
-  const allTables = [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries, db.moodEntries, db.moodTags, db.sleepEntries, db.medicines, db.medicineLogs, db.pointsTransactions, db.rewards, db.rewardClaims, db.achievements, db.progressPhotos, db.table('healthInsights'), db.table('customQuotes'), db.table('scheduleProfiles'), db.table('dayConfigs'), db.groceryLists, db.groceryItems, db.books, db.companions, db.motivationNotes]
+  const allTables = [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries, db.moodEntries, db.moodTags, db.sleepEntries, db.medicines, db.medicineLogs, db.pointsTransactions, db.rewards, db.rewardClaims, db.achievements, db.progressPhotos, db.table('healthInsights'), db.table('customQuotes'), db.table('scheduleProfiles'), db.table('dayConfigs'), db.groceryLists, db.groceryItems, db.books, db.companions, db.motivationNotes, db.gameState, db.gameQuests, db.gameCompanionAffinity, db.gameCustomQuestions, db.fastingRecords, db.personalityGroups]
 
   await db.transaction('rw', allTables, async () => {
       await db.userProfile.clear()
@@ -208,6 +218,12 @@ export async function restoreBackup(file: File, password: string): Promise<void>
       await db.books.clear()
       await db.companions.clear()
       await db.motivationNotes.clear()
+      await db.gameState.clear()
+      await db.gameQuests.clear()
+      await db.gameCompanionAffinity.clear()
+      await db.gameCustomQuestions.clear()
+      await db.fastingRecords.clear()
+      await db.personalityGroups.clear()
 
       if (data.userProfile?.length) await db.userProfile.bulkAdd(data.userProfile)
       if (data.weightEntries?.length) await db.weightEntries.bulkAdd(data.weightEntries)
@@ -243,8 +259,20 @@ export async function restoreBackup(file: File, password: string): Promise<void>
       if (data.books?.length) await db.books.bulkAdd(data.books)
       if (data.companions?.length) await db.companions.bulkAdd(data.companions)
       if (data.motivationNotes?.length) await db.motivationNotes.bulkAdd(data.motivationNotes)
+      if (data.gameState?.length) await db.gameState.bulkAdd(data.gameState)
+      if (data.gameQuests?.length) await db.gameQuests.bulkAdd(data.gameQuests)
+      if (data.gameCompanionAffinity?.length) await db.gameCompanionAffinity.bulkAdd(data.gameCompanionAffinity)
+      if (data.gameCustomQuestions?.length) await db.gameCustomQuestions.bulkAdd(data.gameCustomQuestions)
+      if (data.fastingRecords?.length) await db.fastingRecords.bulkAdd(data.fastingRecords)
+      if (data.personalityGroups?.length) await db.personalityGroups.bulkAdd(data.personalityGroups)
     }
   )
+
+  // Guild rooms built and defeated bosses live in localStorage, not IndexedDB.
+  for (const room of GUILD_ROOMS) localStorage.removeItem(`igb_guild_${room.id}`)
+  for (const id of data.guildRoomsBuilt ?? []) localStorage.setItem(`igb_guild_${id}`, '1')
+  for (const id of Object.keys(BOSSES)) localStorage.removeItem(`igb_boss_${id}_won`)
+  for (const id of data.bossesDefeated ?? []) localStorage.setItem(`igb_boss_${id}_won`, '1')
 }
 
 function arrayToBase64(arr: Uint8Array): string {

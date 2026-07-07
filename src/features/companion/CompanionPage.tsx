@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Pencil, Camera, ChevronDown, ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router'
+import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
 import imageCompression from 'browser-image-compression'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
-import { useCompanions, useActiveCompanion, addCompanion, updateCompanion, deleteCompanion, setActiveCompanion, type CompanionEvent } from '../../hooks/useCompanion'
+import { useCompanions, addCompanion, updateCompanion, deleteCompanion, setCompanionActive } from '../../hooks/useCompanion'
+import { usePersonalityGroups } from '../../hooks/usePersonalityGroups'
 import { getCompanionHomeRegion, setCompanionHomeRegion, getCompanionAffinityRecord, updateLoverDialogue } from '../../lib/game'
+import { MessagePoolEditor, ImportMessagesPanel, stripWrappingQuotes } from './MessagePoolEditor'
 import type { Companion, CompanionMessages } from '../../types'
 
 const JOURNEY_REGIONS = [
@@ -22,34 +25,32 @@ const JOURNEY_REGIONS = [
   { id: 'mount_aris',      label: 'Mount Aris',      emoji: '🐚', available: false },
 ]
 
-const EVENT_LABELS: { key: CompanionEvent; label: string }[] = [
-  { key: 'general', label: 'General / Default' },
-  { key: 'morning_greeting', label: 'Morning Greeting' },
-  { key: 'welcome_back', label: 'Welcome Back' },
-  { key: 'achievement_unlocked', label: 'Achievement Unlocked' },
-  { key: 'habit_completed', label: 'Habit Completed' },
-  { key: 'mood_low', label: 'Low Mood Support' },
-  { key: 'fasting_goal', label: 'Fasting Goal Met' },
-  { key: 'streak_milestone', label: 'Streak Milestone' },
-  { key: 'phone_free', label: 'Phone-Free Reminder' },
-  { key: 'points_earned', label: 'Points Earned' },
-  { key: 'weight_loss', label: 'Weight Loss' },
-  { key: 'idle', label: 'Idle / AFK' },
-]
-
 export default function CompanionPage() {
   const companions = useCompanions()
-  const active = useActiveCompanion()
+  const navigate = useNavigate()
   const [showCreate, setShowCreate] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
+
+  const activeCount = companions?.filter(c => c.is_active).length ?? 0
 
   return (
     <>
       <TopBar title="Companions" />
       <PageContainer>
         <p className="mb-4 text-sm text-muted">
-          Choose a companion to guide you through the app. They show up on your home screen and react to your actions.
+          Turn on one or more companions to guide you through the app. When more than one is active, a random one speaks to you each session.
         </p>
+
+        <button
+          onClick={() => navigate('/me/companion/personalities')}
+          className="mb-3 flex w-full items-center gap-3 rounded-xl bg-card p-3.5 shadow-sm text-left"
+        >
+          <Sparkles className="h-5 w-5 text-accent-500" />
+          <div>
+            <p className="text-sm font-semibold text-text-primary">Personality Groups</p>
+            <p className="text-xs text-muted">Shared message pools multiple companions can draw from</p>
+          </div>
+        </button>
 
         <button
           onClick={() => setShowCreate(!showCreate)}
@@ -72,8 +73,8 @@ export default function CompanionPage() {
                 <CompanionCard
                   key={c.id}
                   companion={c}
-                  isActive={active?.id === c.id}
-                  onActivate={() => setActiveCompanion(c.id!)}
+                  canDeactivate={activeCount > 1 || !c.is_active}
+                  onToggleActive={next => setCompanionActive(c.id!, next)}
                   onEdit={() => setEditingId(c.id!)}
                   onDelete={() => deleteCompanion(c.id!)}
                 />
@@ -86,10 +87,10 @@ export default function CompanionPage() {
   )
 }
 
-function CompanionCard({ companion, isActive, onActivate, onEdit, onDelete }: {
+function CompanionCard({ companion, canDeactivate, onToggleActive, onEdit, onDelete }: {
   companion: Companion
-  isActive: boolean
-  onActivate: () => void
+  canDeactivate: boolean
+  onToggleActive: (next: boolean) => void
   onEdit: () => void
   onDelete: () => void
 }) {
@@ -106,7 +107,7 @@ function CompanionCard({ companion, isActive, onActivate, onEdit, onDelete }: {
   const totalMessages = Object.values(companion.messages).flat().length
 
   return (
-    <div className={`rounded-2xl bg-card p-4 shadow-sm ${isActive ? 'ring-2 ring-primary-400' : ''}`}>
+    <div className={`rounded-2xl bg-card p-4 shadow-sm ${companion.is_active ? 'ring-2 ring-primary-400' : ''}`}>
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface overflow-hidden">
           {avatarUrl ? (
@@ -119,13 +120,14 @@ function CompanionCard({ companion, isActive, onActivate, onEdit, onDelete }: {
           <p className="font-semibold text-text-primary">{companion.name}</p>
           <p className="text-xs text-muted">{totalMessages} messages · {companion.is_default ? 'Default' : 'Custom'}</p>
         </div>
-        {isActive ? (
-          <span className="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-semibold text-primary-600">Active</span>
-        ) : (
-          <button onClick={onActivate} className="rounded-full bg-surface px-2.5 py-0.5 text-xs font-medium text-muted hover:bg-primary-50">
-            Use
-          </button>
-        )}
+        <button
+          onClick={() => onToggleActive(!companion.is_active)}
+          disabled={companion.is_active && !canDeactivate}
+          title={companion.is_active && !canDeactivate ? 'At least one companion must stay active' : undefined}
+          className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-40 ${companion.is_active ? 'bg-primary-500' : 'bg-surface border border-primary-100'}`}
+        >
+          <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${companion.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
+        </button>
       </div>
       <div className="mt-2 flex gap-2 justify-end">
         <button onClick={onEdit} className="p-1.5 text-muted hover:text-primary-500">
@@ -141,35 +143,23 @@ function CompanionCard({ companion, isActive, onActivate, onEdit, onDelete }: {
   )
 }
 
-const WRAPPING_QUOTE_CHARS = ['"', "'", '“', '”', '‘', '’']
-
-function stripWrappingQuotes(raw: string): string {
-  let text = raw.trim()
-  while (
-    text.length >= 2 &&
-    WRAPPING_QUOTE_CHARS.includes(text[0]) &&
-    WRAPPING_QUOTE_CHARS.includes(text[text.length - 1])
-  ) {
-    text = text.slice(1, -1).trim()
-  }
-  return text
-}
-
 function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () => void }) {
   const [name, setName] = useState(initial?.name ?? '')
   const [avatar, setAvatar] = useState<Blob | null>(initial?.avatar ?? null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [homeRegion, setHomeRegion] = useState('ponyville')
+  const [personalityGroupId, setPersonalityGroupId] = useState<number | null>(initial?.personality_group_id ?? null)
   const [isLover, setIsLover] = useState(false)
   const [loverDialogue, setLoverDialogue] = useState<string[]>([])
   const [newLoverLine, setNewLoverLine] = useState('')
   const [messages, setMessages] = useState<CompanionMessages>(initial?.messages ?? {
     general: [], morning_greeting: [], welcome_back: [], achievement_unlocked: [],
-    habit_completed: [], mood_low: [], fasting_goal: [], streak_milestone: [],
-    phone_free: [], points_earned: [], weight_loss: [], idle: [],
+    habit_completed: [], task_completed: [], mood_low: [], fasting_goal: [], streak_milestone: [],
+    phone_free: [], points_earned: [], weight_loss: [], weight_gain: [], exercise_logged: [],
+    water_goal_met: [], sleep_logged: [], personal_best: [], level_up: [], boss_defeated: [],
+    goodnight: [], first_milestone: [], idle: [],
   })
-  const [expandedEvent, setExpandedEvent] = useState<CompanionEvent | null>(null)
-  const [newMessage, setNewMessage] = useState('')
+  const personalityGroups = usePersonalityGroups()
 
   useEffect(() => {
     if (initial?.avatar) {
@@ -200,31 +190,14 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
     setAvatarPreview(URL.createObjectURL(compressed))
   }
 
-  function addMessage(event: CompanionEvent) {
-    const cleaned = stripWrappingQuotes(newMessage)
-    if (!cleaned) return
-    setMessages(prev => ({
-      ...prev,
-      [event]: [...(prev[event] ?? []), cleaned],
-    }))
-    setNewMessage('')
-  }
-
-  function removeMessage(event: CompanionEvent, index: number) {
-    setMessages(prev => ({
-      ...prev,
-      [event]: prev[event].filter((_, i) => i !== index),
-    }))
-  }
-
   async function handleSave() {
     if (!name.trim()) return
     let savedId: number
     if (initial?.id) {
-      await updateCompanion(initial.id, { name: name.trim(), avatar, messages })
+      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages })
       savedId = initial.id
     } else {
-      savedId = await addCompanion({ name: name.trim(), avatar, messages }) as number
+      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages }) as number
     }
     await setCompanionHomeRegion(savedId, homeRegion)
     if (isLover) await updateLoverDialogue(savedId, loverDialogue)
@@ -279,48 +252,28 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
         </div>
       </div>
 
-      <div className="space-y-1 mb-4">
-        {EVENT_LABELS.map(({ key, label }) => (
-          <div key={key}>
-            <button
-              onClick={() => setExpandedEvent(expandedEvent === key ? null : key)}
-              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-surface transition-colors"
-            >
-              <span className="text-text-primary">{label}</span>
-              <span className="flex items-center gap-1 text-xs text-muted">
-                {messages[key]?.length ?? 0}
-                {expandedEvent === key ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-              </span>
-            </button>
-
-            {expandedEvent === key && (
-              <div className="px-3 pb-2 space-y-1.5">
-                {messages[key]?.map((msg, i) => (
-                  <div key={i} className="flex items-start gap-2 rounded-lg bg-surface px-2.5 py-1.5">
-                    <p className="flex-1 text-xs text-text-primary">"{msg}"</p>
-                    <button onClick={() => removeMessage(key, i)} className="shrink-0 p-0.5 text-muted hover:text-danger">
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-                <div className="flex gap-1.5">
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={e => setNewMessage(e.target.value)}
-                    placeholder="Add message... (use {name} for user's name)"
-                    className="flex-1 rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-2.5 py-1.5 text-xs text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
-                    onKeyDown={e => e.key === 'Enter' && addMessage(key)}
-                  />
-                  <button onClick={() => addMessage(key)} disabled={!newMessage.trim()} className="rounded-lg bg-primary-500 px-2.5 py-1.5 text-xs text-white disabled:opacity-50">
-                    +
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+      {/* Personality group */}
+      <div className="mb-4">
+        <p className="mb-1.5 text-xs font-semibold text-muted uppercase tracking-wide">Personality Group</p>
+        <p className="mb-2 text-xs text-muted">Optional shared message pool. Lines from the group are combined with this companion's own lines above.</p>
+        <select
+          value={personalityGroupId ?? ''}
+          onChange={e => setPersonalityGroupId(e.target.value === '' ? null : Number(e.target.value))}
+          className="w-full rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-sm text-text-primary focus:border-primary-400 focus:outline-none"
+        >
+          <option value="">None</option>
+          {personalityGroups?.map(g => (
+            <option key={g.id} value={g.id}>{g.name}</option>
+          ))}
+        </select>
       </div>
+
+      <MessagePoolEditor
+        messages={messages}
+        onChange={updater => setMessages(updater)}
+        showLoverImport={isLover}
+        onImportLover={lines => setLoverDialogue(prev => [...prev, ...lines])}
+      />
 
       {isLover && (
         <div className="mb-4">
@@ -370,6 +323,10 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
               +
             </button>
           </div>
+          <ImportMessagesPanel
+            accent="rose"
+            onImport={lines => setLoverDialogue(prev => [...prev, ...lines])}
+          />
         </div>
       )}
 

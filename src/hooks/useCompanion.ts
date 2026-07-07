@@ -10,12 +10,22 @@ const EMPTY_MESSAGES: CompanionMessages = {
   welcome_back: [],
   achievement_unlocked: [],
   habit_completed: [],
+  task_completed: [],
   mood_low: [],
   fasting_goal: [],
   streak_milestone: [],
   phone_free: [],
   points_earned: [],
   weight_loss: [],
+  weight_gain: [],
+  exercise_logged: [],
+  water_goal_met: [],
+  sleep_logged: [],
+  personal_best: [],
+  level_up: [],
+  boss_defeated: [],
+  goodnight: [],
+  first_milestone: [],
   idle: [],
 }
 
@@ -25,27 +35,60 @@ export function useCompanions() {
   return useLiveQuery(() => db.companions.toArray())
 }
 
-export function useActiveCompanion() {
+const SESSION_COMPANION_KEY = 'igb_session_companion_id'
+
+// Multiple companions can be marked active; one is randomly picked to speak
+// for the current session (persisted in sessionStorage so it stays the same
+// companion across navigations, and re-randomizes next time the app is opened).
+export function useSessionCompanion() {
   return useLiveQuery(async () => {
-    const profile = await db.userProfile.toCollection().first()
-    if (!profile?.active_companion_id) {
+    const active = await db.companions.filter(c => c.is_active === true).toArray()
+
+    if (active.length === 0) {
       return db.companions.filter(c => c.is_default === true).first()
     }
-    const companion = await db.companions.get(profile.active_companion_id)
-    return companion ?? db.companions.filter(c => c.is_default === true).first()
+
+    const storedId = sessionStorage.getItem(SESSION_COMPANION_KEY)
+    if (storedId) {
+      const match = active.find(c => c.id === Number(storedId))
+      if (match) return match
+    }
+
+    const picked = active[Math.floor(Math.random() * active.length)]
+    sessionStorage.setItem(SESSION_COMPANION_KEY, String(picked.id))
+    return picked
   })
 }
 
-export function getCompanionMessage(companion: Companion | undefined, event: CompanionEvent, name: string): string {
-  if (!companion) return getRandomMessage(name)
+// Merges a companion's own messages with its personality group's shared pool
+// (if any) — see PersonalityGroup in types/entities.ts. Live: editing the
+// group's messages updates every companion using it immediately.
+export function useEffectiveMessages(companion: Companion | undefined): CompanionMessages | undefined {
+  return useLiveQuery(async () => {
+    if (!companion) return undefined
+    if (companion.personality_group_id == null) return companion.messages
 
-  const pool = companion.messages[event]
+    const group = await db.personalityGroups.get(companion.personality_group_id)
+    if (!group) return companion.messages
+
+    const merged = { ...EMPTY_MESSAGES }
+    for (const key of Object.keys(EMPTY_MESSAGES) as CompanionEvent[]) {
+      merged[key] = [...(companion.messages[key] ?? []), ...(group.messages[key] ?? [])]
+    }
+    return merged
+  }, [companion?.id, companion?.personality_group_id, companion?.messages])
+}
+
+export function getCompanionMessage(messages: CompanionMessages | undefined, event: CompanionEvent, name: string): string {
+  if (!messages) return getRandomMessage(name)
+
+  const pool = messages[event]
   if (pool && pool.length > 0) {
     const msg = pool[Math.floor(Math.random() * pool.length)]
     return msg.replace('{name}', name)
   }
 
-  const general = companion.messages.general
+  const general = messages.general
   if (general && general.length > 0) {
     const msg = general[Math.floor(Math.random() * general.length)]
     return msg.replace('{name}', name)
@@ -57,12 +100,15 @@ export function getCompanionMessage(companion: Companion | undefined, event: Com
 export async function addCompanion(data: {
   name: string
   avatar: Blob | null
+  personality_group_id?: number | null
   messages?: Partial<CompanionMessages>
 }) {
   return db.companions.add({
     name: data.name,
     avatar: data.avatar,
     is_default: false,
+    is_active: true,
+    personality_group_id: data.personality_group_id ?? null,
     messages: { ...EMPTY_MESSAGES, ...data.messages },
     created_at: nowISO(),
   })
@@ -72,23 +118,17 @@ export async function updateCompanion(id: number, changes: Partial<{
   name: string
   avatar: Blob | null
   messages: CompanionMessages
+  personality_group_id: number | null
 }>) {
   await db.companions.update(id, changes)
 }
 
 export async function deleteCompanion(id: number) {
-  const profile = await db.userProfile.toCollection().first()
-  if (profile?.active_companion_id === id) {
-    await db.userProfile.update(profile.id!, { active_companion_id: null })
-  }
   await db.companions.delete(id)
 }
 
-export async function setActiveCompanion(id: number | null) {
-  const profile = await db.userProfile.toCollection().first()
-  if (profile?.id) {
-    await db.userProfile.update(profile.id, { active_companion_id: id })
-  }
+export async function setCompanionActive(id: number, isActive: boolean) {
+  await db.companions.update(id, { is_active: isActive })
 }
 
 export async function ensureDefaultCompanion() {
@@ -126,6 +166,11 @@ export async function ensureDefaultCompanion() {
       "Checked off! {name}, consistency is your superpower.",
       "Done! Every small step counts, {name}.",
     ],
+    task_completed: [
+      "One more thing off your plate, {name}!",
+      "Task done! {name}, look at you getting things sorted.",
+      "Checked off the list, {name}. Nice work.",
+    ],
     mood_low: [
       "It's okay, {name}. Log when you're ready. Even imperfect is progress.",
       "{name}, bad days happen. You're not alone in this.",
@@ -151,6 +196,42 @@ export async function ensureDefaultCompanion() {
       "{name}, you're making progress! The trend is going the right way.",
       "Weight coming down, {name}! Your body thanks you.",
     ],
+    weight_gain: [
+      "Numbers move both ways, {name}. This doesn't undo your progress.",
+      "{name}, one entry isn't the whole story. Keep going.",
+    ],
+    exercise_logged: [
+      "Nice work moving today, {name}!",
+      "Logged and done, {name}. Your body thanks you.",
+    ],
+    water_goal_met: [
+      "Water goal hit, {name}! Nicely hydrated.",
+      "{name}, that's your water goal for today. Well done.",
+    ],
+    sleep_logged: [
+      "Rest logged, {name}. Taking care of yourself counts too.",
+      "{name}, thanks for tracking that. Sleep matters.",
+    ],
+    personal_best: [
+      "{name}, that's a new personal best! Incredible.",
+      "New record, {name}! You just outdid yourself.",
+    ],
+    level_up: [
+      "Level up, {name}! Look how far you've come.",
+      "{name}, you've grown. That's not nothing.",
+    ],
+    boss_defeated: [
+      "Victory, {name}! That boss didn't stand a chance.",
+      "{name}, you did it! On to the next chapter.",
+    ],
+    goodnight: [
+      "Getting close to bedtime, {name}. Start winding down.",
+      "{name}, good night's coming up. Take it easy from here.",
+    ],
+    first_milestone: [
+      "{name}, that's your first one! Here's to many more.",
+      "First time's always special, {name}. Nicely done.",
+    ],
     idle: [
       "Still here, {name}? Need anything?",
       "Hey {name}, just checking in. You good?",
@@ -166,6 +247,8 @@ export async function ensureDefaultCompanion() {
     name: 'ItGetsBetter',
     avatar: null,
     is_default: true,
+    is_active: true,
+    personality_group_id: null,
     messages: defaultMessages,
     created_at: nowISO(),
   })

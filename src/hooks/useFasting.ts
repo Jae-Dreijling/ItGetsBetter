@@ -4,6 +4,7 @@ import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { format, subDays } from 'date-fns'
 import { awardPoints } from './usePoints'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 
 export interface FastingState {
   status: 'fasting' | 'dismissed' | 'no_data'
@@ -71,7 +72,9 @@ export function useCurrentFast(goalHours: number = 16) {
 export async function breakFast(lastMealAt: Date, fastingMinutes: number, goalHours: number) {
   const durationHours = Math.round((fastingMinutes / 60) * 10) / 10
 
-  await db.table('fastingRecords').add({
+  const previousBest = await db.fastingRecords.orderBy('duration_hours').last()
+
+  await db.fastingRecords.add({
     date: getLogicalDate(),
     start_time: lastMealAt.toISOString(),
     end_time: nowISO(),
@@ -83,6 +86,11 @@ export async function breakFast(lastMealAt: Date, fastingMinutes: number, goalHo
 
   if (fastingMinutes >= goalHours * 60) {
     await awardPoints('fasting_goal_met')
+    triggerCompanionMessage('fasting_goal')
+  }
+
+  if (previousBest && durationHours > previousBest.duration_hours) {
+    triggerCompanionMessage('personal_best')
   }
 }
 

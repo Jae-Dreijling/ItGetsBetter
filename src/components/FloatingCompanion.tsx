@@ -1,21 +1,27 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useActiveCompanion, getCompanionMessage, ensureDefaultCompanion, type CompanionEvent } from '../hooks/useCompanion'
+import { useSessionCompanion, useEffectiveMessages, getCompanionMessage, ensureDefaultCompanion, type CompanionEvent } from '../hooks/useCompanion'
 import { useProfile } from '../hooks/useProfile'
 import CompanionChat from './CompanionChat'
 import { tryGetMotivationMessage } from '../hooks/useMotivationNotes'
+import { useLatestMoodScore } from '../hooks/useMood'
+import { useIsPhoneFreeTime, useIsGoodnightTime } from '../hooks/useSchedule'
+import { useCompanionAffinityFor } from '../hooks/useGame'
+import { getDataAwareNudge } from '../lib/companionNudges'
+import { registerCompanionMessageHandler } from '../lib/companionMessenger'
+
+export { triggerCompanionMessage } from '../lib/companionMessenger'
 
 const POSITION_KEY = 'igb_companion_position'
 const IDLE_TIMEOUT = 10000
 
-let showMessageFn: ((event: CompanionEvent) => void) | null = null
-
-export function triggerCompanionMessage(event: CompanionEvent) {
-  if (showMessageFn) showMessageFn(event)
-}
-
 export default function FloatingCompanion() {
-  const companion = useActiveCompanion()
+  const companion = useSessionCompanion()
+  const effectiveMessages = useEffectiveMessages(companion)
+  const affinity = useCompanionAffinityFor(companion?.id)
   const { profile } = useProfile()
+  const latestMoodScore = useLatestMoodScore()
+  const isPhoneFreeTime = useIsPhoneFreeTime()
+  const isGoodnightTime = useIsGoodnightTime()
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [position, setPosition] = useState(() => {
@@ -36,6 +42,24 @@ export default function FloatingCompanion() {
   const wasLongPress = useRef(false)
   const name = profile?.display_name ?? 'friend'
 
+  // Kept in refs (rather than useCallback deps) so showMessage/resetIdleTimer
+  // never change identity when this reactive data updates — otherwise the
+  // listener-attaching effect below would re-run and reset the idle countdown
+  // far more often than actual user inactivity, making idle messages fire
+  // much too frequently.
+  const messagesRef = useRef(effectiveMessages)
+  const nameRef = useRef(name)
+  const moodScoreRef = useRef(latestMoodScore)
+  const isPhoneFreeTimeRef = useRef(isPhoneFreeTime)
+  const isGoodnightTimeRef = useRef(isGoodnightTime)
+  const affinityRef = useRef(affinity)
+  useEffect(() => { messagesRef.current = effectiveMessages }, [effectiveMessages])
+  useEffect(() => { nameRef.current = name }, [name])
+  useEffect(() => { moodScoreRef.current = latestMoodScore }, [latestMoodScore])
+  useEffect(() => { isPhoneFreeTimeRef.current = isPhoneFreeTime }, [isPhoneFreeTime])
+  useEffect(() => { isGoodnightTimeRef.current = isGoodnightTime }, [isGoodnightTime])
+  useEffect(() => { affinityRef.current = affinity }, [affinity])
+
   useEffect(() => {
     ensureDefaultCompanion()
   }, [])
@@ -51,32 +75,76 @@ export default function FloatingCompanion() {
   }, [companion?.avatar])
 
   const showMessage = useCallback((event: CompanionEvent) => {
-    const msg = getCompanionMessage(companion, event, name)
+    const msg = getCompanionMessage(messagesRef.current, event, nameRef.current)
     setMessage(msg)
     if (messageTimer.current) clearTimeout(messageTimer.current)
     messageTimer.current = setTimeout(() => setMessage(null), 5000)
-  }, [companion, name])
+  }, [])
+
+  const showRawText = useCallback((text: string, durationMs = 7000) => {
+    setMessage(text)
+    if (messageTimer.current) clearTimeout(messageTimer.current)
+    messageTimer.current = setTimeout(() => setMessage(null), durationMs)
+  }, [])
 
   useEffect(() => {
-    showMessageFn = showMessage
-    return () => { showMessageFn = null }
+    registerCompanionMessageHandler(showMessage)
+    return () => registerCompanionMessageHandler(null)
   }, [showMessage])
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimer.current) clearTimeout(idleTimer.current)
     idleTimer.current = setTimeout(async () => {
-      if (Math.random() < 0.35) {
+      // Phone-free time takes over completely — the companion should always
+      // nudge you to put the phone down during that window. Re-arms itself
+      // rather than waiting for a touch/scroll, since the point is you're
+      // not supposed to be interacting with the phone right now.
+      if (isPhoneFreeTimeRef.current) {
+        showMessage('phone_free')
+        resetIdleTimer()
+        return
+      }
+
+      // One-time wind-down nudge in the 30 minutes before phone-free kicks in.
+      if (isGoodnightTimeRef.current && Math.random() < 0.6) {
+        showMessage('goodnight')
+        return
+      }
+
+      if (Math.random() < 0.2) {
         const motMsg = await tryGetMotivationMessage()
         if (motMsg) {
-          setMessage(`💭 "${motMsg}"`)
-          if (messageTimer.current) clearTimeout(messageTimer.current)
-          messageTimer.current = setTimeout(() => setMessage(null), 7000)
+          showRawText(`💭 "${motMsg}"`)
           return
         }
       }
+
+      if (Math.random() < 0.2) {
+        const nudge = await getDataAwareNudge(nameRef.current)
+        if (nudge) {
+          showRawText(nudge)
+          return
+        }
+      }
+
+      const moodIsLow = moodScoreRef.current !== null && moodScoreRef.current !== undefined && moodScoreRef.current <= 3
+      if (moodIsLow && Math.random() < 0.7) {
+        showMessage('mood_low')
+        return
+      }
+
+      // Affinity bleeding into the home screen: a Lover with high affinity
+      // occasionally shows one of their Lover Messages instead of plain idle text.
+      const currentAffinity = affinityRef.current
+      if (currentAffinity?.is_lover && currentAffinity.affinity >= 60 && currentAffinity.lover_dialogue.length > 0 && Math.random() < 0.3) {
+        const line = currentAffinity.lover_dialogue[Math.floor(Math.random() * currentAffinity.lover_dialogue.length)]
+        showRawText(line.replace('{name}', nameRef.current), 5000)
+        return
+      }
+
       showMessage('idle')
     }, IDLE_TIMEOUT)
-  }, [showMessage])
+  }, [showMessage, showRawText])
 
   useEffect(() => {
     function handleResize() {

@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import type { ExerciseEntry } from '../types'
 
 export const DEFAULT_KCAL_PER_MIN: Record<string, number> = {
@@ -54,6 +55,7 @@ export function useExerciseTypes() {
 type ExerciseInput = Omit<ExerciseEntry, 'id' | 'date' | 'logged_at' | 'calories_burned'>
 
 export async function addExerciseEntry(data: ExerciseInput & { date?: string }) {
+  const wasFirstEver = (await db.exerciseEntries.count()) === 0
   let calories_burned: number | null = null
 
   if (data.duration_minutes && data.duration_minutes > 0) {
@@ -79,6 +81,7 @@ export async function addExerciseEntry(data: ExerciseInput & { date?: string }) 
     logged_at: nowISO(),
   })
   await awardPoints('exercise_logged', id as number)
+  if (wasFirstEver) triggerCompanionMessage('first_milestone')
 }
 
 export async function deleteExerciseEntry(id: number) {

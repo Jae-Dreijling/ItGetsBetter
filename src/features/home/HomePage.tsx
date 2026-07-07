@@ -19,18 +19,11 @@ import { useTodaysExercise } from '../../hooks/useExercise'
 import { useTodaysMood } from '../../hooks/useMood'
 import { useTodaysMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
 import { usePointsBalance } from '../../hooks/usePoints'
-import { useIsReturningAfterAbsence } from '../../hooks/useWelcomeBack'
-import { triggerCompanionMessage } from '../../components/FloatingCompanion'
 import { wasStarterOffered } from '../../lib/starterHabits'
-import { useTodaySchedule } from '../../hooks/useSchedule'
+import { useTodaySchedule, isPhoneFreeTime } from '../../hooks/useSchedule'
 import { useNotifications } from '../../hooks/useNotifications'
 import { getLogicalDate } from '../../lib/date'
 import { addDays, format, parseISO } from 'date-fns'
-
-function parseTimeToMinutes(time: string): number {
-  const [h, m] = time.split(':').map(Number)
-  return h * 60 + (m || 0)
-}
 
 type TimeOfDay = 'morning' | 'midday' | 'night'
 
@@ -54,9 +47,7 @@ export default function HomePage() {
   const activeMeds = useTodaysMedicines()
   const todaysMedLogs = useTodaysMedicineLogs()
   const points = usePointsBalance()
-  const isReturning = useIsReturningAfterAbsence()
-  if (isReturning) triggerCompanionMessage('welcome_back')
-  const { mode } = useTodaySchedule()
+  const { mode, profile: scheduleProfile } = useTodaySchedule()
   const { notification, dismiss } = useNotifications()
   const { data: weatherData, emoji: weatherEmoji } = useWeather(isWeatherEnabled())
   const navigate = useNavigate()
@@ -97,16 +88,7 @@ export default function HomePage() {
   const moodLoggedForPeriod = todaysMood?.some(m => m.tags.includes(timeOfDay)) ?? false
   const showMoodPrompt = !moodDismissed && !moodLoggedForPeriod
 
-  const { profile: scheduleProfile } = useTodaySchedule()
-  const isPhoneFreeTime = (() => {
-    if (!scheduleProfile) return false
-    const now = new Date()
-    const currentMinutes = now.getHours() * 60 + now.getMinutes()
-    const wakeMinutes = parseTimeToMinutes(scheduleProfile.wake_time)
-    const freeUntilMinutes = parseTimeToMinutes(scheduleProfile.phone_free_until)
-    const awayMinutes = parseTimeToMinutes(scheduleProfile.phone_away_at)
-    return (currentMinutes >= wakeMinutes && currentMinutes < freeUntilMinutes) || currentMinutes >= awayMinutes
-  })()
+  const isInPhoneFreeWindow = isPhoneFreeTime(scheduleProfile)
 
   const isMedTaken = useCallback((medId: number) => {
     return todaysMedLogs?.some(l => l.medicine_id === medId) ?? false
@@ -125,7 +107,7 @@ export default function HomePage() {
         ) : undefined}
       />
       <PageContainer>
-        {isPhoneFreeTime && (
+        {isInPhoneFreeWindow && (
           <div className="mb-4 flex items-center justify-center gap-2 rounded-2xl bg-secondary-100 py-3 px-4">
             <span className="text-lg">📵</span>
             <p className="text-sm font-medium text-secondary-700">

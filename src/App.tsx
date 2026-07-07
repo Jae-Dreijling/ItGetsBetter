@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router'
 import { db, ensureDefaults } from './db'
 import { checkProgressionAdvancements } from './hooks/useHabits'
 import { ensureDefaultCompanion } from './hooks/useCompanion'
+import { checkLevelUpAndClassChange } from './hooks/useCharacter'
 import { shouldRunLifecycle, runPhotoLifecycle, markLifecycleRun } from './lib/photoLifecycle'
 import { getLogicalDate, nowISO } from './lib/date'
 import { useProfile } from './hooks/useProfile'
@@ -36,12 +37,14 @@ import HabitsPage from './features/todo/HabitsPage'
 import TasksPage from './features/todo/TasksPage'
 
 const ExportPage = lazy(() => import('./features/settings/ExportPage'))
+const DevToolsPage = lazy(() => import('./features/settings/DevToolsPage'))
 const QuoteManager = lazy(() => import('./features/settings/QuoteManager'))
 const ScheduleSettings = lazy(() => import('./features/settings/ScheduleSettings'))
 const LabelManager = lazy(() => import('./features/settings/LabelManager'))
 const GroceryPage = lazy(() => import('./features/grocery/GroceryPage'))
 const BooksPage = lazy(() => import('./features/books/BooksPage'))
 const CompanionPage = lazy(() => import('./features/companion/CompanionPage'))
+const PersonalityGroupsPage = lazy(() => import('./features/companion/PersonalityGroupsPage'))
 const RewardShopPage = lazy(() => import('./features/rewards/RewardShopPage'))
 const AchievementsPage = lazy(() => import('./features/achievements/AchievementsPage'))
 const GraphsDashboard = lazy(() => import('./features/graphs/GraphsDashboard'))
@@ -130,12 +133,14 @@ function AppContent() {
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
         <Route path="settings/export" element={<Suspense fallback={<LazyFallback />}><ExportPage /></Suspense>} />
+        <Route path="settings/devtools" element={<Suspense fallback={<LazyFallback />}><DevToolsPage /></Suspense>} />
         <Route path="settings/quotes" element={<Suspense fallback={<LazyFallback />}><QuoteManager /></Suspense>} />
         <Route path="settings/schedule" element={<Suspense fallback={<LazyFallback />}><ScheduleSettings /></Suspense>} />
         <Route path="settings/labels" element={<Suspense fallback={<LazyFallback />}><LabelManager /></Suspense>} />
         <Route path="me/grocery" element={<Suspense fallback={<LazyFallback />}><GroceryPage /></Suspense>} />
         <Route path="me/books" element={<Suspense fallback={<LazyFallback />}><BooksPage /></Suspense>} />
         <Route path="me/companion" element={<Suspense fallback={<LazyFallback />}><CompanionPage /></Suspense>} />
+        <Route path="me/companion/personalities" element={<Suspense fallback={<LazyFallback />}><PersonalityGroupsPage /></Suspense>} />
         <Route path="me/vault" element={<Suspense fallback={<LazyFallback />}><MotivationVaultPage /></Suspense>} />
         <Route path="me/timeline" element={<Suspense fallback={<LazyFallback />}><TimelinePage /></Suspense>} />
         <Route path="me/meditation" element={<Suspense fallback={<LazyFallback />}><MeditationPage /></Suspense>} />
@@ -169,7 +174,16 @@ export default function App() {
       }
       checkProgressionAdvancements()
       ensureDefaultCompanion()
-      setTimeout(() => triggerCompanionMessage('morning_greeting'), 1500)
+      checkLevelUpAndClassChange()
+      setTimeout(() => {
+        const hour = new Date().getHours() + new Date().getMinutes() / 60
+        const isMorningWindow = hour >= 3 && hour < 11.5
+        if (isMorningWindow && Math.random() < 0.7) {
+          triggerCompanionMessage('morning_greeting')
+        } else {
+          triggerCompanionMessage('welcome_back')
+        }
+      }, 1500)
     }
     init()
   }, [])

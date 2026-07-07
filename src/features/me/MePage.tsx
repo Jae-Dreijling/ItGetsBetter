@@ -1,10 +1,55 @@
 import { useNavigate } from 'react-router'
-import { Ruler, Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin } from 'lucide-react'
+import { Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin, type LucideIcon } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
 import { useLatestWeight } from '../../hooks/useWeightEntries'
 import { usePointsBalance } from '../../hooks/usePoints'
+
+interface MeLink {
+  label: string
+  subtitle: string
+  icon: LucideIcon
+  path: string
+}
+
+const GROUPS: { title: string; items: MeLink[] }[] = [
+  {
+    title: 'Journey',
+    items: [
+      { label: 'Character', subtitle: 'Level, class & stats', icon: Shield, path: '/me/character' },
+      { label: 'Companions', subtitle: 'Manage your mascots', icon: MessageCircle, path: '/me/companion' },
+    ],
+  },
+  {
+    title: 'Progress',
+    items: [
+      { label: 'My Day', subtitle: 'Everything you logged, in order', icon: Clock, path: '/me/timeline' },
+      { label: 'Health Insights', subtitle: 'Patterns in your data', icon: Lightbulb, path: '/me/insights' },
+      { label: 'Graphs', subtitle: 'Charts and trends', icon: BarChart3, path: '/me/graphs' },
+      { label: 'Weekly Review', subtitle: 'Your week at a glance', icon: CalendarCheck, path: '/me/review' },
+      { label: 'Achievements', subtitle: 'Your milestones and victories', icon: Trophy, path: '/me/achievements' },
+      { label: 'Progress Photos', subtitle: 'Before & after comparison', icon: Camera, path: '/me/photos' },
+    ],
+  },
+  {
+    title: 'Tools',
+    items: [
+      { label: 'Meditation', subtitle: 'Timed sessions with custom sounds', icon: Wind, path: '/me/meditation' },
+      { label: 'Grocery Lists', subtitle: 'Shopping lists & templates', icon: ShoppingCart, path: '/me/grocery' },
+      { label: 'Books', subtitle: 'Track your reading', icon: BookOpen, path: '/me/books' },
+      { label: 'Motivation Vault', subtitle: 'Your reasons why', icon: Flame, path: '/me/vault' },
+    ],
+  },
+  {
+    title: 'Data & Settings',
+    items: [
+      { label: 'Export Data', subtitle: 'Excel and photo downloads', icon: FileSpreadsheet, path: '/settings/export' },
+      { label: 'Backup & Restore', subtitle: 'Export or import your data', icon: Download, path: '/settings/backup' },
+      { label: 'Settings', subtitle: 'Profile, theme, app info', icon: Settings, path: '/settings' },
+    ],
+  },
+]
 
 export default function MePage() {
   const { profile } = useProfile()
@@ -45,194 +90,40 @@ export default function MePage() {
           <Gift className="h-5 w-5 text-accent-600" />
         </button>
 
-        <div className="space-y-3">
-          <button
-            onClick={() => navigate('/journey')}
-            className="flex w-full items-center gap-3 rounded-xl bg-gradient-to-r from-primary-500 to-secondary-500 p-4 shadow-sm text-left"
-          >
-            <MapPin className="h-5 w-5 text-white" />
-            <div>
-              <p className="font-medium text-white">Journey</p>
-              <p className="text-sm text-white/70">Your adventure awaits</p>
-            </div>
-          </button>
+        <button
+          onClick={() => navigate('/journey')}
+          className="mb-6 flex w-full items-center gap-3 rounded-xl bg-gradient-to-r from-primary-500 to-secondary-500 p-4 shadow-sm text-left"
+        >
+          <MapPin className="h-5 w-5 text-white" />
+          <div>
+            <p className="font-medium text-white">Journey</p>
+            <p className="text-sm text-white/70">Your adventure awaits</p>
+          </div>
+        </button>
 
-          <button
-            onClick={() => navigate('/me/character')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <Shield className="h-5 w-5 text-primary-500" />
-            <div>
-              <p className="font-medium text-text-primary">Character</p>
-              <p className="text-sm text-muted">Level, class & stats</p>
+        {GROUPS.map(group => (
+          <div key={group.title} className="mb-6">
+            <h2 className="mb-2 text-xs font-semibold text-muted uppercase tracking-wide">{group.title}</h2>
+            <div className="space-y-2">
+              {group.items.map(item => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => navigate(item.path)}
+                    className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+                  >
+                    <Icon className="h-5 w-5 text-primary-500" />
+                    <div>
+                      <p className="font-medium text-text-primary">{item.label}</p>
+                      <p className="text-sm text-muted">{item.subtitle}</p>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/timeline')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <Clock className="h-5 w-5 text-primary-500" />
-            <div>
-              <p className="font-medium text-text-primary">My Day</p>
-              <p className="text-sm text-muted">Everything you logged, in order</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/meditation')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <Wind className="h-5 w-5 text-secondary-500" />
-            <div>
-              <p className="font-medium text-text-primary">Meditation</p>
-              <p className="text-sm text-muted">Timed sessions with custom sounds</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/companion')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <MessageCircle className="h-5 w-5 text-primary-400" />
-            <div>
-              <p className="font-medium text-text-primary">Companions</p>
-              <p className="text-sm text-muted">Manage your mascots</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/insights')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <Lightbulb className="h-5 w-5 text-accent-500" />
-            <div>
-              <p className="font-medium text-text-primary">Health Insights</p>
-              <p className="text-sm text-muted">Patterns in your data</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/graphs')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <BarChart3 className="h-5 w-5 text-primary-500" />
-            <div>
-              <p className="font-medium text-text-primary">Graphs</p>
-              <p className="text-sm text-muted">Charts and trends</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/review')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <CalendarCheck className="h-5 w-5 text-secondary-500" />
-            <div>
-              <p className="font-medium text-text-primary">Weekly Review</p>
-              <p className="text-sm text-muted">Your week at a glance</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/achievements')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <Trophy className="h-5 w-5 text-accent-500" />
-            <div>
-              <p className="font-medium text-text-primary">Achievements</p>
-              <p className="text-sm text-muted">Your milestones and victories</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/photos')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <Camera className="h-5 w-5 text-primary-400" />
-            <div>
-              <p className="font-medium text-text-primary">Progress Photos</p>
-              <p className="text-sm text-muted">Before & after comparison</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/grocery')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <ShoppingCart className="h-5 w-5 text-secondary-500" />
-            <div>
-              <p className="font-medium text-text-primary">Grocery Lists</p>
-              <p className="text-sm text-muted">Shopping lists & templates</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/books')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <BookOpen className="h-5 w-5 text-primary-400" />
-            <div>
-              <p className="font-medium text-text-primary">Books</p>
-              <p className="text-sm text-muted">Track your reading</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/vault')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <Flame className="h-5 w-5 text-accent-500" />
-            <div>
-              <p className="font-medium text-text-primary">Motivation Vault</p>
-              <p className="text-sm text-muted">Your reasons why</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/me/measurements')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <Ruler className="h-5 w-5 text-accent-600" />
-            <div>
-              <p className="font-medium text-text-primary">Measurements</p>
-              <p className="text-sm text-muted">Track body measurements</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/settings/export')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <FileSpreadsheet className="h-5 w-5 text-secondary-500" />
-            <div>
-              <p className="font-medium text-text-primary">Export Data</p>
-              <p className="text-sm text-muted">Excel and photo downloads</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/settings/backup')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <Download className="h-5 w-5 text-secondary-500" />
-            <div>
-              <p className="font-medium text-text-primary">Backup & Restore</p>
-              <p className="text-sm text-muted">Export or import your data</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/settings')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <Settings className="h-5 w-5 text-muted" />
-            <div>
-              <p className="font-medium text-text-primary">Settings</p>
-              <p className="text-sm text-muted">Profile, theme, app info</p>
-            </div>
-          </button>
-        </div>
+          </div>
+        ))}
       </PageContainer>
     </>
   )

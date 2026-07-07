@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { shouldAdvance, getNextValue } from '../lib/progression'
 import type { HabitFrequency, Weekday } from '../types'
 
@@ -194,6 +195,7 @@ export async function toggleHabitCompletion(habitId: number, cantFail: boolean =
   if (existing) {
     await db.habitCompletions.delete(existing.id!)
   } else {
+    const wasFirstEver = (await db.habitCompletions.count()) === 0
     const id = await db.habitCompletions.add({
       habit_id: habitId,
       date: today,
@@ -201,6 +203,7 @@ export async function toggleHabitCompletion(habitId: number, cantFail: boolean =
       logged_at: nowISO(),
     })
     await awardPoints(cantFail ? 'habit_cant_fail' : 'habit_completed', id as number)
+    if (wasFirstEver) triggerCompanionMessage('first_milestone')
   }
 }
 
