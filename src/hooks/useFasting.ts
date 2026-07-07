@@ -4,6 +4,7 @@ import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { format, subDays } from 'date-fns'
 import { awardPoints } from './usePoints'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 
 export interface FastingState {
   status: 'fasting' | 'dismissed' | 'no_data'
@@ -83,6 +84,7 @@ export async function breakFast(lastMealAt: Date, fastingMinutes: number, goalHo
 
   if (fastingMinutes >= goalHours * 60) {
     await awardPoints('fasting_goal_met')
+    triggerCompanionMessage('fasting_goal')
   }
 }
 

@@ -253,6 +253,7 @@ export interface CompanionMessages {
   welcome_back: string[]
   achievement_unlocked: string[]
   habit_completed: string[]
+  task_completed: string[]
   mood_low: string[]
   fasting_goal: string[]
   streak_milestone: string[]

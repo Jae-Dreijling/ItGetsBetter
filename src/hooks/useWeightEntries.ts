@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 
 export function useWeightEntries(dateRange?: { from: string; to: string }) {
   return useLiveQuery(() => {
@@ -26,11 +27,17 @@ export async function addWeightEntry(
   date?: string,
   is_backfill = false
 ) {
+  const previous = await db.weightEntries.orderBy('logged_at').last()
   await db.weightEntries.add({
     date: date ?? getLogicalDate(),
     value_kg,
     logged_at: nowISO(),
     is_backfill,
   })
-  if (!is_backfill) await awardPoints('weight_logged')
+  if (!is_backfill) {
+    await awardPoints('weight_logged')
+    if (previous && value_kg < previous.value_kg) {
+      triggerCompanionMessage('weight_loss')
+    }
+  }
 }

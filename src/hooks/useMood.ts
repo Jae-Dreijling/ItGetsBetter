@@ -17,6 +17,15 @@ export function useMoodHistory(limit: number = 30) {
   , [limit])
 }
 
+// The single most recent mood score logged, regardless of date — used to
+// decide whether the companion should lean on low-mood support messages.
+export function useLatestMoodScore() {
+  return useLiveQuery(async () => {
+    const entry = await db.moodEntries.orderBy('logged_at').last()
+    return entry?.score ?? null
+  })
+}
+
 export function useMoodTags() {
   return useLiveQuery(() => db.moodTags.toArray())
 }

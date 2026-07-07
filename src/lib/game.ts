@@ -2,6 +2,7 @@ import { db } from '../db'
 import { getLogicalDate, nowISO } from './date'
 import type { GameState, GameQuest, GameQuestObjective, GameCustomQuestion } from '../types'
 import type { PointSource } from './points'
+import { triggerCompanionMessage } from './companionMessenger'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -416,6 +417,7 @@ export async function claimQuest(questId: number): Promise<number> {
   })
   const forgeBonus = isRoomBuilt('forge') ? 5 : 0
   await db.gameState.update(state.id!, { gold: state.gold + quest.gold_reward + forgeBonus })
+  triggerCompanionMessage('achievement_unlocked')
   return quest.gold_reward + forgeBonus
 }
 

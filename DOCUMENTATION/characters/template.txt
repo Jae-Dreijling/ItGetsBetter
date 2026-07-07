@@ -24,14 +24,69 @@ Rules the importer understands:
 
 5. Use {name} anywhere you want the user's own name inserted.
 
-6. [Lover] is a special 13th category — only used if this companion is
+6. [Lover] is a special extra category — only used if this companion is
    marked as a Lover. It fills the "Lover Messages" pool, not a normal
    event category.
 
 7. Importing ADDS to whatever messages the companion already has, it
    does not replace them. Safe to re-run with more lines later.
 
-The 12 real category names (must match one of these, spelling doesn't
+WHAT EACH CATEGORY IS ACTUALLY USED FOR
+========================================
+
+General / Default
+  Said when you tap the companion bubble directly. Also the fallback
+  used for any category below that has no messages of its own.
+
+Morning Greeting
+  On app open, between 03:00–11:30, with a high (~70%) chance.
+
+Welcome Back
+  On app open outside the morning window, and every time you open
+  the Journey.
+
+Achievement Unlocked
+  When you unlock an achievement (checked when visiting the
+  Achievements page), or when you successfully claim a finished quest
+  in the Journey.
+
+Habit Completed
+  When you check off a habit on the To-Do page.
+
+Task Completed
+  When you check off a task on the To-Do page. Separate pool from
+  Habit Completed so you can give tasks and habits different tones.
+
+Low Mood Support
+  During idle moments, if your most recently logged mood score was 3
+  or below — high (~70%) chance of showing instead of a plain idle
+  message.
+
+Fasting Goal Met
+  When you break a fast that reached its goal length.
+
+Streak Milestone
+  Not wired to an automatic trigger yet — reserved for a future streak
+  milestone feature. Messages here currently only show if something
+  else calls this category directly.
+
+Phone-Free Reminder
+  Repeats continuously (not just once) during your phone-free window:
+  from 1 hour before your set sleep time through 1 hour after your
+  wake time.
+
+Points Earned
+  Any time you earn points from any logged action.
+
+Weight Loss
+  When a new (non-backfilled) weight entry is lower than your
+  previous one.
+
+Idle / AFK
+  Fallback shown after ~10 seconds of no interaction, when none of
+  the higher-priority conditions above (phone-free, low mood) apply.
+
+The 13 real category names (must match one of these, spelling doesn't
 matter as long as the words are the same):
 
   General / Default
@@ -39,6 +94,7 @@ matter as long as the words are the same):
   Welcome Back
   Achievement Unlocked
   Habit Completed
+  Task Completed
   Low Mood Support
   Fasting Goal Met
   Streak Milestone
@@ -69,6 +125,10 @@ Look at you, {name}! You earned that!
 [Habit Completed]
 Nice one, {name}! Keep that momentum going.
 Checked off! {name}, consistency is your superpower.
+
+[Task Completed]
+One more thing off your plate, {name}!
+Task done! {name}, look at you getting things sorted.
 
 [Low Mood Support]
 It's okay, {name}. Log when you're ready. Even imperfect is progress.

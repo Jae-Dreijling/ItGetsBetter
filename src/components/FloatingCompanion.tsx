@@ -3,19 +3,20 @@ import { useSessionCompanion, getCompanionMessage, ensureDefaultCompanion, type 
 import { useProfile } from '../hooks/useProfile'
 import CompanionChat from './CompanionChat'
 import { tryGetMotivationMessage } from '../hooks/useMotivationNotes'
+import { useLatestMoodScore } from '../hooks/useMood'
+import { useIsPhoneFreeTime } from '../hooks/useSchedule'
+import { registerCompanionMessageHandler } from '../lib/companionMessenger'
+
+export { triggerCompanionMessage } from '../lib/companionMessenger'
 
 const POSITION_KEY = 'igb_companion_position'
 const IDLE_TIMEOUT = 10000
 
-let showMessageFn: ((event: CompanionEvent) => void) | null = null
-
-export function triggerCompanionMessage(event: CompanionEvent) {
-  if (showMessageFn) showMessageFn(event)
-}
-
 export default function FloatingCompanion() {
   const companion = useSessionCompanion()
   const { profile } = useProfile()
+  const latestMoodScore = useLatestMoodScore()
+  const isPhoneFreeTime = useIsPhoneFreeTime()
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [position, setPosition] = useState(() => {
@@ -36,6 +37,20 @@ export default function FloatingCompanion() {
   const wasLongPress = useRef(false)
   const name = profile?.display_name ?? 'friend'
 
+  // Kept in refs (rather than useCallback deps) so showMessage/resetIdleTimer
+  // never change identity when this reactive data updates — otherwise the
+  // listener-attaching effect below would re-run and reset the idle countdown
+  // far more often than actual user inactivity, making idle messages fire
+  // much too frequently.
+  const companionRef = useRef(companion)
+  const nameRef = useRef(name)
+  const moodScoreRef = useRef(latestMoodScore)
+  const isPhoneFreeTimeRef = useRef(isPhoneFreeTime)
+  useEffect(() => { companionRef.current = companion }, [companion])
+  useEffect(() => { nameRef.current = name }, [name])
+  useEffect(() => { moodScoreRef.current = latestMoodScore }, [latestMoodScore])
+  useEffect(() => { isPhoneFreeTimeRef.current = isPhoneFreeTime }, [isPhoneFreeTime])
+
   useEffect(() => {
     ensureDefaultCompanion()
   }, [])
@@ -51,20 +66,30 @@ export default function FloatingCompanion() {
   }, [companion?.avatar])
 
   const showMessage = useCallback((event: CompanionEvent) => {
-    const msg = getCompanionMessage(companion, event, name)
+    const msg = getCompanionMessage(companionRef.current, event, nameRef.current)
     setMessage(msg)
     if (messageTimer.current) clearTimeout(messageTimer.current)
     messageTimer.current = setTimeout(() => setMessage(null), 5000)
-  }, [companion, name])
+  }, [])
 
   useEffect(() => {
-    showMessageFn = showMessage
-    return () => { showMessageFn = null }
+    registerCompanionMessageHandler(showMessage)
+    return () => registerCompanionMessageHandler(null)
   }, [showMessage])
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimer.current) clearTimeout(idleTimer.current)
     idleTimer.current = setTimeout(async () => {
+      // Phone-free time takes over completely — the companion should always
+      // nudge you to put the phone down during that window. Re-arms itself
+      // rather than waiting for a touch/scroll, since the point is you're
+      // not supposed to be interacting with the phone right now.
+      if (isPhoneFreeTimeRef.current) {
+        showMessage('phone_free')
+        resetIdleTimer()
+        return
+      }
+
       if (Math.random() < 0.35) {
         const motMsg = await tryGetMotivationMessage()
         if (motMsg) {
@@ -74,6 +99,13 @@ export default function FloatingCompanion() {
           return
         }
       }
+
+      const moodIsLow = moodScoreRef.current !== null && moodScoreRef.current !== undefined && moodScoreRef.current <= 3
+      if (moodIsLow && Math.random() < 0.7) {
+        showMessage('mood_low')
+        return
+      }
+
       showMessage('idle')
     }, IDLE_TIMEOUT)
   }, [showMessage])

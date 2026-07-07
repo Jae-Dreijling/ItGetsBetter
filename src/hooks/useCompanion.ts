@@ -10,6 +10,7 @@ const EMPTY_MESSAGES: CompanionMessages = {
   welcome_back: [],
   achievement_unlocked: [],
   habit_completed: [],
+  task_completed: [],
   mood_low: [],
   fasting_goal: [],
   streak_milestone: [],
@@ -133,6 +134,11 @@ export async function ensureDefaultCompanion() {
       "Nice one, {name}! Keep that momentum going.",
       "Checked off! {name}, consistency is your superpower.",
       "Done! Every small step counts, {name}.",
+    ],
+    task_completed: [
+      "One more thing off your plate, {name}!",
+      "Task done! {name}, look at you getting things sorted.",
+      "Checked off the list, {name}. Nice work.",
     ],
     mood_low: [
       "It's okay, {name}. Log when you're ready. Even imperfect is progress.",

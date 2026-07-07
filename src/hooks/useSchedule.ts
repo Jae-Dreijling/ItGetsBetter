@@ -83,3 +83,28 @@ export function useTodaySchedule() {
 
   return { profile, mode, profileName }
 }
+
+function parseTimeToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + (m || 0)
+}
+
+// Phone-free window: from 1 hour before target sleep time through 1 hour
+// after wake time (wraps past midnight for the typical evening-to-morning case).
+export function isPhoneFreeTime(profile: ScheduleProfile | null): boolean {
+  if (!profile) return false
+  const now = new Date()
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const windowStart = (parseTimeToMinutes(profile.target_sleep_time) - 60 + 1440) % 1440
+  const windowEnd = (parseTimeToMinutes(profile.wake_time) + 60) % 1440
+
+  if (windowStart > windowEnd) {
+    return currentMinutes >= windowStart || currentMinutes <= windowEnd
+  }
+  return currentMinutes >= windowStart && currentMinutes <= windowEnd
+}
+
+export function useIsPhoneFreeTime(): boolean {
+  const { profile } = useTodaySchedule()
+  return isPhoneFreeTime(profile)
+}

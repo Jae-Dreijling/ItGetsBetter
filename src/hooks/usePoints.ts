@@ -4,6 +4,7 @@ import { getLogicalDate, nowISO } from '../lib/date'
 import { POINT_VALUES, type PointSource } from '../lib/points'
 import { emitPointsEarned } from '../components/PointsToast'
 import { awardSparks } from '../lib/game'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 
 export function usePointsBalance() {
   return useLiveQuery(async () => {
@@ -51,6 +52,9 @@ export async function awardPoints(source: PointSource, sourceId?: number) {
   })
   emitPointsEarned(amount, source)
   await awardSparks(source)
+  triggerCompanionMessage('points_earned')
+  if (source === 'habit_completed') triggerCompanionMessage('habit_completed')
+  if (source === 'task_completed') triggerCompanionMessage('task_completed')
 }
 
 export async function awardStreakBonus(streakDays: number) {

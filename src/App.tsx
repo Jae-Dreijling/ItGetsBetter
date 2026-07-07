@@ -171,7 +171,15 @@ export default function App() {
       }
       checkProgressionAdvancements()
       ensureDefaultCompanion()
-      setTimeout(() => triggerCompanionMessage('morning_greeting'), 1500)
+      setTimeout(() => {
+        const hour = new Date().getHours() + new Date().getMinutes() / 60
+        const isMorningWindow = hour >= 3 && hour < 11.5
+        if (isMorningWindow && Math.random() < 0.7) {
+          triggerCompanionMessage('morning_greeting')
+        } else {
+          triggerCompanionMessage('welcome_back')
+        }
+      }, 1500)
     }
     init()
   }, [])

@@ -28,6 +28,7 @@ const EVENT_LABELS: { key: CompanionEvent; label: string }[] = [
   { key: 'welcome_back', label: 'Welcome Back' },
   { key: 'achievement_unlocked', label: 'Achievement Unlocked' },
   { key: 'habit_completed', label: 'Habit Completed' },
+  { key: 'task_completed', label: 'Task Completed' },
   { key: 'mood_low', label: 'Low Mood Support' },
   { key: 'fasting_goal', label: 'Fasting Goal Met' },
   { key: 'streak_milestone', label: 'Streak Milestone' },
@@ -387,7 +388,7 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
   const [newLoverLine, setNewLoverLine] = useState('')
   const [messages, setMessages] = useState<CompanionMessages>(initial?.messages ?? {
     general: [], morning_greeting: [], welcome_back: [], achievement_unlocked: [],
-    habit_completed: [], mood_low: [], fasting_goal: [], streak_milestone: [],
+    habit_completed: [], task_completed: [], mood_low: [], fasting_goal: [], streak_milestone: [],
     phone_free: [], points_earned: [], weight_loss: [], idle: [],
   })
   const [expandedEvent, setExpandedEvent] = useState<CompanionEvent | null>(null)
