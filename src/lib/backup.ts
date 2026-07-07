@@ -83,7 +83,7 @@ export async function createBackup(password: string): Promise<Blob> {
     ciphertext: arrayToBase64(new Uint8Array(ciphertext)),
   }
 
-  return new Blob([JSON.stringify(payload)], { type: 'application/json' })
+  return new Blob([JSON.stringify(payload)], { type: 'application/octet-stream' })
 }
 
 export async function restoreBackup(file: File, password: string): Promise<void> {
