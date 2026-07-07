@@ -1,5 +1,42 @@
 import { db } from '../db'
 
+// JSON.stringify silently turns Blob fields into `{}` — encode them as data
+// URLs before stringifying, and decode them back to Blobs on restore.
+function blobToDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(blob)
+  })
+}
+
+async function dataURLToBlob(dataURL: string): Promise<Blob> {
+  const res = await fetch(dataURL)
+  return res.blob()
+}
+
+async function encodeBlobField<T extends Record<string, unknown>>(rows: T[], field: keyof T): Promise<T[]> {
+  return Promise.all(rows.map(async row => {
+    const value = row[field]
+    if (value instanceof Blob) return { ...row, [field]: await blobToDataURL(value) }
+    return row
+  }))
+}
+
+// Restores real Blobs from data URLs; any other value (including the `{}`
+// left behind by backups made before this fix) is nulled out rather than
+// carried forward as a fake Blob that would crash on URL.createObjectURL.
+async function decodeBlobField<T extends Record<string, unknown>>(rows: T[], field: keyof T): Promise<T[]> {
+  return Promise.all(rows.map(async row => {
+    const value = row[field]
+    if (typeof value === 'string' && value.startsWith('data:')) {
+      return { ...row, [field]: await dataURLToBlob(value) }
+    }
+    return { ...row, [field]: null }
+  }))
+}
+
 async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   const encoder = new TextEncoder()
   const keyMaterial = await crypto.subtle.importKey(
@@ -30,7 +67,7 @@ export async function createBackup(password: string): Promise<Blob> {
     exportedAt: new Date().toISOString(),
     userProfile: await db.userProfile.toArray(),
     weightEntries: await db.weightEntries.toArray(),
-    mealEntries: await db.mealEntries.toArray(),
+    mealEntries: await encodeBlobField(await db.mealEntries.toArray(), 'photo'),
     measurements: await db.measurements.toArray(),
     appOpenLog: await db.appOpenLog.toArray(),
     labels: await db.labels.toArray(),
@@ -49,7 +86,7 @@ export async function createBackup(password: string): Promise<Blob> {
     rewards: await db.rewards.toArray(),
     rewardClaims: await db.rewardClaims.toArray(),
     achievements: await db.achievements.toArray(),
-    progressPhotos: await db.progressPhotos.toArray(),
+    progressPhotos: await encodeBlobField(await db.progressPhotos.toArray(), 'photo'),
     healthInsights: await db.table('healthInsights').toArray(),
     customQuotes: await db.table('customQuotes').toArray(),
     scheduleProfiles: await db.table('scheduleProfiles').toArray(),
@@ -57,8 +94,8 @@ export async function createBackup(password: string): Promise<Blob> {
     groceryLists: await db.groceryLists.toArray(),
     groceryItems: await db.groceryItems.toArray(),
     books: await db.books.toArray(),
-    companions: await db.companions.toArray(),
-    motivationNotes: await db.motivationNotes.toArray(),
+    companions: await encodeBlobField(await db.companions.toArray(), 'avatar'),
+    motivationNotes: await encodeBlobField(await db.motivationNotes.toArray(), 'photo'),
   }
 
   const json = JSON.stringify(data)
