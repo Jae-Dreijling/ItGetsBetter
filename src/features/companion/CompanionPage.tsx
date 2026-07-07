@@ -126,7 +126,7 @@ function CompanionCard({ companion, canDeactivate, onToggleActive, onEdit, onDel
           title={companion.is_active && !canDeactivate ? 'At least one companion must stay active' : undefined}
           className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-40 ${companion.is_active ? 'bg-primary-500' : 'bg-surface border border-primary-100'}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${companion.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+          <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${companion.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
         </button>
       </div>
       <div className="mt-2 flex gap-2 justify-end">
