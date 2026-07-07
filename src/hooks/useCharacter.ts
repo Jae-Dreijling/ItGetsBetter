@@ -8,6 +8,7 @@ import {
   type CharacterStats,
   type StatKey,
 } from '../lib/gamification'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 
 // ─── Stat score weights ───────────────────────────────────────────────────────
 // Calibrated so a consistent user after 6 months reaches level 8–10 per stat.
@@ -47,56 +48,83 @@ function buildStats(raw: {
   }
 }
 
+// ─── Shared computation ────────────────────────────────────────────────────────
+
+async function computeCharacterData(): Promise<CharacterData> {
+  // Single pass over pointsTransactions for XP + active-day count
+  const transactions = await db.pointsTransactions.toArray()
+  const xp = transactions.reduce((sum, t) => sum + t.amount, 0)
+  const activeDays = new Set(transactions.map(t => t.date)).size
+
+  const [
+    exerciseCount,
+    mealCount,
+    waterCount,
+    medicineTakenCount,
+    moodCount,
+    sleepCount,
+    habitCount,
+    taskCount,
+    booksFinished,
+    achievementsUnlocked,
+  ] = await Promise.all([
+    db.exerciseEntries.count(),
+    db.mealEntries.count(),
+    db.waterEntries.count(),
+    db.medicineLogs.filter(l => l.taken).count(),
+    db.moodEntries.count(),
+    db.sleepEntries.count(),
+    db.habitCompletions.count(),
+    db.tasks.filter(t => t.is_completed).count(),
+    db.books.where('status').equals('finished').count(),
+    db.achievements.filter(a => a.is_unlocked).count(),
+  ])
+
+  const stats = buildStats({
+    exerciseCount, mealCount, waterCount, medicineTakenCount,
+    moodCount, sleepCount, habitCount, taskCount,
+    activeDays, booksFinished, achievementsUnlocked,
+  })
+
+  const statLevels = (Object.keys(stats) as StatKey[]).reduce(
+    (acc, key) => ({ ...acc, [key]: statLevelInfo(stats[key]) }),
+    {} as Record<StatKey, ReturnType<typeof statLevelInfo>>,
+  )
+
+  return {
+    xp,
+    xpLevel: xpLevelInfo(xp),
+    stats,
+    statLevels,
+    characterClass: deriveClass(stats),
+  } satisfies CharacterData
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useCharacter(): CharacterData | undefined {
-  return useLiveQuery(async () => {
-    // Single pass over pointsTransactions for XP + active-day count
-    const transactions = await db.pointsTransactions.toArray()
-    const xp = transactions.reduce((sum, t) => sum + t.amount, 0)
-    const activeDays = new Set(transactions.map(t => t.date)).size
+  return useLiveQuery(computeCharacterData)
+}
 
-    const [
-      exerciseCount,
-      mealCount,
-      waterCount,
-      medicineTakenCount,
-      moodCount,
-      sleepCount,
-      habitCount,
-      taskCount,
-      booksFinished,
-      achievementsUnlocked,
-    ] = await Promise.all([
-      db.exerciseEntries.count(),
-      db.mealEntries.count(),
-      db.waterEntries.count(),
-      db.medicineLogs.filter(l => l.taken).count(),
-      db.moodEntries.count(),
-      db.sleepEntries.count(),
-      db.habitCompletions.count(),
-      db.tasks.filter(t => t.is_completed).count(),
-      db.books.where('status').equals('finished').count(),
-      db.achievements.filter(a => a.is_unlocked).count(),
-    ])
+// ─── Level up / class change detection ────────────────────────────────────────
 
-    const stats = buildStats({
-      exerciseCount, mealCount, waterCount, medicineTakenCount,
-      moodCount, sleepCount, habitCount, taskCount,
-      activeDays, booksFinished, achievementsUnlocked,
-    })
+const LAST_LEVEL_KEY = 'igb_char_level'
+const LAST_CLASS_KEY = 'igb_char_class'
 
-    const statLevels = (Object.keys(stats) as StatKey[]).reduce(
-      (acc, key) => ({ ...acc, [key]: statLevelInfo(stats[key]) }),
-      {} as Record<StatKey, ReturnType<typeof statLevelInfo>>,
-    )
+// Called on app open — compares current level/class against what was last
+// seen and lets the companion celebrate if either one has changed.
+export async function checkLevelUpAndClassChange(): Promise<void> {
+  const data = await computeCharacterData()
+  const lastLevel = localStorage.getItem(LAST_LEVEL_KEY)
+  const lastClass = localStorage.getItem(LAST_CLASS_KEY)
 
-    return {
-      xp,
-      xpLevel: xpLevelInfo(xp),
-      stats,
-      statLevels,
-      characterClass: deriveClass(stats),
-    } satisfies CharacterData
-  })
+  const leveledUp = lastLevel !== null && data.xpLevel.level > parseInt(lastLevel)
+  const classChanged = lastClass !== null && lastClass !== data.characterClass
+
+  if (leveledUp || classChanged) {
+    triggerCompanionMessage('level_up')
+  }
+
+  localStorage.setItem(LAST_LEVEL_KEY, String(data.xpLevel.level))
+  localStorage.setItem(LAST_CLASS_KEY, data.characterClass)
 }

@@ -260,6 +260,15 @@ export interface CompanionMessages {
   phone_free: string[]
   points_earned: string[]
   weight_loss: string[]
+  weight_gain: string[]
+  exercise_logged: string[]
+  water_goal_met: string[]
+  sleep_logged: string[]
+  personal_best: string[]
+  level_up: string[]
+  boss_defeated: string[]
+  goodnight: string[]
+  first_milestone: string[]
   idle: string[]
 }
 
@@ -269,8 +278,29 @@ export interface Companion {
   avatar: Blob | null
   is_default: boolean
   is_active: boolean
+  personality_group_id: number | null
   messages: CompanionMessages
   created_at: string
+}
+
+// A shared message pool multiple companions can draw from alongside their own
+// custom lines (Option B personality templates — see DOCUMENTATION/IDEAS.md #27).
+export interface PersonalityGroup {
+  id?: number
+  name: string
+  messages: CompanionMessages
+  created_at: string
+}
+
+export interface FastingRecord {
+  id?: number
+  date: string
+  start_time: string
+  end_time: string
+  duration_hours: number
+  goal_hours: number
+  goal_met: boolean
+  was_broken_early: boolean
 }
 
 export interface ProgressPhoto {

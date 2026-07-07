@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup } from './types'
 
 const DEFAULT_LABELS = [
   { name: 'Health', color: '#5cb176' },
@@ -40,6 +40,8 @@ class ItGetsBetterDB extends Dexie {
   gameQuests!: EntityTable<GameQuest, 'id'>
   gameCompanionAffinity!: EntityTable<GameCompanionAffinity, 'id'>
   gameCustomQuestions!: EntityTable<GameCustomQuestion, 'id'>
+  fastingRecords!: EntityTable<FastingRecord, 'id'>
+  personalityGroups!: EntityTable<PersonalityGroup, 'id'>
 
   constructor() {
     super('ItGetsBetter')
@@ -393,6 +395,53 @@ class ItGetsBetterDB extends Dexie {
         companion.is_active = previousActiveId != null
           ? companion.id === previousActiveId
           : companion.is_default === true
+      })
+    })
+
+    // Adds fastingRecords (was written to via db.table() without ever being
+    // declared — every breakFast() call was silently throwing) and
+    // personalityGroups (shared companion message pools).
+    this.version(14).stores({
+      userProfile: '++id',
+      weightEntries: '++id, date, logged_at',
+      mealEntries: '++id, date, meal_slot, logged_at',
+      measurements: '++id, date',
+      appOpenLog: '++id, date',
+      labels: '++id',
+      habits: '++id, is_active, is_queued',
+      habitCompletions: '++id, habit_id, date',
+      tasks: '++id, project_id, parent_task_id, is_completed, due_date, priority, show_in_today',
+      projects: '++id',
+      waterEntries: '++id, date, logged_at',
+      exerciseEntries: '++id, date, exercise_type',
+      moodEntries: '++id, date, logged_at',
+      moodTags: '++id',
+      sleepEntries: '++id, date',
+      medicines: '++id, is_active',
+      medicineLogs: '++id, medicine_id, date',
+      pointsTransactions: '++id, source_type, date',
+      rewards: '++id, is_available',
+      rewardClaims: '++id, reward_id, claimed_at',
+      achievements: '++id, trigger_type, is_unlocked',
+      progressPhotos: '++id, date',
+      healthInsights: '++id, correlation_type, is_confirmed, is_rejected',
+      customQuotes: '++id',
+      scheduleProfiles: '++id, &profile_name',
+      dayConfigs: '&date',
+      groceryLists: '++id, is_template',
+      groceryItems: '++id, list_id, is_checked',
+      books: '++id, status',
+      companions: '++id, is_default, is_active, personality_group_id',
+      motivationNotes: '++id, category',
+      gameState: '++id',
+      gameQuests: '++id, status, tier, end_date',
+      gameCompanionAffinity: '++id, companion_id',
+      gameCustomQuestions: '++id',
+      fastingRecords: '++id, date',
+      personalityGroups: '++id',
+    }).upgrade(async tx => {
+      await tx.table('companions').toCollection().modify(companion => {
+        if (companion.personality_group_id === undefined) companion.personality_group_id = null
       })
     })
 

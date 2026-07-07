@@ -34,6 +34,7 @@ A collection of ideas for features that are not planned for any current phase. T
 | 24 | ~~Weather Check (Optional, Online-Only)~~ | ✅ **Built** | Open-Meteo, opt-in toggle in settings |
 | 25 | ~~Barcode Scanning (Optional Meal Aid)~~ | ~~removed~~ | ~~removed~~ |
 | 26 | ~~Pomodoro Sound Alerts~~ | ✅ **Built** | Two configurable sounds (focus end + break end) with Preview, saved in localStorage |
+| 27 | ~~Companion — Expanded Triggers, Personality Groups, Smarter Behaviors~~ | ✅ **Built** | 9 new trigger categories (22 total), live shared "Personality Group" message pools, data-aware nudges, affinity bleeding |
 
 ---
 
@@ -267,6 +268,24 @@ Depends on: Points System (already built).
 ~~An expansion of the Pomodoro timer (#19) that plays a chosen sound at key moments.~~
 
 **Implemented:** Two configurable sound events — "Focus session ends" and "Break ends" — using the same 6-option Web Audio API sound library as Meditation Timer (#18). Picker lives inside the Configure Timer bottom sheet under a "Sounds" divider. Each event has an independent sound picker with a Preview button. Settings stored in localStorage (`igb_pomo_sound_work_end`, `igb_pomo_sound_break_end`). Sounds play alongside the existing vibration on auto-advance. Falls back silently if the browser blocks autoplay. Active sounds summarised as a small line below the session info card (e.g. "🔔 focus end · 💫 break end").
+
+---
+
+## 27. Companion — Expanded Triggers, Personality Groups, Smarter Behaviors — ✅ BUILT
+
+~~Brainstormed ideas for making the companion system (#1, #15) feel more interactive: more trigger categories, personality templates, and smarter idle behavior.~~
+
+**Implemented:**
+
+**9 new trigger categories** (22 total — see [DOCUMENTATION/characters/template.txt](characters/template.txt) for the full list and exactly what fires each one): Weight Gain/Plateau, Exercise Logged, Water Goal Met, Sleep Logged, Personal Best (longest fast ever, most weight lost ever), Level Up (checked on app open against last-seen level/class), Boss Defeated, Goodnight (fires in the 30 minutes right before the Phone-Free window, 90–60 min before sleep time), and First-Time Milestone (first-ever meal/exercise/weight/habit/task/book). Region Unlocked was dropped — the Map page's region-unlock mechanic doesn't actually exist in code yet, so there was nothing real to hook into.
+
+**Personality Groups (Option B — live shared pools).** New `personalityGroups` table; a companion optionally belongs to one group via `personality_group_id`. At message time, a companion's pool for any category is its own lines *plus* its group's lines, merged reactively (`useEffectiveMessages` in `useCompanion.ts`) — editing a group's messages updates every companion using it immediately, no re-save needed per companion. Managed from Me → Companions → Personality Groups, reusing the same category editor UI (`MessagePoolEditor.tsx`, extracted from the Companion form) and the same paste/`.txt`/"Import All Categories" flow.
+
+**Data-aware nudges** (`lib/companionNudges.ts`) — during idle moments, occasionally checks real state (overdue tasks, low water after 2pm, no meals logged by 3pm) and shows a contextual line instead of canned idle text.
+
+**Affinity bleeding into the home screen** — if the active companion is a Lover with Journey affinity ≥60, idle moments have a chance to show one of their Lover Messages instead of a plain idle line, connecting the Journey affinity system to the everyday home-screen companion.
+
+**Also fixed along the way:** `fastingRecords` was written to via `db.table('fastingRecords')` without ever being declared in the Dexie schema — every "Break Fast" tap was silently throwing before the points/companion-message logic ran. Now a proper typed table, included in backups.
 
 ---
 

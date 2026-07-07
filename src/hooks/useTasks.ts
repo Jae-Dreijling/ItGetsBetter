@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import type { TaskPriority } from '../types'
 
 export function useTasks(filters?: { projectId?: number; completed?: boolean }) {
@@ -69,11 +70,15 @@ export async function toggleTask(id: number) {
   const task = await db.tasks.get(id)
   if (!task) return
   const completing = !task.is_completed
+  const wasFirstEver = completing && (await db.tasks.filter(t => t.is_completed).count()) === 0
   await db.tasks.update(id, {
     is_completed: completing,
     completed_at: completing ? nowISO() : null,
   })
-  if (completing) await awardPoints('task_completed', id)
+  if (completing) {
+    await awardPoints('task_completed', id)
+    if (wasFirstEver) triggerCompanionMessage('first_milestone')
+  }
 }
 
 export async function deleteTask(id: number) {

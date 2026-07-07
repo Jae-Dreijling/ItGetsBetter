@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO, getLogicalDate } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 
 export function useCurrentlyReading() {
   return useLiveQuery(() =>
@@ -40,17 +41,23 @@ export async function updateBookProgress(id: number, currentPage: number) {
   if (currentPage >= book.total_pages) {
     updates.status = 'finished'
     updates.finished_at = getLogicalDate()
+    const wasFirstEver = (await db.books.filter(b => b.status === 'finished').count()) === 0
+    await db.books.update(id, updates)
+    if (wasFirstEver) triggerCompanionMessage('first_milestone')
+    return
   }
   await db.books.update(id, updates)
 }
 
 export async function finishBook(id: number, rating: number, notes: string | null) {
+  const wasFirstEver = (await db.books.filter(b => b.status === 'finished').count()) === 0
   await db.books.update(id, {
     status: 'finished',
     rating,
     notes: notes || null,
     finished_at: getLogicalDate(),
   })
+  if (wasFirstEver) triggerCompanionMessage('first_milestone')
 }
 
 export async function updateBook(id: number, changes: Partial<{ title: string; author: string | null; total_pages: number; rating: number | null; notes: string | null }>) {

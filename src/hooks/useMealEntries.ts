@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import type { MealSlot } from '../types'
 
 export function useTodaysMeals() {
@@ -33,6 +34,8 @@ export async function addMealEntry(data: {
   date?: string
   is_backfill?: boolean
 }) {
+  const wasFirstEver = (await db.mealEntries.count()) === 0
+
   const id = await db.mealEntries.add({
     date: data.date ?? getLogicalDate(),
     meal_slot: data.meal_slot,
@@ -43,5 +46,8 @@ export async function addMealEntry(data: {
     logged_at: nowISO(),
     is_backfill: data.is_backfill ?? false,
   })
-  if (!data.is_backfill) await awardPoints('meal_logged', id as number)
+  if (!data.is_backfill) {
+    await awardPoints('meal_logged', id as number)
+    if (wasFirstEver) triggerCompanionMessage('first_milestone')
+  }
 }

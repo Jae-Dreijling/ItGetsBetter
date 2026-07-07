@@ -668,4 +668,5 @@ export function isBossDefeated(bossId: string): boolean {
 export async function claimBossVictory(bossId: string, goldReward: number): Promise<void> {
   localStorage.setItem(`igb_boss_${bossId}_won`, '1')
   await awardGold(goldReward)
+  triggerCompanionMessage('boss_defeated')
 }

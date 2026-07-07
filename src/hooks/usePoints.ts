@@ -55,6 +55,9 @@ export async function awardPoints(source: PointSource, sourceId?: number) {
   triggerCompanionMessage('points_earned')
   if (source === 'habit_completed') triggerCompanionMessage('habit_completed')
   if (source === 'task_completed') triggerCompanionMessage('task_completed')
+  if (source === 'exercise_logged') triggerCompanionMessage('exercise_logged')
+  if (source === 'sleep_logged') triggerCompanionMessage('sleep_logged')
+  if (source === 'water_goal_met') triggerCompanionMessage('water_goal_met')
 }
 
 export async function awardStreakBonus(streakDays: number) {

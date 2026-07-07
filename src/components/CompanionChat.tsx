@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Maximize2, Minimize2, Send } from 'lucide-react'
-import { useSessionCompanion } from '../hooks/useCompanion'
+import { useSessionCompanion, useEffectiveMessages } from '../hooks/useCompanion'
 import { useProfile } from '../hooks/useProfile'
 import { generateResponse } from '../lib/companionChat'
 
@@ -17,6 +17,7 @@ interface CompanionChatProps {
 
 export default function CompanionChat({ isOpen, onClose }: CompanionChatProps) {
   const companion = useSessionCompanion()
+  const effectiveMessages = useEffectiveMessages(companion)
   const { profile } = useProfile()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -39,10 +40,10 @@ export default function CompanionChat({ isOpen, onClose }: CompanionChatProps) {
   useEffect(() => {
     if (isOpen && messages.length === 0 && companion) {
       const name = profile?.display_name ?? 'friend'
-      const greeting = companion.messages.general?.[0]?.replace('{name}', name) ?? `Hey ${name}! What's on your mind?`
+      const greeting = effectiveMessages?.general?.[0]?.replace('{name}', name) ?? `Hey ${name}! What's on your mind?`
       setMessages([{ id: Date.now(), text: greeting, isUser: false }])
     }
-  }, [isOpen, companion, profile])
+  }, [isOpen, companion, effectiveMessages, profile])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -53,7 +54,7 @@ export default function CompanionChat({ isOpen, onClose }: CompanionChatProps) {
   }, [isOpen])
 
   async function handleSend() {
-    if (!input.trim() || !companion) return
+    if (!input.trim() || !companion || !effectiveMessages) return
     const userMsg = input.trim()
     setInput('')
 
@@ -64,7 +65,7 @@ export default function CompanionChat({ isOpen, onClose }: CompanionChatProps) {
     setTimeout(async () => {
       const response = await generateResponse(userMsg, {
         name: profile?.display_name ?? 'friend',
-        messages: companion.messages,
+        messages: effectiveMessages,
       })
       setMessages(prev => [...prev, { id: Date.now(), text: response, isUser: false }])
       setTyping(false)

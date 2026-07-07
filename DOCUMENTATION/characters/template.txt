@@ -1,8 +1,15 @@
 HOW TO USE THIS TEMPLATE
 ========================
 
-This file is a template for the "Import All Categories" button on the
-Companions page (Me > Companions > New Companion / edit a companion).
+This file is a template for the "Import All Categories" button, which
+appears in two places:
+  - Companions page (Me > Companions > New Companion / edit a companion)
+  - Personality Groups page (Me > Companions > Personality Groups)
+
+Personality Groups are a shared message pool multiple companions can draw
+from alongside their own custom lines — editing a group's messages updates
+every companion using it immediately. A companion's final message pool for
+any category is its own lines PLUS its group's lines (if it belongs to one).
 
 Rules the importer understands:
 
@@ -24,12 +31,13 @@ Rules the importer understands:
 
 5. Use {name} anywhere you want the user's own name inserted.
 
-6. [Lover] is a special extra category — only used if this companion is
-   marked as a Lover. It fills the "Lover Messages" pool, not a normal
-   event category.
+6. [Lover] is a special extra category — only available when importing
+   into a companion (not a Personality Group), and only takes effect if
+   that companion is marked as a Lover. It fills the "Lover Messages" pool,
+   not a normal event category.
 
-7. Importing ADDS to whatever messages the companion already has, it
-   does not replace them. Safe to re-run with more lines later.
+7. Importing ADDS to whatever messages are already there, it does not
+   replace them. Safe to re-run with more lines later.
 
 WHAT EACH CATEGORY IS ACTUALLY USED FOR
 ========================================
@@ -48,7 +56,7 @@ Welcome Back
 Achievement Unlocked
   When you unlock an achievement (checked when visiting the
   Achievements page), or when you successfully claim a finished quest
-  in the Journey.
+  or defeat a boss in the Journey.
 
 Habit Completed
   When you check off a habit on the To-Do page.
@@ -82,11 +90,47 @@ Weight Loss
   When a new (non-backfilled) weight entry is lower than your
   previous one.
 
+Weight Gain / Plateau
+  When a new (non-backfilled) weight entry is higher than your
+  previous one. Kept gentle, not guilt-driven.
+
+Exercise Logged
+  Any time you log an exercise session.
+
+Water Goal Met
+  The moment your water total for the day crosses the 2L goal.
+
+Sleep Logged
+  Any time you log last night's sleep.
+
+Personal Best
+  When you set a new all-time record — currently tracked for longest
+  fast and most weight lost to date. Meant to feel rare and special.
+
+Level Up
+  Checked once per app open — fires if your Character level went up,
+  or your character class changed, since the last time you opened
+  the app. See Me > Character.
+
+Boss Defeated
+  When you claim victory over a Journey boss.
+
+Goodnight
+  A one-time wind-down nudge in the 30 minutes right before your
+  Phone-Free window starts (90–60 minutes before your set sleep time).
+
+First-Time Milestone
+  The very first time you ever log a meal, exercise session, weight
+  entry, habit completion, task completion, or finish a book.
+
 Idle / AFK
   Fallback shown after ~10 seconds of no interaction, when none of
-  the higher-priority conditions above (phone-free, low mood) apply.
+  the higher-priority conditions above (phone-free, goodnight, mood,
+  affinity) apply. Sometimes replaced by a data-aware nudge (e.g.
+  overdue tasks, low water) or, for a Lover companion with high
+  affinity, one of their Lover Messages instead.
 
-The 13 real category names (must match one of these, spelling doesn't
+The 22 real category names (must match one of these, spelling doesn't
 matter as long as the words are the same):
 
   General / Default
@@ -101,6 +145,15 @@ matter as long as the words are the same):
   Phone-Free Reminder
   Points Earned
   Weight Loss
+  Weight Gain / Plateau
+  Exercise Logged
+  Water Goal Met
+  Sleep Logged
+  Personal Best
+  Level Up
+  Boss Defeated
+  Goodnight
+  First-Time Milestone
   Idle / AFK
 
 --- COPY EVERYTHING BELOW THIS LINE INTO THE IMPORT BOX ---
@@ -153,6 +206,42 @@ Cha-ching! {name}, you're building up rewards.
 [Weight Loss]
 {name}, you're making progress! The trend is going the right way.
 Weight coming down, {name}! Your body thanks you.
+
+[Weight Gain / Plateau]
+Numbers move both ways, {name}. This doesn't undo your progress.
+{name}, one entry isn't the whole story. Keep going.
+
+[Exercise Logged]
+Nice work moving today, {name}!
+Logged and done, {name}. Your body thanks you.
+
+[Water Goal Met]
+Water goal hit, {name}! Nicely hydrated.
+{name}, that's your water goal for today. Well done.
+
+[Sleep Logged]
+Rest logged, {name}. Taking care of yourself counts too.
+{name}, thanks for tracking that. Sleep matters.
+
+[Personal Best]
+{name}, that's a new personal best! Incredible.
+New record, {name}! You just outdid yourself.
+
+[Level Up]
+Level up, {name}! Look how far you've come.
+{name}, you've grown. That's not nothing.
+
+[Boss Defeated]
+Victory, {name}! That boss didn't stand a chance.
+{name}, you did it! On to the next chapter.
+
+[Goodnight]
+Getting close to bedtime, {name}. Start winding down.
+{name}, good night's coming up. Take it easy from here.
+
+[First-Time Milestone]
+{name}, that's your first one! Here's to many more.
+First time's always special, {name}. Nicely done.
 
 [Idle / AFK]
 Still here, {name}? Need anything?
