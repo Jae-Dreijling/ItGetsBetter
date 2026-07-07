@@ -25,14 +25,28 @@ export function useCompanions() {
   return useLiveQuery(() => db.companions.toArray())
 }
 
-export function useActiveCompanion() {
+const SESSION_COMPANION_KEY = 'igb_session_companion_id'
+
+// Multiple companions can be marked active; one is randomly picked to speak
+// for the current session (persisted in sessionStorage so it stays the same
+// companion across navigations, and re-randomizes next time the app is opened).
+export function useSessionCompanion() {
   return useLiveQuery(async () => {
-    const profile = await db.userProfile.toCollection().first()
-    if (!profile?.active_companion_id) {
+    const active = await db.companions.filter(c => c.is_active === true).toArray()
+
+    if (active.length === 0) {
       return db.companions.filter(c => c.is_default === true).first()
     }
-    const companion = await db.companions.get(profile.active_companion_id)
-    return companion ?? db.companions.filter(c => c.is_default === true).first()
+
+    const storedId = sessionStorage.getItem(SESSION_COMPANION_KEY)
+    if (storedId) {
+      const match = active.find(c => c.id === Number(storedId))
+      if (match) return match
+    }
+
+    const picked = active[Math.floor(Math.random() * active.length)]
+    sessionStorage.setItem(SESSION_COMPANION_KEY, String(picked.id))
+    return picked
   })
 }
 
@@ -63,6 +77,7 @@ export async function addCompanion(data: {
     name: data.name,
     avatar: data.avatar,
     is_default: false,
+    is_active: true,
     messages: { ...EMPTY_MESSAGES, ...data.messages },
     created_at: nowISO(),
   })
@@ -77,18 +92,11 @@ export async function updateCompanion(id: number, changes: Partial<{
 }
 
 export async function deleteCompanion(id: number) {
-  const profile = await db.userProfile.toCollection().first()
-  if (profile?.active_companion_id === id) {
-    await db.userProfile.update(profile.id!, { active_companion_id: null })
-  }
   await db.companions.delete(id)
 }
 
-export async function setActiveCompanion(id: number | null) {
-  const profile = await db.userProfile.toCollection().first()
-  if (profile?.id) {
-    await db.userProfile.update(profile.id, { active_companion_id: id })
-  }
+export async function setCompanionActive(id: number, isActive: boolean) {
+  await db.companions.update(id, { is_active: isActive })
 }
 
 export async function ensureDefaultCompanion() {
@@ -166,6 +174,7 @@ export async function ensureDefaultCompanion() {
     name: 'ItGetsBetter',
     avatar: null,
     is_default: true,
+    is_active: true,
     messages: defaultMessages,
     created_at: nowISO(),
   })

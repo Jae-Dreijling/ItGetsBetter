@@ -3,7 +3,7 @@ import { Plus, Trash2, Pencil, Camera, ChevronDown, ChevronRight } from 'lucide-
 import imageCompression from 'browser-image-compression'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
-import { useCompanions, useActiveCompanion, addCompanion, updateCompanion, deleteCompanion, setActiveCompanion, type CompanionEvent } from '../../hooks/useCompanion'
+import { useCompanions, addCompanion, updateCompanion, deleteCompanion, setCompanionActive, type CompanionEvent } from '../../hooks/useCompanion'
 import { getCompanionHomeRegion, setCompanionHomeRegion, getCompanionAffinityRecord, updateLoverDialogue } from '../../lib/game'
 import type { Companion, CompanionMessages } from '../../types'
 
@@ -39,16 +39,17 @@ const EVENT_LABELS: { key: CompanionEvent; label: string }[] = [
 
 export default function CompanionPage() {
   const companions = useCompanions()
-  const active = useActiveCompanion()
   const [showCreate, setShowCreate] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
+
+  const activeCount = companions?.filter(c => c.is_active).length ?? 0
 
   return (
     <>
       <TopBar title="Companions" />
       <PageContainer>
         <p className="mb-4 text-sm text-muted">
-          Choose a companion to guide you through the app. They show up on your home screen and react to your actions.
+          Turn on one or more companions to guide you through the app. When more than one is active, a random one speaks to you each session.
         </p>
 
         <button
@@ -72,8 +73,8 @@ export default function CompanionPage() {
                 <CompanionCard
                   key={c.id}
                   companion={c}
-                  isActive={active?.id === c.id}
-                  onActivate={() => setActiveCompanion(c.id!)}
+                  canDeactivate={activeCount > 1 || !c.is_active}
+                  onToggleActive={next => setCompanionActive(c.id!, next)}
                   onEdit={() => setEditingId(c.id!)}
                   onDelete={() => deleteCompanion(c.id!)}
                 />
@@ -86,10 +87,10 @@ export default function CompanionPage() {
   )
 }
 
-function CompanionCard({ companion, isActive, onActivate, onEdit, onDelete }: {
+function CompanionCard({ companion, canDeactivate, onToggleActive, onEdit, onDelete }: {
   companion: Companion
-  isActive: boolean
-  onActivate: () => void
+  canDeactivate: boolean
+  onToggleActive: (next: boolean) => void
   onEdit: () => void
   onDelete: () => void
 }) {
@@ -106,7 +107,7 @@ function CompanionCard({ companion, isActive, onActivate, onEdit, onDelete }: {
   const totalMessages = Object.values(companion.messages).flat().length
 
   return (
-    <div className={`rounded-2xl bg-card p-4 shadow-sm ${isActive ? 'ring-2 ring-primary-400' : ''}`}>
+    <div className={`rounded-2xl bg-card p-4 shadow-sm ${companion.is_active ? 'ring-2 ring-primary-400' : ''}`}>
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface overflow-hidden">
           {avatarUrl ? (
@@ -119,13 +120,14 @@ function CompanionCard({ companion, isActive, onActivate, onEdit, onDelete }: {
           <p className="font-semibold text-text-primary">{companion.name}</p>
           <p className="text-xs text-muted">{totalMessages} messages · {companion.is_default ? 'Default' : 'Custom'}</p>
         </div>
-        {isActive ? (
-          <span className="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-semibold text-primary-600">Active</span>
-        ) : (
-          <button onClick={onActivate} className="rounded-full bg-surface px-2.5 py-0.5 text-xs font-medium text-muted hover:bg-primary-50">
-            Use
-          </button>
-        )}
+        <button
+          onClick={() => onToggleActive(!companion.is_active)}
+          disabled={companion.is_active && !canDeactivate}
+          title={companion.is_active && !canDeactivate ? 'At least one companion must stay active' : undefined}
+          className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-40 ${companion.is_active ? 'bg-primary-500' : 'bg-surface border border-primary-100'}`}
+        >
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${companion.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+        </button>
       </div>
       <div className="mt-2 flex gap-2 justify-end">
         <button onClick={onEdit} className="p-1.5 text-muted hover:text-primary-500">

@@ -7,7 +7,6 @@ export interface UserProfile {
   starting_weight_kg: number
   goal_weight_milestone_kg: number
   theme: 'light' | 'dark' | 'auto'
-  active_companion_id: number | null
   created_at: string
 }
 
@@ -268,6 +267,7 @@ export interface Companion {
   name: string
   avatar: Blob | null
   is_default: boolean
+  is_active: boolean
   messages: CompanionMessages
   created_at: string
 }

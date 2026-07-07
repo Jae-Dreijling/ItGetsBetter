@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useActiveCompanion, getCompanionMessage, ensureDefaultCompanion, type CompanionEvent } from '../hooks/useCompanion'
+import { useSessionCompanion, getCompanionMessage, ensureDefaultCompanion, type CompanionEvent } from '../hooks/useCompanion'
 import { useProfile } from '../hooks/useProfile'
 import CompanionChat from './CompanionChat'
 import { tryGetMotivationMessage } from '../hooks/useMotivationNotes'
@@ -14,7 +14,7 @@ export function triggerCompanionMessage(event: CompanionEvent) {
 }
 
 export default function FloatingCompanion() {
-  const companion = useActiveCompanion()
+  const companion = useSessionCompanion()
   const { profile } = useProfile()
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)

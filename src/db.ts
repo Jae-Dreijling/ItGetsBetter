@@ -346,6 +346,56 @@ class ItGetsBetterDB extends Dexie {
       gameCustomQuestions: '++id',
     })
 
+    // Companions gain `is_active` (multiple can speak during a session) in place
+    // of the profile's old single `active_companion_id`. Preserve whichever
+    // companion was previously active (or the default one) as the sole active
+    // companion so behavior doesn't change until the user picks more.
+    this.version(13).stores({
+      userProfile: '++id',
+      weightEntries: '++id, date, logged_at',
+      mealEntries: '++id, date, meal_slot, logged_at',
+      measurements: '++id, date',
+      appOpenLog: '++id, date',
+      labels: '++id',
+      habits: '++id, is_active, is_queued',
+      habitCompletions: '++id, habit_id, date',
+      tasks: '++id, project_id, parent_task_id, is_completed, due_date, priority, show_in_today',
+      projects: '++id',
+      waterEntries: '++id, date, logged_at',
+      exerciseEntries: '++id, date, exercise_type',
+      moodEntries: '++id, date, logged_at',
+      moodTags: '++id',
+      sleepEntries: '++id, date',
+      medicines: '++id, is_active',
+      medicineLogs: '++id, medicine_id, date',
+      pointsTransactions: '++id, source_type, date',
+      rewards: '++id, is_available',
+      rewardClaims: '++id, reward_id, claimed_at',
+      achievements: '++id, trigger_type, is_unlocked',
+      progressPhotos: '++id, date',
+      healthInsights: '++id, correlation_type, is_confirmed, is_rejected',
+      customQuotes: '++id',
+      scheduleProfiles: '++id, &profile_name',
+      dayConfigs: '&date',
+      groceryLists: '++id, is_template',
+      groceryItems: '++id, list_id, is_checked',
+      books: '++id, status',
+      companions: '++id, is_default, is_active',
+      motivationNotes: '++id, category',
+      gameState: '++id',
+      gameQuests: '++id, status, tier, end_date',
+      gameCompanionAffinity: '++id, companion_id',
+      gameCustomQuestions: '++id',
+    }).upgrade(async tx => {
+      const profile = await tx.table('userProfile').toCollection().first()
+      const previousActiveId: number | null = profile?.active_companion_id ?? null
+      await tx.table('companions').toCollection().modify(companion => {
+        companion.is_active = previousActiveId != null
+          ? companion.id === previousActiveId
+          : companion.is_default === true
+      })
+    })
+
     this.on('populate', () => {
       this.labels.bulkAdd(
         DEFAULT_LABELS.map(l => ({ ...l, created_at: new Date().toISOString() }))

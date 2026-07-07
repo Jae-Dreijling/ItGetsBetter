@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Maximize2, Minimize2, Send } from 'lucide-react'
-import { useActiveCompanion } from '../hooks/useCompanion'
+import { useSessionCompanion } from '../hooks/useCompanion'
 import { useProfile } from '../hooks/useProfile'
 import { generateResponse } from '../lib/companionChat'
 
@@ -16,7 +16,7 @@ interface CompanionChatProps {
 }
 
 export default function CompanionChat({ isOpen, onClose }: CompanionChatProps) {
-  const companion = useActiveCompanion()
+  const companion = useSessionCompanion()
   const { profile } = useProfile()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
