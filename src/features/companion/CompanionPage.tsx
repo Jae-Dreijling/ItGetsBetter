@@ -200,7 +200,7 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
       savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages }) as number
     }
     await setCompanionHomeRegion(savedId, homeRegion)
-    if (isLover) await updateLoverDialogue(savedId, loverDialogue)
+    await updateLoverDialogue(savedId, loverDialogue)
     onSave()
   }
 
