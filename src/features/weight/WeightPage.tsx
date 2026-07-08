@@ -23,10 +23,13 @@ export default function WeightPage() {
     e.preventDefault()
     if (!weight || saving) return
     setSaving(true)
-    const isBackfill = date !== getLogicalDate()
-    await addWeightEntry(parseFloat(weight), date, isBackfill)
-    setWeight('')
-    setSaving(false)
+    try {
+      const isBackfill = date !== getLogicalDate()
+      await addWeightEntry(parseFloat(weight), date, isBackfill)
+      setWeight('')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const bmi = latest && profile
