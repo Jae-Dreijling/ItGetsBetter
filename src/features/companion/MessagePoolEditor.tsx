@@ -314,8 +314,32 @@ export function MessagePoolEditor({ messages, onChange, showLoverImport = false,
     if (loverImportLines.length > 0 && onImportLover) onImportLover(loverImportLines)
   }
 
+  const totalMessages = EVENT_LABELS.reduce((sum, { key }) => sum + (messages[key]?.length ?? 0), 0)
+
+  function clearAll() {
+    if (totalMessages === 0) return
+    if (!window.confirm(`Clear all ${totalMessages} messages across every category? This can't be undone.`)) return
+    onChange(prev => {
+      const next = { ...prev }
+      for (const { key } of EVENT_LABELS) next[key] = []
+      return next
+    })
+    setExpandedEvent(null)
+  }
+
   return (
     <>
+      <div className="mb-1.5 flex justify-end">
+        <button
+          type="button"
+          onClick={clearAll}
+          disabled={totalMessages === 0}
+          className="flex items-center gap-1 text-xs font-medium text-muted hover:text-danger disabled:opacity-40"
+        >
+          <Trash2 className="h-3 w-3" /> Clear All Messages
+        </button>
+      </div>
+
       <ImportAllPanel onImport={importAll} showLoverHint={showLoverImport} />
 
       <div className="space-y-1 mb-4">
