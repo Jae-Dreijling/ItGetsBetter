@@ -7,7 +7,7 @@ import PageContainer from '../../components/layout/PageContainer'
 import { useCompanions, addCompanion, updateCompanion, deleteCompanion, setCompanionActive } from '../../hooks/useCompanion'
 import { usePersonalityGroups } from '../../hooks/usePersonalityGroups'
 import { getCompanionHomeRegion, setCompanionHomeRegion, getCompanionAffinityRecord, updateLoverDialogue } from '../../lib/game'
-import { MessagePoolEditor, ImportMessagesPanel, stripWrappingQuotes } from './MessagePoolEditor'
+import { MessagePoolEditor } from './MessagePoolEditor'
 import type { Companion, CompanionMessages } from '../../types'
 
 const JOURNEY_REGIONS = [
@@ -151,7 +151,6 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
   const [personalityGroupId, setPersonalityGroupId] = useState<number | null>(initial?.personality_group_id ?? null)
   const [isLover, setIsLover] = useState(false)
   const [loverDialogue, setLoverDialogue] = useState<string[]>([])
-  const [newLoverLine, setNewLoverLine] = useState('')
   const [messages, setMessages] = useState<CompanionMessages>(initial?.messages ?? {
     general: [], morning_greeting: [], welcome_back: [], achievement_unlocked: [],
     habit_completed: [], task_completed: [], mood_low: [], fasting_goal: [], streak_milestone: [],
@@ -200,7 +199,7 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
       savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages }) as number
     }
     await setCompanionHomeRegion(savedId, homeRegion)
-    if (isLover) await updateLoverDialogue(savedId, loverDialogue)
+    await updateLoverDialogue(savedId, loverDialogue)
     onSave()
   }
 
@@ -271,64 +270,16 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
       <MessagePoolEditor
         messages={messages}
         onChange={updater => setMessages(updater)}
-        showLoverImport={isLover}
+        showLoverImport
         onImportLover={lines => setLoverDialogue(prev => [...prev, ...lines])}
+        loverLines={loverDialogue}
+        onLoverChange={updater => setLoverDialogue(updater)}
+        loverHint={
+          isLover
+            ? 'Lines this companion says when they visit as your Lover. If empty, default visit greetings are used.'
+            : "This companion isn't a Lover yet (that happens through the Journey), but you can prepare these lines now — they'll be ready the moment it happens."
+        }
       />
-
-      {isLover && (
-        <div className="mb-4">
-          <p className="mb-1.5 text-xs font-semibold text-rose-500 uppercase tracking-wide">💕 Lover Messages</p>
-          <p className="mb-2 text-xs text-muted">Lines this companion says when they visit as your Lover. If empty, default visit greetings are used.</p>
-          <div className="space-y-1.5 mb-2">
-            {loverDialogue.map((line, i) => (
-              <div key={i} className="flex items-start gap-2 rounded-lg bg-surface px-2.5 py-1.5">
-                <p className="flex-1 text-xs text-text-primary">"{line}"</p>
-                <button
-                  onClick={() => setLoverDialogue(prev => prev.filter((_, j) => j !== i))}
-                  className="shrink-0 p-0.5 text-muted hover:text-danger"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-1.5">
-            <input
-              type="text"
-              value={newLoverLine}
-              onChange={e => setNewLoverLine(e.target.value)}
-              placeholder="Add a message…"
-              className="flex-1 rounded-lg border border-rose-100 dark:border-rose-900 bg-surface px-2.5 py-1.5 text-xs text-text-primary placeholder:text-muted focus:border-rose-400 focus:outline-none"
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  const cleaned = stripWrappingQuotes(newLoverLine)
-                  if (cleaned) {
-                    setLoverDialogue(prev => [...prev, cleaned])
-                    setNewLoverLine('')
-                  }
-                }
-              }}
-            />
-            <button
-              onClick={() => {
-                const cleaned = stripWrappingQuotes(newLoverLine)
-                if (cleaned) {
-                  setLoverDialogue(prev => [...prev, cleaned])
-                  setNewLoverLine('')
-                }
-              }}
-              disabled={!newLoverLine.trim()}
-              className="rounded-lg bg-rose-500 px-2.5 py-1.5 text-xs text-white disabled:opacity-50"
-            >
-              +
-            </button>
-          </div>
-          <ImportMessagesPanel
-            accent="rose"
-            onImport={lines => setLoverDialogue(prev => [...prev, ...lines])}
-          />
-        </div>
-      )}
 
       <button
         onClick={handleSave}

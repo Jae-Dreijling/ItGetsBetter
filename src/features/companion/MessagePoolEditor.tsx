@@ -262,15 +262,23 @@ function ImportAllPanel({ onImport, showLoverHint }: {
   )
 }
 
+type ExpandedKey = CompanionEvent | 'lover' | null
+
 // Shared per-category message list editor, reused by both the Companion form
 // and the Personality Group form — add/remove/import lines for every category.
-export function MessagePoolEditor({ messages, onChange, showLoverImport = false, onImportLover }: {
+// Lover Messages piggybacks on this same expand/collapse list (as a `'lover'`
+// pseudo-category) instead of duplicating the header/chevron/add/import UI —
+// it just reads/writes `loverLines`/`onLoverChange` instead of `messages`.
+export function MessagePoolEditor({ messages, onChange, showLoverImport = false, onImportLover, loverLines, onLoverChange, loverHint }: {
   messages: CompanionMessages
   onChange: (updater: (prev: CompanionMessages) => CompanionMessages) => void
   showLoverImport?: boolean
   onImportLover?: (lines: string[]) => void
+  loverLines?: string[]
+  onLoverChange?: (updater: (prev: string[]) => string[]) => void
+  loverHint?: string
 }) {
-  const [expandedEvent, setExpandedEvent] = useState<CompanionEvent | null>(null)
+  const [expandedEvent, setExpandedEvent] = useState<ExpandedKey>(null)
   const [newMessage, setNewMessage] = useState('')
 
   function addMessage(event: CompanionEvent) {
@@ -284,7 +292,18 @@ export function MessagePoolEditor({ messages, onChange, showLoverImport = false,
     onChange(prev => ({ ...prev, [event]: prev[event].filter((_, i) => i !== index) }))
   }
 
-  function importAll(imported: Partial<Record<CompanionEvent, string[]>>, loverLines: string[]) {
+  function addLoverMessage() {
+    const cleaned = stripWrappingQuotes(newMessage)
+    if (!cleaned || !onLoverChange) return
+    onLoverChange(prev => [...prev, cleaned])
+    setNewMessage('')
+  }
+
+  function removeLoverMessage(index: number) {
+    onLoverChange?.(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function importAll(imported: Partial<Record<CompanionEvent, string[]>>, loverImportLines: string[]) {
     onChange(prev => {
       const next = { ...prev }
       for (const [key, lines] of Object.entries(imported) as [CompanionEvent, string[]][]) {
@@ -292,11 +311,35 @@ export function MessagePoolEditor({ messages, onChange, showLoverImport = false,
       }
       return next
     })
-    if (loverLines.length > 0 && onImportLover) onImportLover(loverLines)
+    if (loverImportLines.length > 0 && onImportLover) onImportLover(loverImportLines)
+  }
+
+  const totalMessages = EVENT_LABELS.reduce((sum, { key }) => sum + (messages[key]?.length ?? 0), 0)
+
+  function clearAll() {
+    if (totalMessages === 0) return
+    if (!window.confirm(`Clear all ${totalMessages} messages across every category? This can't be undone.`)) return
+    onChange(prev => {
+      const next = { ...prev }
+      for (const { key } of EVENT_LABELS) next[key] = []
+      return next
+    })
+    setExpandedEvent(null)
   }
 
   return (
     <>
+      <div className="mb-1.5 flex justify-end">
+        <button
+          type="button"
+          onClick={clearAll}
+          disabled={totalMessages === 0}
+          className="flex items-center gap-1 text-xs font-medium text-muted hover:text-danger disabled:opacity-40"
+        >
+          <Trash2 className="h-3 w-3" /> Clear All Messages
+        </button>
+      </div>
+
       <ImportAllPanel onImport={importAll} showLoverHint={showLoverImport} />
 
       <div className="space-y-1 mb-4">
@@ -343,6 +386,52 @@ export function MessagePoolEditor({ messages, onChange, showLoverImport = false,
             )}
           </div>
         ))}
+
+        {onLoverChange && (
+          <div>
+            <button
+              onClick={() => setExpandedEvent(expandedEvent === 'lover' ? null : 'lover')}
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-surface transition-colors"
+            >
+              <span className="font-semibold text-rose-500">💕 Lover Messages</span>
+              <span className="flex items-center gap-1 text-xs text-muted">
+                {loverLines?.length ?? 0}
+                {expandedEvent === 'lover' ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              </span>
+            </button>
+
+            {expandedEvent === 'lover' && (
+              <div className="px-3 pb-2 space-y-1.5">
+                {loverHint && <p className="text-xs text-muted">{loverHint}</p>}
+                {loverLines?.map((msg, i) => (
+                  <div key={i} className="flex items-start gap-2 rounded-lg bg-surface px-2.5 py-1.5">
+                    <p className="flex-1 text-xs text-text-primary">"{msg}"</p>
+                    <button onClick={() => removeLoverMessage(i)} className="shrink-0 p-0.5 text-muted hover:text-danger">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={e => setNewMessage(e.target.value)}
+                    placeholder="Add message... (use {name} for user's name)"
+                    className="flex-1 rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-2.5 py-1.5 text-xs text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+                    onKeyDown={e => e.key === 'Enter' && addLoverMessage()}
+                  />
+                  <button onClick={addLoverMessage} disabled={!newMessage.trim()} className="rounded-lg bg-rose-500 px-2.5 py-1.5 text-xs text-white disabled:opacity-50">
+                    +
+                  </button>
+                </div>
+                <ImportMessagesPanel
+                  accent="rose"
+                  onImport={lines => onLoverChange(prev => [...prev, ...lines])}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   )

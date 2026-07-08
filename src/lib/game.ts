@@ -588,6 +588,17 @@ export async function updateLoverDialogue(companionId: number, lines: string[]):
     .first()
   if (existing) {
     await db.gameCompanionAffinity.update(existing.id!, { lover_dialogue: lines })
+  } else {
+    await db.gameCompanionAffinity.add({
+      companion_id: companionId,
+      affinity: 0,
+      is_lover: false,
+      lover_dialogue: lines,
+      home_region: 'ponyville',
+      is_discovered: false,
+      last_visit_at: null,
+      created_at: nowISO(),
+    })
   }
 }
 
