@@ -28,7 +28,12 @@ export async function addWeightEntry(
   is_backfill = false
 ) {
   const previous = await db.weightEntries.orderBy('logged_at').last()
-  const historicalLowest = await db.weightEntries.orderBy('value_kg').first()
+  // value_kg isn't an indexed field, so orderBy() isn't available for it — scan
+  // the (small) table in JS instead of adding a schema migration just for this.
+  const allEntries = await db.weightEntries.toArray()
+  const historicalLowest = allEntries.length > 0
+    ? allEntries.reduce((min, e) => (e.value_kg < min.value_kg ? e : min))
+    : undefined
 
   await db.weightEntries.add({
     date: date ?? getLogicalDate(),

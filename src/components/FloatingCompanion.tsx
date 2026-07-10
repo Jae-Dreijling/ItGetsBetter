@@ -269,8 +269,8 @@ export default function FloatingCompanion() {
       )}
 
       <div
-        className="fixed z-50 flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-lg border-2 border-primary-200 dark:border-primary-800 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-xl"
-        style={{ left: position.x, top: position.y }}
+        className="fixed left-0 top-0 z-50 flex h-14 w-14 touch-none items-center justify-center rounded-full bg-card shadow-lg border-2 border-primary-200 dark:border-primary-800 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-xl"
+        style={{ transform: `translate3d(${position.x}px, ${position.y}px, 0)` }}
         onClick={handleTap}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

@@ -200,7 +200,7 @@ export default function SettingsPage() {
                 <Cloud className="h-5 w-5 text-secondary-400" />
                 <div>
                   <p className="font-medium text-text-primary">Weather</p>
-                  <p className="text-xs text-muted">Shows Velp weather on home screen</p>
+                  <p className="text-xs text-muted">Shows local weather on home screen</p>
                 </div>
               </div>
               <button

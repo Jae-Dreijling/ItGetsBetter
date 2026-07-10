@@ -255,7 +255,7 @@ Depends on: Points System (already built).
 
 ~~A small, strictly optional home-screen weather snippet — today's conditions for a location the user sets, shown only when online.~~
 
-**Implemented:** Open-Meteo API (free, no API key, sends only lat/lon for Velp, Gelderland). Opt-in toggle in Settings with privacy disclaimer. Home screen card shows current temp, feels-like, and WMO weather emoji + label. 30-minute sessionStorage cache to avoid repeat fetches. Card silently hides when offline or disabled — no error state.
+**Implemented:** Open-Meteo API (free, no API key, sends only lat/lon from the browser's geolocation, cached locally for 24h). Opt-in toggle in Settings with privacy disclaimer. Home screen card shows current temp, feels-like, and WMO weather emoji + label. 30-minute sessionStorage cache to avoid repeat fetches. Card silently hides when offline or disabled — no error state.
 
 ---
 

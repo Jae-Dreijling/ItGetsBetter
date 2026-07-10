@@ -1,9 +1,42 @@
 import { useState, useEffect } from 'react'
 
-const VELP_LAT = 51.9667
-const VELP_LON = 5.9667
 const CACHE_KEY = 'igb_weather_cache'
 const CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutes
+const COORDS_CACHE_KEY = 'igb_weather_coords'
+const COORDS_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+interface Coords {
+  lat: number
+  lon: number
+}
+
+function getCoords(): Promise<Coords | null> {
+  const cached = localStorage.getItem(COORDS_CACHE_KEY)
+  if (cached) {
+    try {
+      const entry: { coords: Coords; fetchedAt: number } = JSON.parse(cached)
+      if (Date.now() - entry.fetchedAt < COORDS_CACHE_TTL_MS) {
+        return Promise.resolve(entry.coords)
+      }
+    } catch {
+      // stale/corrupt cache, re-fetch
+    }
+  }
+
+  if (!navigator.geolocation) return Promise.resolve(null)
+
+  return new Promise(resolve => {
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const coords: Coords = { lat: position.coords.latitude, lon: position.coords.longitude }
+        localStorage.setItem(COORDS_CACHE_KEY, JSON.stringify({ coords, fetchedAt: Date.now() }))
+        resolve(coords)
+      },
+      () => resolve(null),
+      { timeout: 10000 }
+    )
+  })
+}
 
 export interface WeatherData {
   temp: number
@@ -64,10 +97,13 @@ export function useWeather(enabled: boolean) {
     }
 
     setLoading(true)
-    fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${VELP_LAT}&longitude=${VELP_LON}&current=temperature_2m,apparent_temperature,weather_code&timezone=Europe%2FAmsterdam`
-    )
-      .then(r => r.json())
+    getCoords()
+      .then(coords => {
+        if (!coords) return null
+        return fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,apparent_temperature,weather_code&timezone=auto`
+        ).then(r => r.json())
+      })
       .then(json => {
         const current = json?.current
         if (!current) return
