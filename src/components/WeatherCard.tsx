@@ -13,7 +13,7 @@ export default function WeatherCard() {
         {loading ? '🌡️' : emoji}
       </span>
       <div className="flex-1">
-        <p className="text-xs text-muted">Velp · right now</p>
+        <p className="text-xs text-muted">Right now</p>
         {loading ? (
           <p className="text-sm font-medium text-muted">Loading weather…</p>
         ) : data ? (
