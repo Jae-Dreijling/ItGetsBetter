@@ -102,7 +102,7 @@ export async function createBackup(password: string): Promise<Blob> {
     medicines: await db.medicines.toArray(),
     medicineLogs: await db.medicineLogs.toArray(),
     pointsTransactions: await db.pointsTransactions.toArray(),
-    rewards: await db.rewards.toArray(),
+    rewards: await encodeBlobField(await db.rewards.toArray(), 'image'),
     rewardClaims: await db.rewardClaims.toArray(),
     achievements: await db.achievements.toArray(),
     progressPhotos: await encodeBlobField(await db.progressPhotos.toArray(), 'photo'),
@@ -183,6 +183,7 @@ export async function restoreBackup(file: File, password: string): Promise<void>
   if (data.progressPhotos?.length) data.progressPhotos = await decodeRequiredBlobField(data.progressPhotos, 'photo')
   if (data.companions?.length) data.companions = await decodeBlobField(data.companions, 'avatar')
   if (data.motivationNotes?.length) data.motivationNotes = await decodeBlobField(data.motivationNotes, 'photo')
+  if (data.rewards?.length) data.rewards = await decodeBlobField(data.rewards, 'image')
 
   const allTables = [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries, db.moodEntries, db.moodTags, db.sleepEntries, db.medicines, db.medicineLogs, db.pointsTransactions, db.rewards, db.rewardClaims, db.achievements, db.progressPhotos, db.table('healthInsights'), db.table('customQuotes'), db.table('scheduleProfiles'), db.table('dayConfigs'), db.groceryLists, db.groceryItems, db.books, db.companions, db.motivationNotes, db.gameState, db.gameQuests, db.gameCompanionAffinity, db.gameCustomQuestions, db.fastingRecords, db.personalityGroups]
 
