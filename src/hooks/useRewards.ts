@@ -30,7 +30,7 @@ export function useLastClaimByReward() {
 export interface AddRewardParams {
   name: string
   pointCost: number
-  description?: string
+  description?: string | null
   icon?: string
   category?: RewardCategory | null
   type?: RewardType
