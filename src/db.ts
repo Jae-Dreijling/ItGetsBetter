@@ -445,6 +445,69 @@ class ItGetsBetterDB extends Dexie {
       })
     })
 
+    // Adds icon, category, type, stock, cooldown_days, url, image, is_preset,
+    // pinned, is_savings_goal to rewards; adds reward_name and note to rewardClaims.
+    this.version(15).stores({
+      userProfile: '++id',
+      weightEntries: '++id, date, logged_at',
+      mealEntries: '++id, date, meal_slot, logged_at',
+      measurements: '++id, date',
+      appOpenLog: '++id, date',
+      labels: '++id',
+      habits: '++id, is_active, is_queued',
+      habitCompletions: '++id, habit_id, date',
+      tasks: '++id, project_id, parent_task_id, is_completed, due_date, priority, show_in_today',
+      projects: '++id',
+      waterEntries: '++id, date, logged_at',
+      exerciseEntries: '++id, date, exercise_type',
+      moodEntries: '++id, date, logged_at',
+      moodTags: '++id',
+      sleepEntries: '++id, date',
+      medicines: '++id, is_active',
+      medicineLogs: '++id, medicine_id, date',
+      pointsTransactions: '++id, source_type, date',
+      rewards: '++id, is_available',
+      rewardClaims: '++id, reward_id, claimed_at',
+      achievements: '++id, trigger_type, is_unlocked',
+      progressPhotos: '++id, date',
+      healthInsights: '++id, correlation_type, is_confirmed, is_rejected',
+      customQuotes: '++id',
+      scheduleProfiles: '++id, &profile_name',
+      dayConfigs: '&date',
+      groceryLists: '++id, is_template',
+      groceryItems: '++id, list_id, is_checked',
+      books: '++id, status',
+      companions: '++id, is_default, is_active, personality_group_id',
+      motivationNotes: '++id, category',
+      gameState: '++id',
+      gameQuests: '++id, status, tier, end_date',
+      gameCompanionAffinity: '++id, companion_id',
+      gameCustomQuestions: '++id',
+      fastingRecords: '++id, date',
+      personalityGroups: '++id',
+    }).upgrade(async tx => {
+      await tx.table('rewards').toCollection().modify((reward: Record<string, unknown>) => {
+        if (reward.icon === undefined) reward.icon = null
+        if (reward.category === undefined) reward.category = null
+        if (reward.type === undefined) reward.type = 'recurring'
+        if (reward.stock === undefined) reward.stock = null
+        if (reward.cooldown_days === undefined) reward.cooldown_days = null
+        if (reward.url === undefined) reward.url = null
+        if (reward.image === undefined) reward.image = null
+        if (reward.is_preset === undefined) reward.is_preset = false
+        if (reward.pinned === undefined) reward.pinned = false
+        if (reward.is_savings_goal === undefined) reward.is_savings_goal = false
+      })
+      const allRewards: Array<{ id: number; name: string }> = await tx.table('rewards').toArray()
+      const nameMap = new Map(allRewards.map(r => [r.id, r.name]))
+      await tx.table('rewardClaims').toCollection().modify((claim: Record<string, unknown>) => {
+        if (claim.reward_name === undefined) {
+          claim.reward_name = nameMap.get(claim.reward_id as number) ?? 'Unknown reward'
+        }
+        if (claim.note === undefined) claim.note = null
+      })
+    })
+
     this.on('populate', () => {
       this.labels.bulkAdd(
         DEFAULT_LABELS.map(l => ({ ...l, created_at: new Date().toISOString() }))

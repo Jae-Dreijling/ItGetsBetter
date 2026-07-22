@@ -183,20 +183,35 @@ export interface PointsTransaction {
   created_at: string
 }
 
+export type RewardType = 'recurring' | 'one_time' | 'limited'
+export type RewardCategory = 'food' | 'entertainment' | 'self_care' | 'rest' | 'shopping' | 'social' | 'custom'
+
 export interface Reward {
   id?: number
   name: string
   description: string | null
   point_cost: number
+  icon: string | null
+  category: RewardCategory | null
+  type: RewardType
+  stock: number | null
+  cooldown_days: number | null
+  url: string | null
+  image: Blob | null
   is_available: boolean
+  is_preset: boolean
+  pinned: boolean
+  is_savings_goal: boolean
   created_at: string
 }
 
 export interface RewardClaim {
   id?: number
   reward_id: number
+  reward_name: string
   points_spent: number
   claimed_at: string
+  note: string | null
 }
 
 export interface Achievement {

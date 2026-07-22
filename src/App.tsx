@@ -47,6 +47,7 @@ const BooksPage = lazy(() => import('./features/books/BooksPage'))
 const CompanionPage = lazy(() => import('./features/companion/CompanionPage'))
 const PersonalityGroupsPage = lazy(() => import('./features/companion/PersonalityGroupsPage'))
 const RewardShopPage = lazy(() => import('./features/rewards/RewardShopPage'))
+const RewardClaimHistoryPage = lazy(() => import('./features/rewards/RewardClaimHistoryPage'))
 const AchievementsPage = lazy(() => import('./features/achievements/AchievementsPage'))
 const GraphsDashboard = lazy(() => import('./features/graphs/GraphsDashboard'))
 const WeeklyReviewPage = lazy(() => import('./features/review/WeeklyReviewPage'))
@@ -125,6 +126,7 @@ function AppContent() {
         <Route path="me" element={<MePage />} />
         <Route path="me/measurements" element={<MeasurementsPage />} />
         <Route path="me/rewards" element={<Suspense fallback={<LazyFallback />}><RewardShopPage /></Suspense>} />
+        <Route path="me/rewards/history" element={<Suspense fallback={<LazyFallback />}><RewardClaimHistoryPage /></Suspense>} />
         <Route path="me/achievements" element={<Suspense fallback={<LazyFallback />}><AchievementsPage /></Suspense>} />
         <Route path="me/graphs" element={<Suspense fallback={<LazyFallback />}><GraphsDashboard /></Suspense>} />
         <Route path="me/review" element={<Suspense fallback={<LazyFallback />}><WeeklyReviewPage /></Suspense>} />
