@@ -3,6 +3,9 @@ import type { MealSlot, HabitFrequency, TaskPriority, Weekday } from './enums'
 export interface UserProfile {
   id?: number
   display_name: string
+  // Other names to switch to with one tap (e.g. a fake name for showing the
+  // app to someone). display_name is always the active one.
+  saved_names?: string[]
   height_cm: number
   starting_weight_kg: number
   goal_weight_milestone_kg: number
