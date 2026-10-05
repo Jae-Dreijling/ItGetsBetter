@@ -344,10 +344,11 @@ A step is finished, and can be merged to `main`, when:
 | 9 | Navigation | Tabs become **Today · Log · Plan · Me**. Plan = habits, tasks, goals, stepping away (abstinence), focus timer. Me = journey, companions, people (social), progress, tools. |
 | 10 | Spotlight cap | **3 cards** on Today, besides the Daily Check, the daily floor and the companion |
 | 11 | First open of 2.0 | A **quick feature picker**: switch features on/off and choose the spotlight. Changeable later in Settings → Features. |
+| 12 | Daily Check | **Surprise me:** weighted random, the same question all day; recently logged is less likely, long gaps more likely. A fixed schedule can be added as an alternative later. |
+| 13 | Daily floor | **Habits you mark:** pick 2–3 habits as the floor; completing them makes the day "done". |
 
 ### Still open
 
-1. **Daily Check:** which metrics are in the pool, and roughly what chances? (Decide when building step 3.)
 2. **AI:** OK with bringing your own API key and paying per use, or should AI wait/skip? (Decide before step 12.)
 3. **Fasting points:** keep the "fasting goal met" points and companion trigger with the manual timer, or make fasting points-free? *Review recommends points-free* (restriction is a known binge trigger).
 4. **To-do redesign:** what overwhelms you most right now? (Input for the mockups in step 5.)

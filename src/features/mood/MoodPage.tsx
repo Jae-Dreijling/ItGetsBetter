@@ -1,4 +1,5 @@
 import { useChartColors } from '../../hooks/useChartColors'
+import { MOOD_LABELS, MOOD_COLORS } from '../../lib/mood'
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { Plus, X } from 'lucide-react'
@@ -7,8 +8,6 @@ import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useTodaysMood, useMoodHistory, useMoodTags, addMoodEntry, addMoodTag, deleteMoodTag } from '../../hooks/useMood'
 
-const MOOD_LABELS = ['', 'Awful', 'Bad', 'Okay', 'Good', 'Great']
-const MOOD_COLORS = ['', '#d4665a', '#f47e6c', '#e8a838', '#4eb499', '#5cb176']
 
 export default function MoodPage() {
   const chartColors = useChartColors()

@@ -1,9 +1,8 @@
 import { useState } from 'react'
+import { MOOD_LABELS, MOOD_COLORS } from '../lib/mood'
 import { X, Plus } from 'lucide-react'
 import { addMoodEntry, useMoodTags, addMoodTag } from '../hooks/useMood'
 
-const MOOD_LABELS = ['', 'Awful', 'Bad', 'Okay', 'Good', 'Great']
-const MOOD_COLORS = ['', '#d4665a', '#f47e6c', '#e8a838', '#4eb499', '#5cb176']
 
 interface MoodPromptProps {
   timeOfDay: 'morning' | 'midday' | 'night'

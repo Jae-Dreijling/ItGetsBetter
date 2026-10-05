@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 
 const DEFAULT_LABELS = [
@@ -43,6 +43,7 @@ export class ItGetsBetterDB extends Dexie {
   gameCustomQuestions!: EntityTable<GameCustomQuestion, 'id'>
   fastingRecords!: EntityTable<FastingRecord, 'id'>
   personalityGroups!: EntityTable<PersonalityGroup, 'id'>
+  wins!: EntityTable<Win, 'id'>
 
   // The name is only overridden in tests, to run upgrades on a separate database.
   constructor(name = 'ItGetsBetter') {
@@ -523,6 +524,11 @@ export class ItGetsBetterDB extends Dexie {
       for (let i = 0; i < merged.length; i++) {
         if (merged[i] !== companions[i]) await tx.table('companions').put(merged[i])
       }
+    })
+
+    // Non-scale wins from the Daily Check (and later the wins jar).
+    this.version(17).stores({
+      wins: '++id, date',
     })
 
     this.on('populate', () => {

@@ -330,6 +330,16 @@ export interface FastingRecord {
   was_broken_early: boolean
 }
 
+// Non-scale wins ("anything feel easier lately?"), e.g. from the Daily Check.
+// The future wins jar collects them.
+export interface Win {
+  id?: number
+  date: string
+  text: string
+  source: 'daily_check'
+  logged_at: string
+}
+
 export interface ProgressPhoto {
   id?: number
   date: string

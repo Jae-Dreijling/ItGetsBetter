@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { useFeatureTiers } from '../../hooks/useFeatures'
+import { useDailyCheck } from '../../hooks/useDailyCheck'
+import DailyCheckCard from '../../components/DailyCheckCard'
 import { isOn, type FeatureId } from '../../lib/features'
 import { Scale, UtensilsCrossed, Droplets, Timer, AlertCircle, Dumbbell, CheckCircle2, ChevronRight, Pill, Check, Star } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
@@ -38,6 +40,8 @@ function getTimeOfDay(): TimeOfDay {
 
 export default function HomePage() {
   const tiers = useFeatureTiers()
+  // Today's Daily Check replaces the separate mood prompt when it asks about mood.
+  const dailyCheck = useDailyCheck()
   const on = (id: FeatureId) => isOn(tiers, id)
   const latestWeight = useLatestWeight()
   const todaysMeals = useTodaysMeals()
@@ -138,11 +142,13 @@ export default function HomePage() {
           <NotificationToast message={notification.message} onDismiss={dismiss} />
         )}
 
+        <DailyCheckCard />
+
         {showStarter && (
           <StarterHabitPrompt onDismiss={() => setStarterDismissed(true)} />
         )}
 
-        {showMoodPrompt && (
+        {showMoodPrompt && dailyCheck.kind !== 'mood' && (
           <MoodPrompt timeOfDay={timeOfDay} onDismiss={() => setMoodDismissed(true)} />
         )}
 
