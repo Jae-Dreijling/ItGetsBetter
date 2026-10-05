@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { m, useMotionValue } from 'motion/react'
+import { AnimatePresence, m, useMotionValue } from 'motion/react'
+import { pop } from '../lib/animations'
 import { useSessionCompanion, useEffectiveMessages, getCompanionMessage, ensureDefaultCompanion, type CompanionEvent } from '../hooks/useCompanion'
 import { useProfile } from '../hooks/useProfile'
 import CompanionChat from './CompanionChat'
@@ -233,14 +234,22 @@ export default function FloatingCompanion() {
 
   return (
     <>
+      <AnimatePresence mode="wait">
       {message && !dragging && (
-        <div
+        <m.div
+          key={message}
+          variants={pop}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
           className="fixed z-50 rounded-2xl bg-card p-3 shadow-lg border border-primary-100 dark:border-primary-900"
           style={{
             ...(bubbleOnLeft
               ? { right: window.innerWidth - position.x + 8, maxWidth: position.x - 16 }
               : { left: position.x + 62, maxWidth: window.innerWidth - position.x - 70 }),
             top: position.y - 10,
+            // Grows out of the side the companion is on.
+            transformOrigin: bubbleOnLeft ? 'right top' : 'left top',
           }}
           onClick={() => setMessage(null)}
         >
@@ -251,8 +260,9 @@ export default function FloatingCompanion() {
               bubbleOnLeft ? 'right-[-5px] border-l-0 border-b-0' : 'left-[-5px] border-r-0 border-t-0'
             }`}
           />
-        </div>
+        </m.div>
       )}
+      </AnimatePresence>
 
       <m.div
         className="fixed left-0 top-0 z-50 flex h-14 w-14 touch-none select-none items-center justify-center rounded-full bg-card shadow-lg border-2 border-primary-200 dark:border-primary-800 cursor-grab active:cursor-grabbing"
