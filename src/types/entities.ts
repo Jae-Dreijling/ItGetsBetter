@@ -16,6 +16,8 @@ export interface UserProfile {
   // Per-feature attention tier (spotlight / available / off). Missing means
   // available. See lib/features.
   feature_tiers?: FeatureTiers
+  // When the one-time 2.0 feature picker was completed or skipped.
+  features_picked_at?: string
   created_at: string
 }
 

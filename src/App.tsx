@@ -16,11 +16,11 @@ import AppLock from './components/AppLock'
 import { isLockEnabled } from './lib/appLock'
 import { applyColorTheme, resolveColorTheme } from './lib/themes'
 import InstallPrompt from './components/InstallPrompt'
-import FloatingCompanion from './components/FloatingCompanion'
 import { triggerCompanionMessage } from './lib/companionMessenger'
 import PointsToast from './components/PointsToast'
 import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
+import FeaturePicker from './features/setup/FeaturePicker'
 import HomePage from './features/home/HomePage'
 
 const loadLogHubPage = () => import('./features/log/LogHubPage')
@@ -76,6 +76,7 @@ const MapPage = lazy(() => import('./features/game/MapPage'))
 function AppContent() {
   const { profile, isLoading } = useProfile()
   const [setupDone, setSetupDone] = useState(false)
+  const [pickerDone, setPickerDone] = useState(false)
 
   useEffect(() => {
     if (profile) {
@@ -108,6 +109,11 @@ function AppContent() {
 
   if (!profile && !setupDone) {
     return <FirstLaunchSetup onComplete={() => setSetupDone(true)} />
+  }
+
+  // One-time 2.0 feature picker (also after first-time setup and Start Fresh).
+  if (profile && !profile.features_picked_at && !pickerDone) {
+    return <FeaturePicker onDone={() => setPickerDone(true)} />
   }
 
   return (
@@ -225,7 +231,6 @@ export default function App() {
       <ErrorBoundary feature="the app">
         <AppContent />
       </ErrorBoundary>
-      <FloatingCompanion />
       <PointsToast />
       <InstallPrompt />
     </BrowserRouter>

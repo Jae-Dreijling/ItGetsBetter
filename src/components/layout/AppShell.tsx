@@ -5,6 +5,7 @@ import { Heart } from 'lucide-react'
 import { fade } from '../../lib/animations'
 import BottomTabs from './BottomTabs'
 import SideMenu from './SideMenu'
+import FloatingCompanion from '../FloatingCompanion'
 import { registerSideMenuOpener } from '../../lib/sideMenu'
 
 export default function AppShell() {
@@ -30,6 +31,9 @@ export default function AppShell() {
         </m.div>
       </Suspense>
       <BottomTabs />
+      {/* Lives in the app layout, so it never covers first-time setup or the
+          feature picker, and stays mounted while navigating between pages. */}
+      <FloatingCompanion />
     </div>
   )
 }
