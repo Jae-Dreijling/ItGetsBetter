@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { m, useMotionValue } from 'motion/react'
 import { useSessionCompanion, useEffectiveMessages, getCompanionMessage, ensureDefaultCompanion, type CompanionEvent } from '../hooks/useCompanion'
 import { useProfile } from '../hooks/useProfile'
 import CompanionChat from './CompanionChat'
@@ -11,6 +12,22 @@ import { registerCompanionMessageHandler } from '../lib/companionMessenger'
 import { startIdleTimer } from '../lib/idleTimer'
 
 const POSITION_KEY = 'igb_companion_position'
+const SIZE = 56
+// A finger rarely stays perfectly still: movement under this many pixels
+// still counts as a tap, so a slightly wobbly tap isn't swallowed by a drag.
+const TAP_SLOP = 10
+const LONG_PRESS_MS = 500
+
+function clampToScreen(p: { x: number; y: number }) {
+  return {
+    x: Math.max(0, Math.min(window.innerWidth - SIZE, p.x)),
+    y: Math.max(56, Math.min(window.innerHeight - 120, p.y)),
+  }
+}
+
+function screenBounds() {
+  return { left: 0, right: window.innerWidth - SIZE, top: 56, bottom: window.innerHeight - 120 }
+}
 // "Idle" means the user stepped away: no touch, scroll or typing anywhere.
 const IDLE_TIMEOUT = 2 * 60 * 1000
 // During phone-free time the companion nudges regardless of activity.
@@ -26,18 +43,20 @@ export default function FloatingCompanion() {
   const isGoodnightTime = useIsGoodnightTime()
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  // Resting position, used to place the speech bubble. While dragging, the
+  // companion moves through the x/y motion values only, outside React, so a
+  // drag doesn't re-render this component on every frame.
   const [position, setPosition] = useState(() => {
-    const clamp = (p: { x: number; y: number }) => ({
-      x: Math.max(0, Math.min(window.innerWidth - 56, p.x)),
-      y: Math.max(56, Math.min(window.innerHeight - 120, p.y)),
-    })
     const saved = localStorage.getItem(POSITION_KEY)
-    if (saved) return clamp(JSON.parse(saved) as { x: number; y: number })
+    if (saved) return clampToScreen(JSON.parse(saved) as { x: number; y: number })
     return { x: window.innerWidth - 70, y: window.innerHeight - 200 }
   })
+  const x = useMotionValue(position.x)
+  const y = useMotionValue(position.y)
   const [dragging, setDragging] = useState(false)
+  const [bounds, setBounds] = useState(screenBounds)
   const [chatOpen, setChatOpen] = useState(false)
-  const dragOffset = useRef({ x: 0, y: 0 })
+  const pressStart = useRef<{ x: number; y: number } | null>(null)
   const messageTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasLongPress = useRef(false)
@@ -137,14 +156,15 @@ export default function FloatingCompanion() {
 
   useEffect(() => {
     function handleResize() {
-      setPosition(p => ({
-        x: Math.max(0, Math.min(window.innerWidth - 56, p.x)),
-        y: Math.max(56, Math.min(window.innerHeight - 120, p.y)),
-      }))
+      const next = clampToScreen({ x: x.get(), y: y.get() })
+      x.set(next.x)
+      y.set(next.y)
+      setPosition(next)
+      setBounds(screenBounds())
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  }, [x, y])
 
   useEffect(() => {
     const timer = startIdleTimer({ timeoutMs: IDLE_TIMEOUT, onIdle: () => void handleIdle() })
@@ -161,21 +181,6 @@ export default function FloatingCompanion() {
     return () => clearInterval(interval)
   }, [isPhoneFreeTime, showMessage])
 
-  function handleTap() {
-    if (!dragging && !wasLongPress.current) {
-      showMessage('general')
-    }
-    wasLongPress.current = false
-  }
-
-  function startLongPress() {
-    wasLongPress.current = false
-    longPressTimer.current = setTimeout(() => {
-      wasLongPress.current = true
-      setChatOpen(true)
-    }, 500)
-  }
-
   function cancelLongPress() {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current)
@@ -183,51 +188,40 @@ export default function FloatingCompanion() {
     }
   }
 
-  function handleTouchStart(e: React.TouchEvent) {
-    const touch = e.touches[0]
-    dragOffset.current = { x: touch.clientX - position.x, y: touch.clientY - position.y }
-    setDragging(false)
-    startLongPress()
-  }
-
-  function handleTouchMove(e: React.TouchEvent) {
+  // Taps and long presses are detected from the pointer itself; Motion only
+  // handles the dragging. A press that moved less than TAP_SLOP is a tap.
+  function handlePointerDown(e: React.PointerEvent) {
+    pressStart.current = { x: e.clientX, y: e.clientY }
+    wasLongPress.current = false
     cancelLongPress()
-    const touch = e.touches[0]
-    const newX = Math.max(0, Math.min(window.innerWidth - 56, touch.clientX - dragOffset.current.x))
-    const newY = Math.max(56, Math.min(window.innerHeight - 120, touch.clientY - dragOffset.current.y))
-    setPosition({ x: newX, y: newY })
-    setDragging(true)
+    longPressTimer.current = setTimeout(() => {
+      wasLongPress.current = true
+      setChatOpen(true)
+    }, LONG_PRESS_MS)
   }
 
-  function handleTouchEnd() {
+  function movedBeyondSlop(e: React.PointerEvent) {
+    const start = pressStart.current
+    return !start || Math.hypot(e.clientX - start.x, e.clientY - start.y) > TAP_SLOP
+  }
+
+  function handlePointerMove(e: React.PointerEvent) {
+    if (pressStart.current && movedBeyondSlop(e)) cancelLongPress()
+  }
+
+  function handlePointerUp(e: React.PointerEvent) {
     cancelLongPress()
-    localStorage.setItem(POSITION_KEY, JSON.stringify(position))
-    setTimeout(() => setDragging(false), 100)
+    const isTap = !movedBeyondSlop(e) && !wasLongPress.current
+    pressStart.current = null
+    if (isTap) showMessage('general')
   }
 
-  function handleMouseDown(e: React.MouseEvent) {
-    dragOffset.current = { x: e.clientX - position.x, y: e.clientY - position.y }
+  // Called once the companion has come to rest, after any momentum glide.
+  function handleDragSettled() {
+    const next = clampToScreen({ x: x.get(), y: y.get() })
+    setPosition(next)
     setDragging(false)
-    startLongPress()
-
-    function onMouseMove(ev: MouseEvent) {
-      cancelLongPress()
-      const newX = Math.max(0, Math.min(window.innerWidth - 56, ev.clientX - dragOffset.current.x))
-      const newY = Math.max(56, Math.min(window.innerHeight - 120, ev.clientY - dragOffset.current.y))
-      setPosition({ x: newX, y: newY })
-      setDragging(true)
-    }
-
-    function onMouseUp() {
-      cancelLongPress()
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseup', onMouseUp)
-      localStorage.setItem(POSITION_KEY, JSON.stringify(position))
-      setTimeout(() => setDragging(false), 100)
-    }
-
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
+    localStorage.setItem(POSITION_KEY, JSON.stringify(next))
   }
 
   if (chatOpen) {
@@ -239,7 +233,7 @@ export default function FloatingCompanion() {
 
   return (
     <>
-      {message && (
+      {message && !dragging && (
         <div
           className="fixed z-50 rounded-2xl bg-card p-3 shadow-lg border border-primary-100 dark:border-primary-900"
           style={{
@@ -260,21 +254,31 @@ export default function FloatingCompanion() {
         </div>
       )}
 
-      <div
-        className="fixed left-0 top-0 z-50 flex h-14 w-14 touch-none items-center justify-center rounded-full bg-card shadow-lg border-2 border-primary-200 dark:border-primary-800 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-xl"
-        style={{ transform: `translate3d(${position.x}px, ${position.y}px, 0)` }}
-        onClick={handleTap}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
+      <m.div
+        className="fixed left-0 top-0 z-50 flex h-14 w-14 touch-none select-none items-center justify-center rounded-full bg-card shadow-lg border-2 border-primary-200 dark:border-primary-800 cursor-grab active:cursor-grabbing"
+        style={{ x, y }}
+        drag
+        dragConstraints={bounds}
+        dragElastic={0.15}
+        dragTransition={{ power: 0.2, timeConstant: 200, bounceStiffness: 400, bounceDamping: 30 }}
+        whileTap={{ scale: 0.94 }}
+        whileDrag={{ scale: 1.08, boxShadow: '0 12px 28px rgba(0, 0, 0, 0.22)' }}
+        onDragStart={() => {
+          cancelLongPress()
+          setDragging(true)
+        }}
+        onDragTransitionEnd={handleDragSettled}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={cancelLongPress}
       >
         {avatarUrl ? (
           <img src={avatarUrl} alt={companion?.name ?? 'Companion'} className="h-full w-full rounded-full object-cover" />
         ) : (
           <span className="text-xl">💬</span>
         )}
-      </div>
+      </m.div>
     </>
   )
 }

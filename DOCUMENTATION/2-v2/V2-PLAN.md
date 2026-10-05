@@ -127,6 +127,7 @@ Rule from the Rulebook that stays: **nothing is lost by being away.** No decayin
 ## 5. More companion content
 
 - **More lines per trigger**, and new triggers (Daily Check answered, abstinence milestones, a friend you saw, theme changed, first time opening 2.0, etc.).
+- **Reactions to being handled** (idea, 2026-10-05): the companion reacts when it's picked up, dragged around or thrown (e.g. "Wheee!", "Put me down!", a dizzy face after a hard fling). The drag code already knows when a drag starts and how fast it's thrown.
 - **Memory:** the companion references things you did ("you saw Sam last week, how was it?", "day 30 without binging!"). This can be done without AI by filling in data templates.
 - **Relationship depth:** affinity already exists. Add unlockable conversations/backstory at affinity levels.
 - **Content packs:** the import template already supports bulk lines; keep using it and add packs for the new triggers.
@@ -295,7 +296,7 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 | # | Step | Why here |
 |---|---|---|
 | 0 ✅ | **Small fixes:** backup hardening, companion idle, "Start fresh", pick current companion, saved names, remove My Quotes (one at a time) | Quick wins, each tested on its own |
-| 1 | **Smoothness foundation:** fix companion drag, add the animation library + presets, measure and slim the bundle | Fixes the "clunky" feeling right away; everything after builds on it |
+| 1 🔄 | **Smoothness foundation:** fix companion drag, add the animation library + presets, measure and slim the bundle | Fixes the "clunky" feeling right away; everything after builds on it |
 | 2 | **Themes** | Colour refactor before redesigning screens, so new screens support themes from the start |
 | 2b | **Feature system + navigation:** spotlight/available/off tiers, Settings → Features, where every page lives (four-tab ceiling; off features disappear from menus) | Every new feature plugs into this, and the Today screen depends on it |
 | 3 | **Today screen + Daily Check** | The core ADHD change |
