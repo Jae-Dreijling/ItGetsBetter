@@ -14,6 +14,7 @@ import UpdatePrompt from './components/UpdatePrompt'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppLock from './components/AppLock'
 import { isLockEnabled } from './lib/appLock'
+import { applyColorTheme, resolveColorTheme } from './lib/themes'
 import InstallPrompt from './components/InstallPrompt'
 import FloatingCompanion from './components/FloatingCompanion'
 import { triggerCompanionMessage } from './lib/companionMessenger'
@@ -45,6 +46,7 @@ const TasksPage = lazy(() => import('./features/todo/TasksPage'))
 const ExportPage = lazy(() => import('./features/settings/ExportPage'))
 const DevToolsPage = lazy(() => import('./features/settings/DevToolsPage'))
 const StartFreshPage = lazy(() => import('./features/settings/StartFreshPage'))
+const ThemePage = lazy(() => import('./features/settings/ThemePage'))
 const ScheduleSettings = lazy(() => import('./features/settings/ScheduleSettings'))
 const LabelManager = lazy(() => import('./features/settings/LabelManager'))
 const GroceryPage = lazy(() => import('./features/grocery/GroceryPage'))
@@ -91,6 +93,10 @@ function AppContent() {
     }
   }, [profile?.theme])
 
+  useEffect(() => {
+    if (profile) applyColorTheme(resolveColorTheme(profile.color_theme))
+  }, [profile])
+
   if (isLoading) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-surface">
@@ -133,6 +139,7 @@ function AppContent() {
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
         <Route path="settings/start-fresh" element={<StartFreshPage />} />
+        <Route path="settings/theme" element={<ThemePage />} />
         <Route path="settings/export" element={<ExportPage />} />
         <Route path="settings/devtools" element={<DevToolsPage />} />
         <Route path="settings/schedule" element={<ScheduleSettings />} />

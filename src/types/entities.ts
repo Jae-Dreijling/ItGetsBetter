@@ -10,6 +10,8 @@ export interface UserProfile {
   starting_weight_kg: number
   goal_weight_milestone_kg: number
   theme: 'light' | 'dark' | 'auto'
+  // Colour theme; undefined means the default coral theme. See lib/themes.
+  color_theme?: 'coral' | 'spring' | 'summer' | 'autumn' | 'winter' | 'seasonal'
   created_at: string
 }
 

@@ -17,12 +17,12 @@ A personal, phone-first, offline health app (React + Vite + Tailwind v4 + Dexie/
 - **Never punish absence** (Rulebook 5.2): no "streak broken", no counting missed days, no red overdue lists. Show what *was* done ("18 of the last 21 days").
 - **Keep existing data:** every Dexie schema change needs a new `version()` with an upgrade that carries data over. Backup/restore (`src/lib/backup.ts`) covers all tables automatically; if old rows need new defaults, add a `ROW_FIXUPS` entry there too, since restored rows skip Dexie upgrades.
 - **3 AM day boundary:** use `getLogicalDate()` from `src/lib/date.ts`, not the calendar date.
-- **Animations:** only `transform`/`opacity`, and respect "reduce motion".
+- **Animations:** use the presets in `src/lib/animations.ts` with Motion's `m` components (LazyMotion is strict: never `motion.div`). Only `transform`/`opacity`; "reduce motion" is handled by `MotionConfig` in `main.tsx`.
 
 ## Don'ts
 
 - Never commit `DOCUMENTATION/7-eight-journeys/` (the user's personal health data, gitignored).
-- Don't hard-code hex colours in components; use theme colours from `src/index.css`.
+- Don't hard-code hex colours in components; use theme colours from `src/index.css` (they change per theme, see `src/lib/themes.ts`). Charts can't use CSS variables, so they get colours from `useChartColors()`. Mood and label colours are deliberately fixed.
 - If you move a doc, update the code comments that point to it (`grep -rn DOCUMENTATION src`).
 
 ## Commands

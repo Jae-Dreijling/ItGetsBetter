@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router'
+import { COLOR_THEMES, resolveColorTheme, type ColorThemeSetting } from '../../lib/themes'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Target, X, Wrench, Sprout } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Target, X, Wrench, Sprout, Palette } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
@@ -8,6 +9,12 @@ import { useStorageEstimate, formatBytes } from '../../hooks/useStorage'
 import { isLockEnabled, enableLock, disableLock } from '../../lib/appLock'
 import { isWeatherEnabled, setWeatherEnabled } from '../../hooks/useWeather'
 import { useFocus, FOCUS_OPTIONS } from '../../hooks/useFocus'
+
+function colorThemeLabel(setting: ColorThemeSetting | undefined): string {
+  const theme = COLOR_THEMES.find(t => t.id === resolveColorTheme(setting))!
+  const name = `${theme.emoji} ${theme.name}`
+  return setting === 'seasonal' ? `Follow the seasons · ${name}` : name
+}
 
 export default function SettingsPage() {
   const { profile } = useProfile()
@@ -124,6 +131,17 @@ export default function SettingsPage() {
             </div>
           </button>
 
+          <button
+            onClick={() => navigate('/settings/theme')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Palette className="h-5 w-5 text-primary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Colour Theme</p>
+              <p className="text-sm text-muted">{colorThemeLabel(profile?.color_theme)}</p>
+            </div>
+          </button>
+
           <div className="flex items-center justify-between rounded-xl bg-card p-4 shadow-sm">
             <div className="flex items-center gap-3">
               {profile?.theme === 'dark' ? (
@@ -131,7 +149,7 @@ export default function SettingsPage() {
               ) : (
                 <Sun className="h-5 w-5 text-accent-500" />
               )}
-              <p className="font-medium text-text-primary">Theme</p>
+              <p className="font-medium text-text-primary">Light / Dark</p>
             </div>
             <button
               onClick={cycleTheme}

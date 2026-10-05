@@ -50,7 +50,7 @@ A rewrite would cost months and throw away 26 working features plus your data. A
 
 ## 1. Themes
 
-**What:** several complete colour themes (e.g. Warm Coral = today's look, Forest, Ocean, Lavender, Midnight, High Contrast), each with a light and dark version.
+**What:** several complete colour themes, each with a light and dark version. ✅ Built 2026-10-05: Coral (default) + one per season (Spring, Summer, Autumn, Winter) + "Follow the seasons". Unlockable themes come with the reward shop work.
 
 **How:**
 - Tailwind v4 already turns every colour in [index.css](../../src/index.css) into a CSS variable, so a theme is just a set of ~30 variable overrides (e.g. under `[data-theme="forest"]`). No class names need to change.
@@ -297,7 +297,7 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 |---|---|---|
 | 0 ✅ | **Small fixes:** backup hardening, companion idle, "Start fresh", pick current companion, saved names, remove My Quotes (one at a time) | Quick wins, each tested on its own |
 | 1 ✅ | **Smoothness foundation:** fix companion drag, add the animation library + presets, measure and slim the bundle | Fixes the "clunky" feeling right away; everything after builds on it |
-| 2 | **Themes** | Colour refactor before redesigning screens, so new screens support themes from the start |
+| 2 ✅ | **Themes** | Colour refactor before redesigning screens, so new screens support themes from the start |
 | 2b | **Feature system + navigation:** spotlight/available/off tiers, Settings → Features, where every page lives (four-tab ceiling; off features disappear from menus) | Every new feature plugs into this, and the Today screen depends on it |
 | 3 | **Today screen + Daily Check** | The core ADHD change |
 | 4 | **APK + notifications (Capacitor)** | Real phone app early, so the next features can use notifications |

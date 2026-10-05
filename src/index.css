@@ -52,6 +52,9 @@
 }
 
 :root {
+  /* Chart grid lines: a faint mix of the muted text colour into the card, so
+     they suit every theme in both light and dark mode. */
+  --chart-grid: color-mix(in oklab, var(--muted) 22%, var(--card));
   --surface: #fdf6f0;
   --card: #ffffff;
   --text-primary: #2c1810;
@@ -65,6 +68,204 @@
   --muted: #a89888;
   color-scheme: dark;
 }
+
+/* ── Seasonal colour themes ────────────────────────────────────────────────
+   Set with <html data-theme="spring"> etc. (no attribute = the default coral
+   theme above). Palettes are generated to match the default palette's
+   lightness and colourfulness step by step, so contrast stays the same; only
+   the hues change. Palette blocks work on any element, so the theme picker
+   can preview a theme on a single card. Backgrounds and text are tinted with
+   the theme's hue (--tint) and only apply on <html>. */
+
+/* 🪸 Coral, the default. The app uses no attribute for it (the @theme values
+   above); this block lets a single element, like a picker card, show coral
+   while another theme is active. */
+[data-theme="coral"] {
+  --color-primary-50: #fef2f0;
+  --color-primary-100: #fde3de;
+  --color-primary-200: #fbc8bd;
+  --color-primary-300: #f8a492;
+  --color-primary-400: #f47e6c;
+  --color-primary-500: #ec5a42;
+  --color-primary-600: #d94030;
+  --color-primary-700: #b63225;
+  --color-primary-800: #962c22;
+  --color-primary-900: #7c2922;
+  --color-secondary-50: #f0faf7;
+  --color-secondary-100: #d6f1e8;
+  --color-secondary-200: #ade3d2;
+  --color-secondary-300: #7cceb7;
+  --color-secondary-400: #4eb499;
+  --color-secondary-500: #339980;
+  --color-secondary-600: #267a67;
+  --color-secondary-700: #216254;
+  --color-secondary-800: #1e4f44;
+  --color-secondary-900: #1b4239;
+  --color-accent-50: #fefbe8;
+  --color-accent-100: #fef5c3;
+  --color-accent-200: #fee98a;
+  --color-accent-300: #fdd647;
+  --color-accent-400: #fac215;
+  --color-accent-500: #eaaa08;
+  --color-accent-600: #ca8404;
+  --color-accent-700: #a15e07;
+  --color-accent-800: #854a0e;
+  --color-accent-900: #713d12;
+}
+
+/* 🌸 Spring */
+[data-theme="spring"] {
+  --tint: 350;
+  --color-primary-50: #fbf2f6;
+  --color-primary-100: #f8e4eb;
+  --color-primary-200: #f1c9d7;
+  --color-primary-300: #e9a7be;
+  --color-primary-400: #df85ab;
+  --color-primary-500: #d56695;
+  --color-primary-600: #c15186;
+  --color-primary-700: #a1416f;
+  --color-primary-800: #85375d;
+  --color-primary-900: #6e314f;
+  --color-secondary-50: #f3faf2;
+  --color-secondary-100: #def0db;
+  --color-secondary-200: #bfe1b8;
+  --color-secondary-300: #99cb90;
+  --color-secondary-400: #78b06b;
+  --color-secondary-500: #609654;
+  --color-secondary-600: #4a7843;
+  --color-secondary-700: #3b6038;
+  --color-secondary-800: #314e2f;
+  --color-secondary-900: #294128;
+  --color-accent-50: #fafce9;
+  --color-accent-100: #f3f9c7;
+  --color-accent-200: #ebf091;
+  --color-accent-300: #e5e052;
+  --color-accent-400: #e3cd22;
+  --color-accent-500: #d7b402;
+  --color-accent-600: #ba8d00;
+  --color-accent-700: #956600;
+  --color-accent-800: #7c5000;
+  --color-accent-900: #6b4200;
+}
+
+/* ☀️ Summer */
+[data-theme="summer"] {
+  --tint: 200;
+  --color-primary-50: #edf7f8;
+  --color-primary-100: #d8eff1;
+  --color-primary-200: #b1e0e5;
+  --color-primary-300: #78ccd7;
+  --color-primary-400: #1ebbc7;
+  --color-primary-500: #00a4b1;
+  --color-primary-600: #008f99;
+  --color-primary-700: #00777f;
+  --color-primary-800: #006369;
+  --color-primary-900: #005459;
+  --color-secondary-50: #fef5f1;
+  --color-secondary-100: #fde4d9;
+  --color-secondary-200: #f8cab5;
+  --color-secondary-300: #ebaa8c;
+  --color-secondary-400: #d58a68;
+  --color-secondary-500: #b87151;
+  --color-secondary-600: #925a3e;
+  --color-secondary-700: #754932;
+  --color-secondary-800: #5e3c2a;
+  --color-secondary-900: #4e3224;
+  --color-accent-50: #fdfbe8;
+  --color-accent-100: #fbf6c4;
+  --color-accent-200: #f9eb8b;
+  --color-accent-300: #f7d949;
+  --color-accent-400: #f4c515;
+  --color-accent-500: #e5ad00;
+  --color-accent-600: #c68700;
+  --color-accent-700: #9e6000;
+  --color-accent-800: #834c06;
+  --color-accent-900: #703e0d;
+}
+
+/* 🍂 Autumn */
+[data-theme="autumn"] {
+  --tint: 60;
+  --color-primary-50: #fdf3ee;
+  --color-primary-100: #fce4d9;
+  --color-primary-200: #f8cbb4;
+  --color-primary-300: #f4a981;
+  --color-primary-400: #f0854e;
+  --color-primary-500: #e46600;
+  --color-primary-600: #cb5600;
+  --color-primary-700: #a94600;
+  --color-primary-800: #8e3900;
+  --color-primary-900: #7a2e00;
+  --color-secondary-50: #f5f9f1;
+  --color-secondary-100: #e5eed9;
+  --color-secondary-200: #cdddb4;
+  --color-secondary-300: #aec58b;
+  --color-secondary-400: #91aa64;
+  --color-secondary-500: #78904d;
+  --color-secondary-600: #5e733e;
+  --color-secondary-700: #4b5c33;
+  --color-secondary-800: #3d4b2b;
+  --color-secondary-900: #333e25;
+  --color-accent-50: #fafcea;
+  --color-accent-100: #f3f9c9;
+  --color-accent-200: #ebf096;
+  --color-accent-300: #e5e05d;
+  --color-accent-400: #e2cd36;
+  --color-accent-500: #d5b524;
+  --color-accent-600: #ba8e08;
+  --color-accent-700: #956600;
+  --color-accent-800: #7c5102;
+  --color-accent-900: #6a4208;
+}
+
+/* ❄️ Winter */
+[data-theme="winter"] {
+  --tint: 250;
+  --color-primary-50: #f0f6fb;
+  --color-primary-100: #dfebf7;
+  --color-primary-200: #c1d9f0;
+  --color-primary-300: #9ac1e9;
+  --color-primary-400: #6face1;
+  --color-primary-500: #4b96da;
+  --color-primary-600: #2d84c7;
+  --color-primary-700: #216da7;
+  --color-primary-800: #1e5b89;
+  --color-primary-900: #1d4d71;
+  --color-secondary-50: #f2faf6;
+  --color-secondary-100: #dbf0e6;
+  --color-secondary-200: #b7e1cd;
+  --color-secondary-300: #8dcbb0;
+  --color-secondary-400: #67b191;
+  --color-secondary-500: #4f9679;
+  --color-secondary-600: #3d7861;
+  --color-secondary-700: #31604f;
+  --color-secondary-800: #2a4d40;
+  --color-secondary-900: #244136;
+  --color-accent-50: #fefbeb;
+  --color-accent-100: #fdf5ca;
+  --color-accent-200: #fce99a;
+  --color-accent-300: #f9d667;
+  --color-accent-400: #f4c34d;
+  --color-accent-500: #e4ac43;
+  --color-accent-600: #c38735;
+  --color-accent-700: #9b6128;
+  --color-accent-800: #804d22;
+  --color-accent-900: #6c4020;
+}
+
+:root[data-theme]:not(.dark) {
+  --surface: oklch(0.977 0.012 var(--tint));
+  --text-primary: oklch(0.234 0.036 var(--tint));
+  --muted: oklch(0.593 0.029 var(--tint));
+}
+
+:root.dark[data-theme] {
+  --surface: oklch(0.221 0.012 var(--tint));
+  --card: oklch(0.266 0.014 var(--tint));
+  --text-primary: oklch(0.946 0.014 var(--tint));
+  --muted: oklch(0.689 0.03 var(--tint));
+}
+
 
 *,
 *::before,
