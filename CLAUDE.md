@@ -34,3 +34,5 @@ npm test           # vitest
 npm run lint       # eslint
 npm run build      # tsc + vite build
 ```
+
+**Windows quirk:** if every test file fails with `Cannot read properties of undefined (reading 'config')` and the run header shows a lowercase `c:/` path, Vitest was started from a lowercase drive-letter working directory and loaded itself twice. Run it from `C:\Github\ItGetsBetter` (upper-case `C:`). CI is unaffected.

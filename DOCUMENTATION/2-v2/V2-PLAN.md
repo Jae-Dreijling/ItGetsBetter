@@ -299,7 +299,7 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 | 1 ✅ | **Smoothness foundation:** fix companion drag, add the animation library + presets, measure and slim the bundle | Fixes the "clunky" feeling right away; everything after builds on it |
 | 2 ✅ | **Themes** | Colour refactor before redesigning screens, so new screens support themes from the start |
 | 2b ✅ | **Feature system + navigation:** spotlight/available/off tiers, Settings → Features, where every page lives (four-tab ceiling; off features disappear from menus) | Every new feature plugs into this, and the Today screen depends on it |
-| 3 | **Today screen + Daily Check** | The core ADHD change |
+| 3 ✅ | **Today screen + Daily Check** | The core ADHD change |
 | 4 | **APK + notifications (Capacitor)** | Real phone app early, so the next features can use notifications |
 | ⏸ | **2.0 release** (steps 0–4). Later steps ship as 2.1, 2.2, … | |
 | 5 | **To-do redesign** (habits + tasks) | Design with mockups first; uses the animations and fits with the Today screen |
