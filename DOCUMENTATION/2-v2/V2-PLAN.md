@@ -341,6 +341,9 @@ A step is finished, and can be merged to `main`, when:
 | 6 | Phone testing | **Local Wi-Fi:** the dev server runs on the PC and you open it on your phone on the same network. Nothing gets published. |
 | 7 | Current app data | **Decide at step 4** (the APK move). Until then treat it as "keep": every database change carries existing data over, and you make a backup before step 0. |
 | 8 | Start fresh | Wiping data offers the **option to keep companions & personality groups** |
+| 9 | Navigation | Tabs become **Today · Log · Plan · Me**. Plan = habits, tasks, goals, stepping away (abstinence), focus timer. Me = journey, companions, people (social), progress, tools. |
+| 10 | Spotlight cap | **3 cards** on Today, besides the Daily Check, the daily floor and the companion |
+| 11 | First open of 2.0 | A **quick feature picker**: switch features on/off and choose the spotlight. Changeable later in Settings → Features. |
 
 ### Still open
 
@@ -348,4 +351,3 @@ A step is finished, and can be merged to `main`, when:
 2. **AI:** OK with bringing your own API key and paying per use, or should AI wait/skip? (Decide before step 12.)
 3. **Fasting points:** keep the "fasting goal met" points and companion trigger with the manual timer, or make fasting points-free? *Review recommends points-free* (restriction is a known binge trigger).
 4. **To-do redesign:** what overwhelms you most right now? (Input for the mockups in step 5.)
-5. **Navigation + default tiers:** proposal in step 2b (which features start in the spotlight, available or off).

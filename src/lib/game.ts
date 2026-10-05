@@ -1,4 +1,6 @@
 import { db } from '../db'
+import { getFeatureTiers } from '../hooks/useFeatures'
+import { isQuestObjectiveOn } from './features'
 import { getLogicalDate, nowISO } from './date'
 import type { GameState, GameQuest, GameQuestObjective, GameCustomQuestion } from '../types'
 import type { PointSource } from './points'
@@ -292,10 +294,14 @@ export async function generateQuestsIfNeeded(): Promise<void> {
   const activeWeekly = stillActive.filter(q => q.is_weekly)
   const activeMonthly = stillActive.filter(q => !q.is_weekly)
   const activeObjectives = new Set(stillActive.map(q => q.objective_type))
+  // New quests are only about features that are on (Rulebook 2.4).
+  const tiers = await getFeatureTiers()
+  const isPossible = (t: { objective_type: GameQuestObjective }) =>
+    !activeObjectives.has(t.objective_type) && isQuestObjectiveOn(tiers, t.objective_type)
 
   // Fill weekly slots (max 3)
   if (activeWeekly.length < 3) {
-    const available = WEEKLY_TEMPLATES.filter(t => !activeObjectives.has(t.objective_type))
+    const available = WEEKLY_TEMPLATES.filter(isPossible)
     const shuffled = [...available].sort(() => Math.random() - 0.5)
     const needed = 3 - activeWeekly.length
     for (const t of shuffled.slice(0, needed)) {
@@ -320,7 +326,7 @@ export async function generateQuestsIfNeeded(): Promise<void> {
 
   // Fill monthly slots (max 6, generate up to 3 at once)
   if (activeMonthly.length < 3) {
-    const available = MONTHLY_TEMPLATES.filter(t => !activeObjectives.has(t.objective_type))
+    const available = MONTHLY_TEMPLATES.filter(isPossible)
     const shuffled = [...available].sort(() => Math.random() - 0.5)
     const needed = Math.min(3, 6 - activeMonthly.length)
     for (const t of shuffled.slice(0, needed)) {

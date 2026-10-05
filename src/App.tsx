@@ -47,6 +47,7 @@ const ExportPage = lazy(() => import('./features/settings/ExportPage'))
 const DevToolsPage = lazy(() => import('./features/settings/DevToolsPage'))
 const StartFreshPage = lazy(() => import('./features/settings/StartFreshPage'))
 const ThemePage = lazy(() => import('./features/settings/ThemePage'))
+const FeaturesPage = lazy(() => import('./features/settings/FeaturesPage'))
 const ScheduleSettings = lazy(() => import('./features/settings/ScheduleSettings'))
 const LabelManager = lazy(() => import('./features/settings/LabelManager'))
 const GroceryPage = lazy(() => import('./features/grocery/GroceryPage'))
@@ -140,6 +141,7 @@ function AppContent() {
         <Route path="settings/backup" element={<BackupPage />} />
         <Route path="settings/start-fresh" element={<StartFreshPage />} />
         <Route path="settings/theme" element={<ThemePage />} />
+        <Route path="settings/features" element={<FeaturesPage />} />
         <Route path="settings/export" element={<ExportPage />} />
         <Route path="settings/devtools" element={<DevToolsPage />} />
         <Route path="settings/schedule" element={<ScheduleSettings />} />

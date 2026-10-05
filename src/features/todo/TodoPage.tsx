@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Plus, Target, CheckCircle2, Timer } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
+import { useFeatureTiers } from '../../hooks/useFeatures'
+import { isOn } from '../../lib/features'
 import PageContainer from '../../components/layout/PageContainer'
 import LabelBadge from '../../components/LabelBadge'
 import PriorityBadge from '../../components/PriorityBadge'
@@ -16,7 +18,12 @@ type Filter = 'all' | 'habits' | 'tasks'
 type SortMode = 'priority' | 'due_date'
 
 export default function TodoPage() {
-  const [filter, setFilter] = useState<Filter>('all')
+  const [chosenFilter, setFilter] = useState<Filter>('all')
+  const tiers = useFeatureTiers()
+  const habitsOn = isOn(tiers, 'habits')
+  const tasksOn = isOn(tiers, 'tasks')
+  // With one of the two switched off, the page simply shows the other.
+  const filter: Filter = habitsOn && tasksOn ? chosenFilter : habitsOn ? 'habits' : tasksOn ? 'tasks' : 'all'
   const [labelFilter, setLabelFilter] = useState<number | null>(null)
   const [projectFilter, setProjectFilter] = useState<number | 'none' | null>(null)
   const [sortMode, setSortMode] = useState<SortMode>('priority')
@@ -67,8 +74,8 @@ export default function TodoPage() {
   return (
     <>
       <TopBar
-        title="To-Do"
-        rightContent={
+        title="Plan"
+        rightContent={isOn(tiers, 'focus_timer') ? (
           <button
             onClick={() => navigate('/todo/pomodoro')}
             className="p-1.5 text-muted hover:text-text-primary"
@@ -76,9 +83,10 @@ export default function TodoPage() {
           >
             <Timer className="h-5 w-5" />
           </button>
-        }
+        ) : undefined}
       />
       <PageContainer>
+        {habitsOn && tasksOn && (
         <div className="mb-4 flex gap-2">
           {(['all', 'habits', 'tasks'] as Filter[]).map(f => (
             <button
@@ -94,6 +102,7 @@ export default function TodoPage() {
             </button>
           ))}
         </div>
+        )}
 
         <div className="mb-4 flex flex-wrap gap-2">
           {labels && labels.length > 0 && (
@@ -122,7 +131,7 @@ export default function TodoPage() {
             </div>
           )}
 
-          {(filter === 'all' || filter === 'tasks') && projects && projects.length > 0 && (
+          {tasksOn && (filter === 'all' || filter === 'tasks') && projects && projects.length > 0 && (
             <select
               value={projectFilter === 'none' ? 'none' : projectFilter ?? ''}
               onChange={e => {
@@ -139,7 +148,7 @@ export default function TodoPage() {
             </select>
           )}
 
-          {(filter === 'all' || filter === 'tasks') && (
+          {tasksOn && (filter === 'all' || filter === 'tasks') && (
             <div className="flex gap-1 rounded-lg bg-card p-0.5">
               <button
                 onClick={() => setSortMode('priority')}
@@ -157,7 +166,7 @@ export default function TodoPage() {
           )}
         </div>
 
-        {habitsTotal > 0 && (filter === 'all' || filter === 'habits') && (
+        {habitsOn && habitsTotal > 0 && (filter === 'all' || filter === 'habits') && (
           <div className="mb-4 rounded-lg bg-card p-3 shadow-sm flex items-center gap-3">
             <CheckCircle2 className="h-5 w-5 text-success" />
             <span className="text-sm text-text-primary font-medium">
@@ -166,7 +175,7 @@ export default function TodoPage() {
           </div>
         )}
 
-        {(filter === 'all' || filter === 'habits') && (
+        {habitsOn && (filter === 'all' || filter === 'habits') && (
           <div className="mb-6">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">Habits</h2>
@@ -266,7 +275,7 @@ export default function TodoPage() {
           </div>
         )}
 
-        {(filter === 'all' || filter === 'tasks') && (
+        {tasksOn && (filter === 'all' || filter === 'tasks') && (
           <div className="mb-6">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">Tasks</h2>
@@ -293,18 +302,22 @@ export default function TodoPage() {
         )}
 
         <div className="flex gap-2">
+          {habitsOn && (
           <button
             onClick={() => navigate('/todo/habits')}
             className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-primary-100 py-2.5 text-sm font-medium text-primary-700"
           >
             <Plus className="h-4 w-4" /> Add Habit
           </button>
+          )}
+          {tasksOn && (
           <button
             onClick={() => navigate('/todo/tasks')}
             className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-secondary-100 py-2.5 text-sm font-medium text-secondary-700"
           >
             <Plus className="h-4 w-4" /> Add Task
           </button>
+          )}
         </div>
       </PageContainer>
     </>

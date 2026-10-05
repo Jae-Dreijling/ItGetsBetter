@@ -1,4 +1,5 @@
 import type { MealSlot, HabitFrequency, TaskPriority, Weekday } from './enums'
+import type { FeatureTiers } from '../lib/features'
 
 export interface UserProfile {
   id?: number
@@ -12,6 +13,9 @@ export interface UserProfile {
   theme: 'light' | 'dark' | 'auto'
   // Colour theme; undefined means the default coral theme. See lib/themes.
   color_theme?: 'coral' | 'spring' | 'summer' | 'autumn' | 'winter' | 'seasonal'
+  // Per-feature attention tier (spotlight / available / off). Missing means
+  // available. See lib/features.
+  feature_tiers?: FeatureTiers
   created_at: string
 }
 

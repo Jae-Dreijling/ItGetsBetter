@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router'
+import { useFeatureTiers } from '../../hooks/useFeatures'
+import { isOn, type FeatureId } from '../../lib/features'
 import { Scale, UtensilsCrossed, Droplets, Timer, AlertCircle, Dumbbell, CheckCircle2, ChevronRight, Pill, Check, Star } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import { openSideMenu } from '../../lib/sideMenu'
@@ -35,6 +37,8 @@ function getTimeOfDay(): TimeOfDay {
 }
 
 export default function HomePage() {
+  const tiers = useFeatureTiers()
+  const on = (id: FeatureId) => isOn(tiers, id)
   const latestWeight = useLatestWeight()
   const todaysMeals = useTodaysMeals()
   const activeHabits = useActiveHabits()
@@ -100,7 +104,7 @@ export default function HomePage() {
   return (
     <>
       <TopBar
-        title="Home"
+        title="Today"
         onMenuClick={openSideMenu}
         rightContent={weatherData ? (
           <span className="text-xs text-muted">{weatherEmoji} {weatherData.temp}°</span>
@@ -144,7 +148,7 @@ export default function HomePage() {
 
         <FocusSpotlight />
 
-        {points !== undefined && (
+        {on('rewards') && points !== undefined && (
           <button
             onClick={() => navigate('/me/rewards')}
             className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent-100 py-2.5 transition-transform active:scale-[0.98]"
@@ -156,102 +160,108 @@ export default function HomePage() {
 
         <div className="mb-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => navigate('/log/weight')}
-              className="rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Scale className="h-4 w-4 text-secondary-500" />
-                <span className="text-xs text-muted">Weight</span>
-              </div>
-              <p className="text-lg font-bold text-text-primary">
-                {latestWeight ? `${latestWeight.value_kg} kg` : '—'}
-              </p>
-            </button>
-
-            <button
-              onClick={() => navigate('/log/meal')}
-              className="rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <UtensilsCrossed className="h-4 w-4 text-primary-500" />
-                <span className="text-xs text-muted">Meals</span>
-              </div>
-              <p className="text-lg font-bold text-text-primary">
-                {todaysMeals?.length ?? 0} logged
-              </p>
-              {avgScore && (
-                <p className="text-xs text-muted">avg {avgScore}/5</p>
-              )}
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => navigate('/log/water')}
-              className="rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Droplets className="h-4 w-4 text-secondary-500" />
-                <span className="text-xs text-muted">Water</span>
-              </div>
-              <p className="text-lg font-bold text-text-primary mb-1">
-                {waterDisplay}
-                <span className="text-xs font-normal text-muted"> / {waterGoalMl / 1000}L</span>
-              </p>
-              <div className="h-2 rounded-full bg-surface overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-secondary-400 transition-all duration-500"
-                  style={{ width: `${waterPercent}%` }}
-                />
-              </div>
-            </button>
-
-            <div className="rounded-2xl bg-card p-4 shadow-sm text-left">
-              <button onClick={() => navigate('/log/fasting')} className="w-full text-left">
+            {on('weight') && (
+              <button
+                onClick={() => navigate('/log/weight')}
+                className="rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]"
+              >
                 <div className="flex items-center gap-2 mb-2">
-                  <Timer className="h-4 w-4 text-accent-500" />
-                  <span className="text-xs text-muted">Fasting</span>
+                  <Scale className="h-4 w-4 text-secondary-500" />
+                  <span className="text-xs text-muted">Weight</span>
                 </div>
-                <p className={`text-lg font-bold mb-1 ${fast.goalMet ? 'text-success' : fast.status === 'dismissed' ? 'text-muted' : 'text-text-primary'}`}>
-                  {fast.status === 'fasting'
-                    ? formatFastingDuration(fast.fastingMinutes)
-                    : fast.status === 'dismissed'
-                    ? 'Dismissed'
-                    : 'No data'}
+                <p className="text-lg font-bold text-text-primary">
+                  {latestWeight ? `${latestWeight.value_kg} kg` : '—'}
                 </p>
-                {fast.status === 'fasting' && (
-                  <div className="h-2 rounded-full bg-surface overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${fast.goalMet ? 'bg-success' : 'bg-accent-400'}`}
-                      style={{ width: `${Math.min((fast.fastingMinutes / (fast.goalHours * 60)) * 100, 100)}%` }}
-                    />
-                  </div>
+              </button>
+            )}
+
+            {on('meals') && (
+              <button
+                onClick={() => navigate('/log/meal')}
+                className="rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <UtensilsCrossed className="h-4 w-4 text-primary-500" />
+                  <span className="text-xs text-muted">Meals</span>
+                </div>
+                <p className="text-lg font-bold text-text-primary">
+                  {todaysMeals?.length ?? 0} logged
+                </p>
+                {avgScore && (
+                  <p className="text-xs text-muted">avg {avgScore}/5</p>
                 )}
               </button>
-              {fast.status === 'fasting' && fast.fastingMinutes > 0 && (
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => {
-                      breakFast(fast.lastMealAt!, fast.fastingMinutes, fast.goalHours)
-                      navigate('/log/meal')
-                    }}
-                    className="flex-1 rounded-lg bg-success/15 py-1.5 text-xs font-semibold text-success"
-                  >
-                    Break Fast
-                  </button>
-                  <button
-                    onClick={() => fast.dismiss()}
-                    className="flex-1 rounded-lg bg-surface py-1.5 text-xs font-semibold text-muted"
-                  >
-                    Delete Fast
-                  </button>
+            )}
+
+            {on('water') && (
+              <button
+                onClick={() => navigate('/log/water')}
+                className="rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Droplets className="h-4 w-4 text-secondary-500" />
+                  <span className="text-xs text-muted">Water</span>
                 </div>
-              )}
-            </div>
+                <p className="text-lg font-bold text-text-primary mb-1">
+                  {waterDisplay}
+                  <span className="text-xs font-normal text-muted"> / {waterGoalMl / 1000}L</span>
+                </p>
+                <div className="h-2 rounded-full bg-surface overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-secondary-400 transition-all duration-500"
+                    style={{ width: `${waterPercent}%` }}
+                  />
+                </div>
+              </button>
+            )}
+
+            {on('fasting') && (
+              <div className="rounded-2xl bg-card p-4 shadow-sm text-left">
+                <button onClick={() => navigate('/log/fasting')} className="w-full text-left">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Timer className="h-4 w-4 text-accent-500" />
+                    <span className="text-xs text-muted">Fasting</span>
+                  </div>
+                  <p className={`text-lg font-bold mb-1 ${fast.goalMet ? 'text-success' : fast.status === 'dismissed' ? 'text-muted' : 'text-text-primary'}`}>
+                    {fast.status === 'fasting'
+                      ? formatFastingDuration(fast.fastingMinutes)
+                      : fast.status === 'dismissed'
+                      ? 'Dismissed'
+                      : 'No data'}
+                  </p>
+                  {fast.status === 'fasting' && (
+                    <div className="h-2 rounded-full bg-surface overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${fast.goalMet ? 'bg-success' : 'bg-accent-400'}`}
+                        style={{ width: `${Math.min((fast.fastingMinutes / (fast.goalHours * 60)) * 100, 100)}%` }}
+                      />
+                    </div>
+                  )}
+                </button>
+                {fast.status === 'fasting' && fast.fastingMinutes > 0 && (
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => {
+                        breakFast(fast.lastMealAt!, fast.fastingMinutes, fast.goalHours)
+                        navigate('/log/meal')
+                      }}
+                      className="flex-1 rounded-lg bg-success/15 py-1.5 text-xs font-semibold text-success"
+                    >
+                      Break Fast
+                    </button>
+                    <button
+                      onClick={() => fast.dismiss()}
+                      className="flex-1 rounded-lg bg-surface py-1.5 text-xs font-semibold text-muted"
+                    >
+                      Delete Fast
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {habitsTotal > 0 && (
+          {on('habits') && habitsTotal > 0 && (
             <button
               onClick={() => navigate('/todo')}
               className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]"
@@ -275,7 +285,7 @@ export default function HomePage() {
             </button>
           )}
 
-          {todaysExercise && todaysExercise.length > 0 && (
+          {on('exercise') && todaysExercise && todaysExercise.length > 0 && (
             <button
               onClick={() => navigate('/log/exercise')}
               className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]"
@@ -294,7 +304,7 @@ export default function HomePage() {
           )}
         </div>
 
-        {medsTotal > 0 && (
+        {on('medicine') && medsTotal > 0 && (
           <div className="mb-4 space-y-3">
             <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">Medicine</h2>
             {medsTaken < medsTotal ? (
@@ -324,7 +334,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {homepageTasks.length > 0 && (
+        {on('tasks') && homepageTasks.length > 0 && (
           <div className="space-y-3">
             <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">Tasks</h2>
             <div className="space-y-2">
