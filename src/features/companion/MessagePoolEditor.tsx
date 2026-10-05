@@ -3,7 +3,7 @@ import { Trash2, ChevronDown, ChevronRight, Upload, FileText } from 'lucide-reac
 import type { CompanionEvent } from '../../hooks/useCompanion'
 import type { CompanionMessages } from '../../types'
 
-export const EVENT_LABELS: { key: CompanionEvent; label: string }[] = [
+const EVENT_LABELS: { key: CompanionEvent; label: string }[] = [
   { key: 'general', label: 'General / Default' },
   { key: 'morning_greeting', label: 'Morning Greeting' },
   { key: 'welcome_back', label: 'Welcome Back' },
@@ -30,7 +30,7 @@ export const EVENT_LABELS: { key: CompanionEvent; label: string }[] = [
 
 const WRAPPING_QUOTE_CHARS = ['"', "'", '“', '”', '‘', '’']
 
-export function stripWrappingQuotes(raw: string): string {
+function stripWrappingQuotes(raw: string): string {
   let text = raw.trim()
   while (
     text.length >= 2 &&

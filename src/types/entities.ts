@@ -1,12 +1,23 @@
 import type { MealSlot, HabitFrequency, TaskPriority, Weekday } from './enums'
+import type { FeatureTiers } from '../lib/features'
 
 export interface UserProfile {
   id?: number
   display_name: string
+  // Other names to switch to with one tap (e.g. a fake name for showing the
+  // app to someone). display_name is always the active one.
+  saved_names?: string[]
   height_cm: number
   starting_weight_kg: number
   goal_weight_milestone_kg: number
   theme: 'light' | 'dark' | 'auto'
+  // Colour theme; undefined means the default coral theme. See lib/themes.
+  color_theme?: 'coral' | 'spring' | 'summer' | 'autumn' | 'winter' | 'seasonal'
+  // Per-feature attention tier (spotlight / available / off). Missing means
+  // available. See lib/features.
+  feature_tiers?: FeatureTiers
+  // When the one-time 2.0 feature picker was completed or skipped.
+  features_picked_at?: string
   created_at: string
 }
 
@@ -82,6 +93,8 @@ export interface Habit {
   chain_order: number
   is_active: boolean
   is_queued: boolean
+  // Part of the daily floor (max 3, see lib/floor). Missing means no.
+  is_floor?: boolean
   activated_at: string | null
   created_at: string
 }
@@ -299,7 +312,7 @@ export interface Companion {
 }
 
 // A shared message pool multiple companions can draw from alongside their own
-// custom lines (Option B personality templates — see DOCUMENTATION/IDEAS.md #27).
+// custom lines (Option B personality templates — see DOCUMENTATION/5-ideas/IDEAS.md #27).
 export interface PersonalityGroup {
   id?: number
   name: string
@@ -317,6 +330,16 @@ export interface FastingRecord {
   goal_hours: number
   goal_met: boolean
   was_broken_early: boolean
+}
+
+// Non-scale wins ("anything feel easier lately?"), e.g. from the Daily Check.
+// The future wins jar collects them.
+export interface Win {
+  id?: number
+  date: string
+  text: string
+  source: 'daily_check'
+  logged_at: string
 }
 
 export interface ProgressPhoto {

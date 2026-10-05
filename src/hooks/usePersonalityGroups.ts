@@ -1,7 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
-import { DEFAULT_PERSONALITY_GROUPS } from '../lib/defaultPersonalityGroups'
 import type { CompanionMessages } from '../types'
 
 const EMPTY_MESSAGES: CompanionMessages = {
@@ -43,12 +42,21 @@ export async function deletePersonalityGroup(id: number) {
 // Seeds a starter library of personality types (MLP Mane-Six-inspired archetypes
 // plus a few originals) exactly once — deleting them afterward is respected,
 // they won't come back on the next app open.
-const SEEDED_KEY = 'igb_personality_groups_seeded'
+export const SEEDED_KEY = 'igb_personality_groups_seeded'
 
 export async function ensureDefaultPersonalityGroups() {
   if (localStorage.getItem(SEEDED_KEY)) return
   localStorage.setItem(SEEDED_KEY, '1')
 
+  // 44 KB of message text, only needed this once, so loaded on demand. If that
+  // download fails, clear the flag so the next app start tries again.
+  let DEFAULT_PERSONALITY_GROUPS
+  try {
+    ({ DEFAULT_PERSONALITY_GROUPS } = await import('../lib/defaultPersonalityGroups'))
+  } catch (err) {
+    localStorage.removeItem(SEEDED_KEY)
+    throw err
+  }
   for (const preset of DEFAULT_PERSONALITY_GROUPS) {
     await db.personalityGroups.add({
       name: preset.name,

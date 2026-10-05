@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
-import imageCompression from 'browser-image-compression'
+import { compressImage } from '../../lib/compressImage'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
-import { useCompanions, addCompanion, updateCompanion, deleteCompanion, setCompanionActive } from '../../hooks/useCompanion'
+import { useCompanions, useSessionCompanion, addCompanion, updateCompanion, deleteCompanion, setCompanionActive } from '../../hooks/useCompanion'
+import { setSessionCompanionId } from '../../lib/sessionCompanion'
 import { usePersonalityGroups } from '../../hooks/usePersonalityGroups'
 import { getCompanionHomeRegion, setCompanionHomeRegion, getCompanionAffinityRecord, updateLoverDialogue } from '../../lib/game'
 import { MessagePoolEditor } from './MessagePoolEditor'
@@ -27,6 +28,7 @@ const JOURNEY_REGIONS = [
 
 export default function CompanionPage() {
   const companions = useCompanions()
+  const current = useSessionCompanion()
   const navigate = useNavigate()
   const [showCreate, setShowCreate] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -38,7 +40,7 @@ export default function CompanionPage() {
       <TopBar title="Companions" />
       <PageContainer>
         <p className="mb-4 text-sm text-muted">
-          Turn on one or more companions to guide you through the app. When more than one is active, a random one speaks to you each session.
+          Turn on one or more companions to guide you through the app. When more than one is on, a random one speaks to you each session. Tap a companion to make it the one talking now.
         </p>
 
         <button
@@ -73,8 +75,14 @@ export default function CompanionPage() {
                 <CompanionCard
                   key={c.id}
                   companion={c}
+                  isCurrent={current?.id === c.id}
                   canDeactivate={activeCount > 1 || !c.is_active}
-                  onToggleActive={next => setCompanionActive(c.id!, next)}
+                  onMakeCurrent={() => setSessionCompanionId(c.id!)}
+                  onToggleActive={next => {
+                    setCompanionActive(c.id!, next)
+                    // A switched-off companion shouldn't keep talking: pick another.
+                    if (!next && current?.id === c.id) setSessionCompanionId(null)
+                  }}
                   onEdit={() => setEditingId(c.id!)}
                   onDelete={() => deleteCompanion(c.id!)}
                 />
@@ -87,9 +95,11 @@ export default function CompanionPage() {
   )
 }
 
-function CompanionCard({ companion, canDeactivate, onToggleActive, onEdit, onDelete }: {
+function CompanionCard({ companion, isCurrent, canDeactivate, onMakeCurrent, onToggleActive, onEdit, onDelete }: {
   companion: Companion
+  isCurrent: boolean
   canDeactivate: boolean
+  onMakeCurrent: () => void
   onToggleActive: (next: boolean) => void
   onEdit: () => void
   onDelete: () => void
@@ -109,17 +119,31 @@ function CompanionCard({ companion, canDeactivate, onToggleActive, onEdit, onDel
   return (
     <div className={`rounded-2xl bg-card p-4 shadow-sm ${companion.is_active ? 'ring-2 ring-primary-400' : ''}`}>
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface overflow-hidden">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={companion.name} className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-xl">💬</span>
-          )}
-        </div>
-        <div className="flex-1">
-          <p className="font-semibold text-text-primary">{companion.name}</p>
-          <p className="text-xs text-muted">{totalMessages} messages · {companion.is_default ? 'Default' : 'Custom'}</p>
-        </div>
+        <button
+          onClick={onMakeCurrent}
+          aria-label={isCurrent ? `${companion.name} is talking now` : `Make ${companion.name} the one talking now`}
+          aria-pressed={isCurrent}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left transition-transform duration-100 active:scale-[0.97]"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface overflow-hidden">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={companion.name} className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-xl">💬</span>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-2 font-semibold text-text-primary">
+              <span className="truncate">{companion.name}</span>
+              {isCurrent && (
+                <span className="shrink-0 rounded-full bg-primary-100 px-2 py-0.5 text-[11px] font-medium text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">
+                  💬 Talking now
+                </span>
+              )}
+            </p>
+            <p className="text-xs text-muted">{totalMessages} messages · {companion.is_default ? 'Default' : 'Custom'}</p>
+          </div>
+        </button>
         <button
           onClick={() => onToggleActive(!companion.is_active)}
           disabled={companion.is_active && !canDeactivate}
@@ -183,7 +207,7 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const compressed = await imageCompression(file, { maxSizeMB: 0.1, maxWidthOrHeight: 256, useWebWorker: true })
+    const compressed = await compressImage(file, { maxSizeMB: 0.1, maxWidthOrHeight: 256, useWebWorker: true })
     setAvatar(compressed)
     if (avatarPreview) URL.revokeObjectURL(avatarPreview)
     setAvatarPreview(URL.createObjectURL(compressed))

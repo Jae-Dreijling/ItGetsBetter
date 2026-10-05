@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from 'react'
+import { useEffect, useState, lazy } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
 import { db, ensureDefaults } from './db'
 import { checkProgressionAdvancements } from './hooks/useHabits'
@@ -12,34 +12,42 @@ import { Heart } from 'lucide-react'
 
 import UpdatePrompt from './components/UpdatePrompt'
 import ErrorBoundary from './components/ErrorBoundary'
-import AppLock, { isLockEnabled } from './components/AppLock'
+import AppLock from './components/AppLock'
+import { isLockEnabled } from './lib/appLock'
+import { applyColorTheme, resolveColorTheme } from './lib/themes'
 import InstallPrompt from './components/InstallPrompt'
-import FloatingCompanion, { triggerCompanionMessage } from './components/FloatingCompanion'
+import { triggerCompanionMessage } from './lib/companionMessenger'
 import PointsToast from './components/PointsToast'
 import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
+import FeaturePicker from './features/setup/FeaturePicker'
 import HomePage from './features/home/HomePage'
-import LogHubPage from './features/log/LogHubPage'
-import WeightPage from './features/weight/WeightPage'
-import MealsPage from './features/meals/MealsPage'
-import MeasurementsPage from './features/measurements/MeasurementsPage'
-import SettingsPage from './features/settings/SettingsPage'
-import ProfileSettings from './features/settings/ProfileSettings'
-import BackupPage from './features/settings/BackupPage'
-import WaterPage from './features/water/WaterPage'
-import FastingPage from './features/fasting/FastingPage'
-import ExercisePage from './features/exercise/ExercisePage'
-import MoodPage from './features/mood/MoodPage'
-import SleepPage from './features/sleep/SleepPage'
-import MedicinePage from './features/medicine/MedicinePage'
-import MePage from './features/me/MePage'
-import TodoPage from './features/todo/TodoPage'
-import HabitsPage from './features/todo/HabitsPage'
-import TasksPage from './features/todo/TasksPage'
 
+const loadLogHubPage = () => import('./features/log/LogHubPage')
+const LogHubPage = lazy(loadLogHubPage)
+const WeightPage = lazy(() => import('./features/weight/WeightPage'))
+const MealsPage = lazy(() => import('./features/meals/MealsPage'))
+const MeasurementsPage = lazy(() => import('./features/measurements/MeasurementsPage'))
+const SettingsPage = lazy(() => import('./features/settings/SettingsPage'))
+const ProfileSettings = lazy(() => import('./features/settings/ProfileSettings'))
+const BackupPage = lazy(() => import('./features/settings/BackupPage'))
+const WaterPage = lazy(() => import('./features/water/WaterPage'))
+const FastingPage = lazy(() => import('./features/fasting/FastingPage'))
+const ExercisePage = lazy(() => import('./features/exercise/ExercisePage'))
+const MoodPage = lazy(() => import('./features/mood/MoodPage'))
+const SleepPage = lazy(() => import('./features/sleep/SleepPage'))
+const MedicinePage = lazy(() => import('./features/medicine/MedicinePage'))
+const loadMePage = () => import('./features/me/MePage')
+const MePage = lazy(loadMePage)
+const loadTodoPage = () => import('./features/todo/TodoPage')
+const TodoPage = lazy(loadTodoPage)
+const HabitsPage = lazy(() => import('./features/todo/HabitsPage'))
+const TasksPage = lazy(() => import('./features/todo/TasksPage'))
 const ExportPage = lazy(() => import('./features/settings/ExportPage'))
 const DevToolsPage = lazy(() => import('./features/settings/DevToolsPage'))
-const QuoteManager = lazy(() => import('./features/settings/QuoteManager'))
+const StartFreshPage = lazy(() => import('./features/settings/StartFreshPage'))
+const ThemePage = lazy(() => import('./features/settings/ThemePage'))
+const FeaturesPage = lazy(() => import('./features/settings/FeaturesPage'))
 const ScheduleSettings = lazy(() => import('./features/settings/ScheduleSettings'))
 const LabelManager = lazy(() => import('./features/settings/LabelManager'))
 const GroceryPage = lazy(() => import('./features/grocery/GroceryPage'))
@@ -65,17 +73,10 @@ const BossPage = lazy(() => import('./features/game/BossPage'))
 const EncounterPage = lazy(() => import('./features/game/EncounterPage'))
 const MapPage = lazy(() => import('./features/game/MapPage'))
 
-function LazyFallback() {
-  return (
-    <div className="flex flex-1 items-center justify-center py-12">
-      <Heart className="h-6 w-6 animate-pulse text-primary-400" />
-    </div>
-  )
-}
-
 function AppContent() {
   const { profile, isLoading } = useProfile()
   const [setupDone, setSetupDone] = useState(false)
+  const [pickerDone, setPickerDone] = useState(false)
 
   useEffect(() => {
     if (profile) {
@@ -94,6 +95,10 @@ function AppContent() {
     }
   }, [profile?.theme])
 
+  useEffect(() => {
+    if (profile) applyColorTheme(resolveColorTheme(profile.color_theme))
+  }, [profile])
+
   if (isLoading) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-surface">
@@ -104,6 +109,11 @@ function AppContent() {
 
   if (!profile && !setupDone) {
     return <FirstLaunchSetup onComplete={() => setSetupDone(true)} />
+  }
+
+  // One-time 2.0 feature picker (also after first-time setup and Start Fresh).
+  if (profile && !profile.features_picked_at && !pickerDone) {
+    return <FeaturePicker onDone={() => setPickerDone(true)} />
   }
 
   return (
@@ -122,45 +132,64 @@ function AppContent() {
         <Route path="todo" element={<TodoPage />} />
         <Route path="todo/habits" element={<HabitsPage />} />
         <Route path="todo/tasks" element={<TasksPage />} />
-        <Route path="todo/pomodoro" element={<Suspense fallback={<LazyFallback />}><PomodoroPage /></Suspense>} />
+        <Route path="todo/pomodoro" element={<PomodoroPage />} />
         <Route path="me" element={<MePage />} />
         <Route path="me/measurements" element={<MeasurementsPage />} />
-        <Route path="me/rewards" element={<Suspense fallback={<LazyFallback />}><RewardShopPage /></Suspense>} />
-        <Route path="me/rewards/history" element={<Suspense fallback={<LazyFallback />}><RewardClaimHistoryPage /></Suspense>} />
-        <Route path="me/achievements" element={<Suspense fallback={<LazyFallback />}><AchievementsPage /></Suspense>} />
-        <Route path="me/graphs" element={<Suspense fallback={<LazyFallback />}><GraphsDashboard /></Suspense>} />
-        <Route path="me/review" element={<Suspense fallback={<LazyFallback />}><WeeklyReviewPage /></Suspense>} />
-        <Route path="me/photos" element={<Suspense fallback={<LazyFallback />}><ProgressPhotosPage /></Suspense>} />
-        <Route path="me/insights" element={<Suspense fallback={<LazyFallback />}><InsightsPage /></Suspense>} />
+        <Route path="me/rewards" element={<RewardShopPage />} />
+        <Route path="me/rewards/history" element={<RewardClaimHistoryPage />} />
+        <Route path="me/achievements" element={<AchievementsPage />} />
+        <Route path="me/graphs" element={<GraphsDashboard />} />
+        <Route path="me/review" element={<WeeklyReviewPage />} />
+        <Route path="me/photos" element={<ProgressPhotosPage />} />
+        <Route path="me/insights" element={<InsightsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
-        <Route path="settings/export" element={<Suspense fallback={<LazyFallback />}><ExportPage /></Suspense>} />
-        <Route path="settings/devtools" element={<Suspense fallback={<LazyFallback />}><DevToolsPage /></Suspense>} />
-        <Route path="settings/quotes" element={<Suspense fallback={<LazyFallback />}><QuoteManager /></Suspense>} />
-        <Route path="settings/schedule" element={<Suspense fallback={<LazyFallback />}><ScheduleSettings /></Suspense>} />
-        <Route path="settings/labels" element={<Suspense fallback={<LazyFallback />}><LabelManager /></Suspense>} />
-        <Route path="me/grocery" element={<Suspense fallback={<LazyFallback />}><GroceryPage /></Suspense>} />
-        <Route path="me/books" element={<Suspense fallback={<LazyFallback />}><BooksPage /></Suspense>} />
-        <Route path="me/companion" element={<Suspense fallback={<LazyFallback />}><CompanionPage /></Suspense>} />
-        <Route path="me/companion/personalities" element={<Suspense fallback={<LazyFallback />}><PersonalityGroupsPage /></Suspense>} />
-        <Route path="me/vault" element={<Suspense fallback={<LazyFallback />}><MotivationVaultPage /></Suspense>} />
-        <Route path="me/timeline" element={<Suspense fallback={<LazyFallback />}><TimelinePage /></Suspense>} />
-        <Route path="me/meditation" element={<Suspense fallback={<LazyFallback />}><MeditationPage /></Suspense>} />
-        <Route path="me/character" element={<Suspense fallback={<LazyFallback />}><CharacterPage /></Suspense>} />
-        <Route path="journey" element={<Suspense fallback={<LazyFallback />}><JourneyPage /></Suspense>} />
-        <Route path="journey/start" element={<Suspense fallback={<LazyFallback />}><JourneyActivationPage /></Suspense>} />
-        <Route path="journey/guild" element={<Suspense fallback={<LazyFallback />}><GuildHallPage /></Suspense>} />
-        <Route path="journey/boss/:bossId" element={<Suspense fallback={<LazyFallback />}><BossPage /></Suspense>} />
-        <Route path="journey/encounter/:encounterId" element={<Suspense fallback={<LazyFallback />}><EncounterPage /></Suspense>} />
-        <Route path="journey/map" element={<Suspense fallback={<LazyFallback />}><MapPage /></Suspense>} />
+        <Route path="settings/start-fresh" element={<StartFreshPage />} />
+        <Route path="settings/theme" element={<ThemePage />} />
+        <Route path="settings/features" element={<FeaturesPage />} />
+        <Route path="settings/export" element={<ExportPage />} />
+        <Route path="settings/devtools" element={<DevToolsPage />} />
+        <Route path="settings/schedule" element={<ScheduleSettings />} />
+        <Route path="settings/labels" element={<LabelManager />} />
+        <Route path="me/grocery" element={<GroceryPage />} />
+        <Route path="me/books" element={<BooksPage />} />
+        <Route path="me/companion" element={<CompanionPage />} />
+        <Route path="me/companion/personalities" element={<PersonalityGroupsPage />} />
+        <Route path="me/vault" element={<MotivationVaultPage />} />
+        <Route path="me/timeline" element={<TimelinePage />} />
+        <Route path="me/meditation" element={<MeditationPage />} />
+        <Route path="me/character" element={<CharacterPage />} />
+        <Route path="journey" element={<JourneyPage />} />
+        <Route path="journey/start" element={<JourneyActivationPage />} />
+        <Route path="journey/guild" element={<GuildHallPage />} />
+        <Route path="journey/boss/:bossId" element={<BossPage />} />
+        <Route path="journey/encounter/:encounterId" element={<EncounterPage />} />
+        <Route path="journey/map" element={<MapPage />} />
       </Route>
     </Routes>
   )
 }
 
+// Pages load when first opened. The other bottom tabs are fetched in the
+// background once the app is idle, so switching tabs stays instant.
+function prefetchTabs() {
+  void loadLogHubPage()
+  void loadTodoPage()
+  void loadMePage()
+}
+
 export default function App() {
   const [unlocked, setUnlocked] = useState(!isLockEnabled())
+
+  useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(prefetchTabs, { timeout: 3000 })
+      return () => cancelIdleCallback(id)
+    }
+    const timer = setTimeout(prefetchTabs, 1500)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     async function init() {
@@ -202,7 +231,6 @@ export default function App() {
       <ErrorBoundary feature="the app">
         <AppContent />
       </ErrorBoundary>
-      <FloatingCompanion />
       <PointsToast />
       <InstallPrompt />
     </BrowserRouter>

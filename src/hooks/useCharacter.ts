@@ -12,7 +12,7 @@ import { triggerCompanionMessage } from '../lib/companionMessenger'
 
 // ─── Stat score weights ───────────────────────────────────────────────────────
 // Calibrated so a consistent user after 6 months reaches level 8–10 per stat.
-// See DOCUMENTATION/GAMIFICATION.md for the reasoning behind each divisor.
+// See DOCUMENTATION/3-game/research/GAMIFICATION-OPTIONS.md for the reasoning behind each divisor.
 
 function buildStats(raw: {
   exerciseCount: number

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router'
 import { Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin, type LucideIcon } from 'lucide-react'
+import { isPathOn } from '../../lib/features'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
@@ -53,6 +54,11 @@ const GROUPS: { title: string; items: MeLink[] }[] = [
 
 export default function MePage() {
   const { profile } = useProfile()
+  const tiers = profile?.feature_tiers
+  // Switched-off features disappear from this page (Rulebook 2.4).
+  const groups = GROUPS
+    .map(group => ({ ...group, items: group.items.filter(item => isPathOn(tiers, item.path)) }))
+    .filter(group => group.items.length > 0)
   const latestWeight = useLatestWeight()
   const points = usePointsBalance()
   const navigate = useNavigate()
@@ -76,32 +82,36 @@ export default function MePage() {
           </div>
         )}
 
-        <button
-          onClick={() => navigate('/me/rewards')}
-          className="mb-5 flex w-full items-center gap-4 rounded-2xl bg-accent-100 p-4 text-left transition-transform active:scale-[0.98]"
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-200">
-            <Star className="h-5 w-5 text-accent-700" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-accent-700">{points ?? 0} points</p>
-            <p className="text-xs text-accent-600">Reward Shop</p>
-          </div>
-          <Gift className="h-5 w-5 text-accent-600" />
-        </button>
+        {isPathOn(tiers, '/me/rewards') && (
+          <button
+            onClick={() => navigate('/me/rewards')}
+            className="mb-5 flex w-full items-center gap-4 rounded-2xl bg-accent-100 p-4 text-left transition-transform active:scale-[0.98]"
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-200">
+              <Star className="h-5 w-5 text-accent-700" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-accent-700">{points ?? 0} points</p>
+              <p className="text-xs text-accent-600">Reward Shop</p>
+            </div>
+            <Gift className="h-5 w-5 text-accent-600" />
+          </button>
+        )}
 
-        <button
-          onClick={() => navigate('/journey')}
-          className="mb-6 flex w-full items-center gap-3 rounded-xl bg-gradient-to-r from-primary-500 to-secondary-500 p-4 shadow-sm text-left"
-        >
-          <MapPin className="h-5 w-5 text-white" />
-          <div>
-            <p className="font-medium text-white">Journey</p>
-            <p className="text-sm text-white/70">Your adventure awaits</p>
-          </div>
-        </button>
+        {isPathOn(tiers, '/journey') && (
+          <button
+            onClick={() => navigate('/journey')}
+            className="mb-6 flex w-full items-center gap-3 rounded-xl bg-gradient-to-r from-primary-500 to-secondary-500 p-4 shadow-sm text-left"
+          >
+            <MapPin className="h-5 w-5 text-white" />
+            <div>
+              <p className="font-medium text-white">Journey</p>
+              <p className="text-sm text-white/70">Your adventure awaits</p>
+            </div>
+          </button>
+        )}
 
-        {GROUPS.map(group => (
+        {groups.map(group => (
           <div key={group.title} className="mb-6">
             <h2 className="mb-2 text-xs font-semibold text-muted uppercase tracking-wide">{group.title}</h2>
             <div className="space-y-2">

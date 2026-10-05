@@ -16,7 +16,7 @@
 | **Must Have** | 15 | ✅ All built (Phases 0-1) |
 | **Should Have** | 8 | ✅ All built (Phases 2-3) |
 | **Could Have** | 18 | ✅ All built (Phases 4-7) |
-| **Won't Have Yet** | 14 | ⏳ Deferred — see [IDEAS.md](IDEAS.md) for future concepts |
+| **Won't Have Yet** | 14 | ⏳ Deferred — see [IDEAS.md](../5-ideas/IDEAS.md) for future concepts |
 
 ---
 

@@ -48,7 +48,7 @@ export default function StarterHabitPrompt({ onDismiss }: Props) {
             key={i}
             onClick={() => toggle(i)}
             className={`flex w-full items-center gap-3 rounded-xl p-3 text-left text-sm transition-colors ${
-              selected.has(i) ? 'bg-primary-100 text-primary-700 font-medium' : 'bg-surface text-muted'
+              selected.has(i) ? 'bg-primary-100 text-primary-700 font-medium dark:bg-primary-900/40 dark:text-primary-300' : 'bg-surface text-muted'
             }`}
           >
             <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${

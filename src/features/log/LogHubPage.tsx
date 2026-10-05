@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router'
 import { Scale, UtensilsCrossed, Droplets, Timer, Dumbbell, SmilePlus, Moon, Pill } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
+import { useFeatureTiers } from '../../hooks/useFeatures'
+import { isPathOn } from '../../lib/features'
 
 const groups = [
   {
@@ -26,12 +28,17 @@ const groups = [
 
 export default function LogHubPage() {
   const navigate = useNavigate()
+  const tiers = useFeatureTiers()
+  // Switched-off features disappear from this page (Rulebook 2.4).
+  const visibleGroups = groups
+    .map(group => ({ ...group, items: group.items.filter(item => isPathOn(tiers, item.path)) }))
+    .filter(group => group.items.length > 0)
 
   return (
     <>
       <TopBar title="Log" />
       <PageContainer>
-        {groups.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.title} className="mb-5">
             <h2 className="mb-2 text-xs font-semibold text-muted uppercase tracking-wide">{group.title}</h2>
             <div className="space-y-2">

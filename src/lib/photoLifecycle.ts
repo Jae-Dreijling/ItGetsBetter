@@ -1,5 +1,5 @@
 import { db } from '../db'
-import imageCompression from 'browser-image-compression'
+import { compressImage } from './compressImage'
 import { subMonths } from 'date-fns'
 
 export interface LifecycleReport {
@@ -31,7 +31,7 @@ export async function runPhotoLifecycle(): Promise<LifecycleReport> {
       report.foodPhotosDeleted++
     } else if (meal.date < threeMonthsAgo && meal.photo.size > 60000) {
       try {
-        const compressed = await imageCompression(new File([meal.photo], 'photo.jpg', { type: meal.photo.type }), {
+        const compressed = await compressImage(new File([meal.photo], 'photo.jpg', { type: meal.photo.type }), {
           maxSizeMB: 0.05,
           maxWidthOrHeight: 512,
           useWebWorker: true,
@@ -48,7 +48,7 @@ export async function runPhotoLifecycle(): Promise<LifecycleReport> {
   for (const photo of photos) {
     if (photo.date < oneYearAgo && photo.photo.size > 120000) {
       try {
-        const compressed = await imageCompression(new File([photo.photo], 'photo.jpg', { type: photo.photo.type }), {
+        const compressed = await compressImage(new File([photo.photo], 'photo.jpg', { type: photo.photo.type }), {
           maxSizeMB: 0.1,
           maxWidthOrHeight: 1024,
           useWebWorker: true,

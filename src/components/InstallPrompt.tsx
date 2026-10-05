@@ -4,9 +4,14 @@ import { Download, X } from 'lucide-react'
 const INSTALL_DISMISSED_KEY = 'igb_install_dismissed'
 const APP_OPEN_COUNT_KEY = 'igb_app_open_count'
 
+// Chrome's install event; not in TypeScript's DOM types yet.
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+}
+
 export default function InstallPrompt() {
   const [show, setShow] = useState(false)
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
 
   useEffect(() => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
@@ -22,7 +27,7 @@ export default function InstallPrompt() {
 
     const handler = (e: Event) => {
       e.preventDefault()
-      setDeferredPrompt(e)
+      setDeferredPrompt(e as BeforeInstallPromptEvent)
       setShow(true)
     }
     window.addEventListener('beforeinstallprompt', handler)

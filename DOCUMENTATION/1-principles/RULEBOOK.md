@@ -114,6 +114,26 @@
 
 ---
 
+### 2.4 — Many Features, Few Asking for Attention
+
+**Rule:** The app may have as many features as are useful, but every feature outside the core must be optional, and only a few may ask for attention at once. Each feature has one of three attention tiers, chosen by the user:
+
+- **Spotlight:** shown on the home screen and allowed to send notifications. Capped at about 3–4 items in total.
+- **Available:** reachable through the tabs or menu when the user goes looking. Never prompts, nags or shows what wasn't done.
+- **Off:** hidden everywhere (menus, notifications, companion messages). Its data is kept, never deleted.
+
+New features arrive as Available, never straight into the Spotlight. Points, quests, achievements and companion messages must never require an optional feature.
+
+**Reasoning:** The user didn't leave v1 because it had too many features. They left because too many things asked for attention at once, so the app felt like a wall of homework. Separating what *exists* from what *asks* lets the app grow without growing the pressure. An unused feature that stays quiet costs nothing; an unused feature that keeps showing up becomes a small daily reminder of failure.
+
+**Good:** A social tracker that's switched to Available: it's in the menu when wanted, but sends no reminders and never appears on the home screen. A Settings → Features screen where any feature can be moved between tiers in one tap.
+
+**Bad:** A new abstinence feature that adds a home-screen card and a daily notification the moment it ships. A quest that requires logging in the reading tracker, which the user has turned off.
+
+**Exceptions:** The core (home screen, Daily Check, companion, settings) can't be switched off, because the app doesn't work without it. Safety-relevant prompts (e.g. a gentle note when unhealthy patterns show up) may surface regardless of tier, but only rarely and always warmly.
+
+---
+
 ## 3. Data Entry
 
 ### 3.1 — Progressive Disclosure: Minimum First, Depth Optional

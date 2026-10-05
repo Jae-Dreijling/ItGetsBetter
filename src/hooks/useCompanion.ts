@@ -1,7 +1,9 @@
+import { useSyncExternalStore } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
 import { getRandomMessage } from '../lib/supportiveMessages'
+import { getSessionCompanionId, setSessionCompanionId, subscribeSessionCompanion, pickSessionCompanion } from '../lib/sessionCompanion'
 import type { Companion, CompanionMessages } from '../types'
 
 const EMPTY_MESSAGES: CompanionMessages = {
@@ -35,29 +37,23 @@ export function useCompanions() {
   return useLiveQuery(() => db.companions.toArray())
 }
 
-const SESSION_COMPANION_KEY = 'igb_session_companion_id'
+export function useSessionCompanionId(): number | null {
+  return useSyncExternalStore(subscribeSessionCompanion, getSessionCompanionId)
+}
 
 // Multiple companions can be marked active; one is randomly picked to speak
-// for the current session (persisted in sessionStorage so it stays the same
-// companion across navigations, and re-randomizes next time the app is opened).
+// for the current session, unless the user taps one on the Companions page.
+// The pick lives in sessionStorage (lib/sessionCompanion), so it stays the same
+// across navigations and re-randomizes next time the app is opened.
 export function useSessionCompanion() {
+  const storedId = useSessionCompanionId()
   return useLiveQuery(async () => {
-    const active = await db.companions.filter(c => c.is_active === true).toArray()
-
-    if (active.length === 0) {
-      return db.companions.filter(c => c.is_default === true).first()
+    const picked = pickSessionCompanion(await db.companions.toArray(), storedId)
+    if (picked?.id !== undefined && picked.is_active && picked.id !== storedId) {
+      setSessionCompanionId(picked.id)
     }
-
-    const storedId = sessionStorage.getItem(SESSION_COMPANION_KEY)
-    if (storedId) {
-      const match = active.find(c => c.id === Number(storedId))
-      if (match) return match
-    }
-
-    const picked = active[Math.floor(Math.random() * active.length)]
-    sessionStorage.setItem(SESSION_COMPANION_KEY, String(picked.id))
     return picked
-  })
+  }, [storedId])
 }
 
 // Merges a companion's own messages with its personality group's shared pool
@@ -131,10 +127,27 @@ export async function setCompanionActive(id: number, isActive: boolean) {
   await db.companions.update(id, { is_active: isActive })
 }
 
+// Called from more than one place on app start (App and FloatingCompanion),
+// so the check and the add share one transaction: otherwise two concurrent
+// calls both see "no default yet" and the app gets two default companions.
+//
+// Installs from before that fix can already have duplicates, and default
+// companions can't be deleted in the UI. Extras become normal companions
+// named "... (copy)", so nothing is lost and the user can delete them.
 export async function ensureDefaultCompanion() {
-  const count = await db.companions.filter(c => c.is_default === true).count()
-  if (count > 0) return
+  await db.transaction('rw', db.companions, async () => {
+    const defaults = await db.companions.filter(c => c.is_default === true).sortBy('id')
+    if (defaults.length === 0) {
+      await db.companions.add(createDefaultCompanion())
+      return
+    }
+    for (const extra of defaults.slice(1)) {
+      await db.companions.update(extra.id!, { is_default: false, name: `${extra.name} (copy)` })
+    }
+  })
+}
 
+function createDefaultCompanion(): Companion {
   const defaultMessages: CompanionMessages = {
     general: [
       "Good to see you, {name}. You're doing great.",
@@ -243,7 +256,7 @@ export async function ensureDefaultCompanion() {
     ],
   }
 
-  await db.companions.add({
+  return {
     name: 'ItGetsBetter',
     avatar: null,
     is_default: true,
@@ -251,5 +264,5 @@ export async function ensureDefaultCompanion() {
     personality_group_id: null,
     messages: defaultMessages,
     created_at: nowISO(),
-  })
+  }
 }

@@ -8,7 +8,7 @@ export interface PersonalityPreset {
 
 // 7 archetypes inspired by the Mane Six + Princess Celestia (by personality
 // type, not name or likeness), plus 5 original archetypes for variety.
-// See DOCUMENTATION/IDEAS.md #27 and DOCUMENTATION/characters/template.txt.
+// See DOCUMENTATION/5-ideas/IDEAS.md #27 and DOCUMENTATION/4-companion/message-import-template.txt.
 export const DEFAULT_PERSONALITY_GROUPS: PersonalityPreset[] = [
   {
     name: 'The Scholar',

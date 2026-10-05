@@ -2,9 +2,9 @@ import { useLocation, useNavigate } from 'react-router'
 import { Home, PenSquare, CheckSquare, User } from 'lucide-react'
 
 const tabs = [
-  { id: 'home', label: 'Home', icon: Home, path: '/' },
+  { id: 'home', label: 'Today', icon: Home, path: '/' },
   { id: 'log', label: 'Log', icon: PenSquare, path: '/log' },
-  { id: 'todo', label: 'To-Do', icon: CheckSquare, path: '/todo' },
+  { id: 'todo', label: 'Plan', icon: CheckSquare, path: '/todo' },
   { id: 'me', label: 'Me', icon: User, path: '/me' },
 ] as const
 

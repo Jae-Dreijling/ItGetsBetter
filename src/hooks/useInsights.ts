@@ -9,10 +9,18 @@ export interface InsightResult {
   isConfirmed: boolean | null
 }
 
+
+interface StoredInsight {
+  id: number
+  insight_text: string
+  correlation_type: string
+  is_confirmed: boolean | null
+  is_rejected: boolean | null
+}
+
 export function useInsights() {
   return useLiveQuery(async () => {
-    const insights = await db.table('healthInsights').toArray() as any[]
-    return insights as { id: number; insight_text: string; correlation_type: string; is_confirmed: boolean | null; is_rejected: boolean | null }[]
+    return await db.table('healthInsights').toArray() as StoredInsight[]
   })
 }
 
@@ -146,8 +154,8 @@ export async function generateInsights(): Promise<{ text: string; correlationTyp
 }
 
 export async function saveInsight(text: string, correlationType: string) {
-  const existing = await (db.table('healthInsights') as any)
-    .filter((i: any) => i.correlation_type === correlationType)
+  const existing = await db.table('healthInsights')
+    .filter((i: StoredInsight) => i.correlation_type === correlationType)
     .first()
   if (existing) return
 

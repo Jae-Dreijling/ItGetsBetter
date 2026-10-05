@@ -11,6 +11,8 @@ export const POINT_VALUES = {
   mood_logged: 2,
   medicine_taken: 2,
   streak_bonus_per_day: 1,
+  daily_check: 3,
+  floor_complete: 5,
 } as const
 
 export type PointSource = keyof typeof POINT_VALUES

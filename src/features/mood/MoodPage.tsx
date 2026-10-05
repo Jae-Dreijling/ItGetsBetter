@@ -1,3 +1,5 @@
+import { useChartColors } from '../../hooks/useChartColors'
+import { MOOD_LABELS, MOOD_COLORS } from '../../lib/mood'
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { Plus, X } from 'lucide-react'
@@ -6,10 +8,9 @@ import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useTodaysMood, useMoodHistory, useMoodTags, addMoodEntry, addMoodTag, deleteMoodTag } from '../../hooks/useMood'
 
-const MOOD_LABELS = ['', 'Awful', 'Bad', 'Okay', 'Good', 'Great']
-const MOOD_COLORS = ['', '#d4665a', '#f47e6c', '#e8a838', '#4eb499', '#5cb176']
 
 export default function MoodPage() {
+  const chartColors = useChartColors()
   const todaysMood = useTodaysMood()
   const history = useMoodHistory(30)
   const savedTags = useMoodTags()
@@ -167,11 +168,11 @@ export default function MoodPage() {
             <h3 className="mb-3 text-sm font-semibold text-muted">Trend</h3>
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#8c7a6e" />
-                <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10 }} stroke="#8c7a6e" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
+                <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10 }} stroke={chartColors.axis} />
                 <Tooltip />
-                <Line type="monotone" dataKey="score" stroke="#f47e6c" strokeWidth={2} dot={{ fill: '#f47e6c', r: 3 }} />
+                <Line type="monotone" dataKey="score" stroke={chartColors.primary} strokeWidth={2} dot={{ fill: chartColors.primary, r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

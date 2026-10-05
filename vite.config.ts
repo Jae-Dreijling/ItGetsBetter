@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import { execSync } from 'node:child_process'
 
 function getCommitHash(): string {
@@ -12,12 +13,16 @@ function getCommitHash(): string {
   }
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   define: {
     __APP_COMMIT__: JSON.stringify(getCommitHash()),
     __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
   plugins: [
+    // `npm run dev:phone` serves over https: the encryption API used by
+    // backups and the app lock only works on secure origins, and a phone on
+    // the local network reaches the PC by IP, which isn't one over http.
+    mode === 'phone' && basicSsl(),
     react(),
     tailwindcss(),
     VitePWA({
@@ -48,4 +53,4 @@ export default defineConfig({
       },
     }),
   ],
-})
+}))

@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
-import imageCompression from 'browser-image-compression'
+import { compressImage } from '../lib/compressImage'
 
 export function useProgressPhotos() {
   return useLiveQuery(() =>
@@ -17,7 +17,7 @@ export function useProgressPhotosByDate(date: string) {
 }
 
 export async function addProgressPhoto(file: File, poseType: string, date?: string) {
-  const compressed = await imageCompression(file, {
+  const compressed = await compressImage(file, {
     maxSizeMB: 0.5,
     maxWidthOrHeight: 1920,
     useWebWorker: true,

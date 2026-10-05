@@ -1,13 +1,19 @@
 import { useNavigate } from 'react-router'
+import { COLOR_THEMES, resolveColorTheme, type ColorThemeSetting } from '../../lib/themes'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Target, X, Wrench } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Wrench, Sprout, Palette, LayoutGrid } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
 import { useStorageEstimate, formatBytes } from '../../hooks/useStorage'
-import { isLockEnabled, enableLock, disableLock } from '../../components/AppLock'
+import { isLockEnabled, enableLock, disableLock } from '../../lib/appLock'
 import { isWeatherEnabled, setWeatherEnabled } from '../../hooks/useWeather'
-import { useFocus, FOCUS_OPTIONS } from '../../hooks/useFocus'
+
+function colorThemeLabel(setting: ColorThemeSetting | undefined): string {
+  const theme = COLOR_THEMES.find(t => t.id === resolveColorTheme(setting))!
+  const name = `${theme.emoji} ${theme.name}`
+  return setting === 'seasonal' ? `Follow the seasons · ${name}` : name
+}
 
 export default function SettingsPage() {
   const { profile } = useProfile()
@@ -17,8 +23,6 @@ export default function SettingsPage() {
   const [showPinSetup, setShowPinSetup] = useState(false)
   const [weatherEnabled, setWeatherEnabledState] = useState(isWeatherEnabled)
   const [newPin, setNewPin] = useState('')
-  const { focus, setFocus } = useFocus()
-  const [showFocusPicker, setShowFocusPicker] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'current'>('idle')
 
   async function checkForUpdate() {
@@ -70,6 +74,17 @@ export default function SettingsPage() {
           </button>
 
           <button
+            onClick={() => navigate('/settings/features')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <LayoutGrid className="h-5 w-5 text-accent-500" />
+            <div>
+              <p className="font-medium text-text-primary">Features</p>
+              <p className="text-sm text-muted">Choose what's in your spotlight, on or off</p>
+            </div>
+          </button>
+
+          <button
             onClick={() => navigate('/settings/schedule')}
             className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
           >
@@ -92,17 +107,6 @@ export default function SettingsPage() {
           </button>
 
           <button
-            onClick={() => navigate('/settings/quotes')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <MessageCircleHeart className="h-5 w-5 text-primary-400" />
-            <div>
-              <p className="font-medium text-text-primary">My Quotes</p>
-              <p className="text-sm text-muted">Custom messages for your home screen</p>
-            </div>
-          </button>
-
-          <button
             onClick={() => navigate('/settings/backup')}
             className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
           >
@@ -110,6 +114,17 @@ export default function SettingsPage() {
             <div>
               <p className="font-medium text-text-primary">Backup & Restore</p>
               <p className="text-sm text-muted">Export or import your data</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/settings/start-fresh')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Sprout className="h-5 w-5 text-secondary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Start Fresh</p>
+              <p className="text-sm text-muted">Clean slate, optionally keeping your companions</p>
             </div>
           </button>
 
@@ -124,6 +139,17 @@ export default function SettingsPage() {
             </div>
           </button>
 
+          <button
+            onClick={() => navigate('/settings/theme')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Palette className="h-5 w-5 text-primary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Colour Theme</p>
+              <p className="text-sm text-muted">{colorThemeLabel(profile?.color_theme)}</p>
+            </div>
+          </button>
+
           <div className="flex items-center justify-between rounded-xl bg-card p-4 shadow-sm">
             <div className="flex items-center gap-3">
               {profile?.theme === 'dark' ? (
@@ -131,7 +157,7 @@ export default function SettingsPage() {
               ) : (
                 <Sun className="h-5 w-5 text-accent-500" />
               )}
-              <p className="font-medium text-text-primary">Theme</p>
+              <p className="font-medium text-text-primary">Light / Dark</p>
             </div>
             <button
               onClick={cycleTheme}
@@ -221,37 +247,6 @@ export default function SettingsPage() {
               </p>
             )}
           </div>
-
-          <div className="rounded-xl bg-card p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Target className="h-5 w-5 text-primary-500" />
-                <div>
-                  <p className="font-medium text-text-primary">Current Focus</p>
-                  <p className="text-xs text-muted">
-                    {focus ? `${focus.emoji} ${focus.label}` : 'None set'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {focus && (
-                  <button
-                    onClick={() => setFocus(null)}
-                    className="rounded-lg p-1.5 text-muted hover:text-danger transition-colors"
-                    aria-label="Clear focus"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowFocusPicker(true)}
-                  className="rounded-lg bg-surface px-3 py-1.5 text-sm font-medium text-muted hover:bg-primary-50 transition-colors"
-                >
-                  {focus ? 'Change' : 'Set'}
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
         {storage && (
@@ -290,43 +285,6 @@ export default function SettingsPage() {
         </p>
       </PageContainer>
 
-      {showFocusPicker && (
-        <div
-          className="fixed inset-0 z-50 flex items-end bg-black/40"
-          onClick={() => setShowFocusPicker(false)}
-        >
-          <div
-            className="w-full rounded-t-2xl bg-card p-4 pb-8 shadow-xl"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-text-primary">Set Current Focus</h2>
-              <button onClick={() => setShowFocusPicker(false)} className="p-1.5 text-muted">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {FOCUS_OPTIONS.map(opt => (
-                <button
-                  key={opt.key}
-                  onClick={() => { setFocus(opt.key); setShowFocusPicker(false) }}
-                  className={`flex items-center gap-3 rounded-xl p-3 text-left transition-colors ${
-                    focus?.key === opt.key
-                      ? 'bg-primary-100 ring-2 ring-primary-400'
-                      : 'bg-surface hover:bg-primary-50'
-                  }`}
-                >
-                  <span className="text-2xl leading-none">{opt.emoji}</span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-text-primary">{opt.label}</p>
-                    <p className="text-[11px] text-muted leading-tight">{opt.description}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }

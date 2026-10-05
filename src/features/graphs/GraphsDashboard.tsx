@@ -1,3 +1,4 @@
+import { useChartColors } from '../../hooks/useChartColors'
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
@@ -30,6 +31,7 @@ function formatDate(date: string) {
 }
 
 export default function GraphsDashboard() {
+  const chartColors = useChartColors()
   const [range, setRange] = useState<TimeRange>('1m')
   const { profile } = useProfile()
   const weight = useWeightGraphData(range)
@@ -63,14 +65,14 @@ export default function GraphsDashboard() {
           <ChartCard title="Weight">
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={weight.map(d => ({ ...d, d: formatDate(d.date) }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke="#8c7a6e" />
-                <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fontSize: 10 }} stroke="#8c7a6e" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
+                <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fontSize: 10 }} stroke={chartColors.axis} />
                 <Tooltip />
-                <Line type="monotone" dataKey="weight" stroke="#f47e6c" strokeWidth={1.5} dot={{ r: 2 }} name="Weight" />
-                <Line type="monotone" dataKey="smoothed" stroke="#ec5a42" strokeWidth={2.5} dot={false} name="Trend" />
+                <Line type="monotone" dataKey="weight" stroke={chartColors.primary} strokeWidth={1.5} dot={{ r: 2 }} name="Weight" />
+                <Line type="monotone" dataKey="smoothed" stroke={chartColors.primaryStrong} strokeWidth={2.5} dot={false} name="Trend" />
                 {profile && (
-                  <ReferenceLine y={profile.goal_weight_milestone_kg} stroke="#4eb499" strokeDasharray="5 5" />
+                  <ReferenceLine y={profile.goal_weight_milestone_kg} stroke={chartColors.secondary} strokeDasharray="5 5" />
                 )}
               </LineChart>
             </ResponsiveContainer>
@@ -81,11 +83,11 @@ export default function GraphsDashboard() {
           <ChartCard title="Meal Health Score">
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={meals.map(d => ({ ...d, d: formatDate(d.date) }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke="#8c7a6e" />
-                <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10 }} stroke="#8c7a6e" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
+                <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10 }} stroke={chartColors.axis} />
                 <Tooltip />
-                <Line type="monotone" dataKey="avg" stroke="#f47e6c" strokeWidth={2} dot={{ r: 2 }} name="Avg Score" />
+                <Line type="monotone" dataKey="avg" stroke={chartColors.primary} strokeWidth={2} dot={{ r: 2 }} name="Avg Score" />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -95,12 +97,12 @@ export default function GraphsDashboard() {
           <ChartCard title="Water Intake">
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={water.map(d => ({ ...d, d: formatDate(d.date) }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke="#8c7a6e" />
-                <YAxis tick={{ fontSize: 10 }} stroke="#8c7a6e" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
+                <YAxis tick={{ fontSize: 10 }} stroke={chartColors.axis} />
                 <Tooltip />
-                <Bar dataKey="liters" fill="#4eb499" radius={[4, 4, 0, 0]} name="Liters" />
-                <ReferenceLine y={2} stroke="#339980" strokeDasharray="5 5" />
+                <Bar dataKey="liters" fill={chartColors.secondary} radius={[4, 4, 0, 0]} name="Liters" />
+                <ReferenceLine y={2} stroke={chartColors.secondaryStrong} strokeDasharray="5 5" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -110,11 +112,11 @@ export default function GraphsDashboard() {
           <ChartCard title="Mood">
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={mood.map(d => ({ ...d, d: formatDate(d.date) }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke="#8c7a6e" />
-                <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10 }} stroke="#8c7a6e" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
+                <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10 }} stroke={chartColors.axis} />
                 <Tooltip />
-                <Line type="monotone" dataKey="avg" stroke="#eaaa08" strokeWidth={2} dot={{ r: 2 }} name="Mood" />
+                <Line type="monotone" dataKey="avg" stroke={chartColors.accent} strokeWidth={2} dot={{ r: 2 }} name="Mood" />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -124,12 +126,12 @@ export default function GraphsDashboard() {
           <ChartCard title="Sleep">
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={sleep.map(d => ({ ...d, d: formatDate(d.date) }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke="#8c7a6e" />
-                <YAxis tick={{ fontSize: 10 }} stroke="#8c7a6e" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
+                <YAxis tick={{ fontSize: 10 }} stroke={chartColors.axis} />
                 <Tooltip />
-                <Line type="monotone" dataKey="hours" stroke="#eaaa08" strokeWidth={2} dot={{ r: 2 }} name="Hours" />
-                <Line type="monotone" dataKey="quality" stroke="#4eb499" strokeWidth={1.5} dot={{ r: 2 }} name="Quality" />
+                <Line type="monotone" dataKey="hours" stroke={chartColors.accent} strokeWidth={2} dot={{ r: 2 }} name="Hours" />
+                <Line type="monotone" dataKey="quality" stroke={chartColors.secondary} strokeWidth={1.5} dot={{ r: 2 }} name="Quality" />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -139,11 +141,11 @@ export default function GraphsDashboard() {
           <ChartCard title="Exercise (per week)">
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={exercise.map(d => ({ ...d, d: formatDate(d.week) }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke="#8c7a6e" />
-                <YAxis tick={{ fontSize: 10 }} stroke="#8c7a6e" allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
+                <YAxis tick={{ fontSize: 10 }} stroke={chartColors.axis} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="sessions" fill="#f47e6c" radius={[4, 4, 0, 0]} name="Sessions" />
+                <Bar dataKey="sessions" fill={chartColors.primary} radius={[4, 4, 0, 0]} name="Sessions" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -153,11 +155,11 @@ export default function GraphsDashboard() {
           <ChartCard title="Habit Completion %">
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={habits.map(d => ({ ...d, d: formatDate(d.date) }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke="#8c7a6e" />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} stroke="#8c7a6e" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} stroke={chartColors.axis} />
                 <Tooltip />
-                <Line type="monotone" dataKey="percent" stroke="#5cb176" strokeWidth={2} dot={{ r: 2 }} name="%" />
+                <Line type="monotone" dataKey="percent" stroke={chartColors.success} strokeWidth={2} dot={{ r: 2 }} name="%" />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -167,16 +169,16 @@ export default function GraphsDashboard() {
           <ChartCard title="Body Measurements">
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={measurements.map(d => ({ ...d, d: formatDate(d.date) }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke="#8c7a6e" />
-                <YAxis tick={{ fontSize: 10 }} stroke="#8c7a6e" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="d" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
+                <YAxis tick={{ fontSize: 10 }} stroke={chartColors.axis} />
                 <Tooltip />
-                {measurements.some(d => d.waist) && <Line type="monotone" dataKey="waist" stroke="#f47e6c" strokeWidth={2} dot={{ r: 2 }} name="Waist" />}
-                {measurements.some(d => d.chest) && <Line type="monotone" dataKey="chest" stroke="#4eb499" strokeWidth={2} dot={{ r: 2 }} name="Chest" />}
-                {measurements.some(d => d.hips) && <Line type="monotone" dataKey="hips" stroke="#eaaa08" strokeWidth={2} dot={{ r: 2 }} name="Hips" />}
-                {measurements.some(d => d.arms) && <Line type="monotone" dataKey="arms" stroke="#ec5a42" strokeWidth={2} dot={{ r: 2 }} name="Arms" />}
-                {measurements.some(d => d.thighs) && <Line type="monotone" dataKey="thighs" stroke="#339980" strokeWidth={2} dot={{ r: 2 }} name="Thighs" />}
-                {measurements.some(d => d.neck) && <Line type="monotone" dataKey="neck" stroke="#ca8404" strokeWidth={1.5} dot={{ r: 2 }} name="Neck" />}
+                {measurements.some(d => d.waist) && <Line type="monotone" dataKey="waist" stroke={chartColors.primary} strokeWidth={2} dot={{ r: 2 }} name="Waist" />}
+                {measurements.some(d => d.chest) && <Line type="monotone" dataKey="chest" stroke={chartColors.secondary} strokeWidth={2} dot={{ r: 2 }} name="Chest" />}
+                {measurements.some(d => d.hips) && <Line type="monotone" dataKey="hips" stroke={chartColors.accent} strokeWidth={2} dot={{ r: 2 }} name="Hips" />}
+                {measurements.some(d => d.arms) && <Line type="monotone" dataKey="arms" stroke={chartColors.primaryStrong} strokeWidth={2} dot={{ r: 2 }} name="Arms" />}
+                {measurements.some(d => d.thighs) && <Line type="monotone" dataKey="thighs" stroke={chartColors.secondaryStrong} strokeWidth={2} dot={{ r: 2 }} name="Thighs" />}
+                {measurements.some(d => d.neck) && <Line type="monotone" dataKey="neck" stroke={chartColors.accentStrong} strokeWidth={1.5} dot={{ r: 2 }} name="Neck" />}
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>

@@ -1,3 +1,4 @@
+import { useChartColors } from '../../hooks/useChartColors'
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { Moon, Star } from 'lucide-react'
@@ -10,6 +11,7 @@ import { getLogicalDate } from '../../lib/date'
 const QUALITY_LABELS = ['', 'Terrible', 'Poor', 'Fair', 'Good', 'Excellent']
 
 export default function SleepPage() {
+  const chartColors = useChartColors()
   const todaysSleep = useTodaysSleep()
   const history = useSleepHistory(30)
   const [showForm, setShowForm] = useState(false)
@@ -164,11 +166,11 @@ export default function SleepPage() {
             <h3 className="mb-3 text-sm font-semibold text-muted">Sleep Trend</h3>
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#8c7a6e" />
-                <YAxis tick={{ fontSize: 10 }} stroke="#8c7a6e" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
+                <YAxis tick={{ fontSize: 10 }} stroke={chartColors.axis} />
                 <Tooltip />
-                <Line type="monotone" dataKey="hours" stroke="#eaaa08" strokeWidth={2} dot={{ fill: '#eaaa08', r: 3 }} name="Hours" />
+                <Line type="monotone" dataKey="hours" stroke={chartColors.accent} strokeWidth={2} dot={{ fill: chartColors.accent, r: 3 }} name="Hours" />
               </LineChart>
             </ResponsiveContainer>
           </div>

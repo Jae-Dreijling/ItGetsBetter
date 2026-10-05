@@ -1280,4 +1280,4 @@ All decisions identified during requirements gathering have been resolved during
 
 ---
 
-*This document represents the complete product definition for ItGetsBetter as of 2026-06-22. All 7 development phases have been implemented. The app is deployed on Cloudflare Pages with Cloudflare Access for privacy. See [IDEAS.md](IDEAS.md) for future feature concepts.*
+*This document represents the complete product definition for ItGetsBetter as of 2026-06-22. All 7 development phases have been implemented. The app is deployed on Cloudflare Pages with Cloudflare Access for privacy. See [IDEAS.md](../5-ideas/IDEAS.md) for future feature concepts.*

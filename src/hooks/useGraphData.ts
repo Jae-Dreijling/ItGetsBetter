@@ -20,7 +20,7 @@ function getFromDate(range: TimeRange): string | null {
 export function useWeightGraphData(range: TimeRange) {
   const from = getFromDate(range)
   return useLiveQuery(async () => {
-    let entries = from
+    const entries = from
       ? await db.weightEntries.where('date').aboveOrEqual(from).sortBy('date')
       : await db.weightEntries.orderBy('date').toArray()
 

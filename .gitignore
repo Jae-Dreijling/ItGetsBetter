@@ -22,14 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-DOCUMENTATION/characters/applejack.txt
-DOCUMENTATION/characters/discord.txt
-DOCUMENTATION/characters/fluttershy.txt
-DOCUMENTATION/characters/pinkie_pie.txt
-DOCUMENTATION/characters/princess_cadance.txt
-DOCUMENTATION/characters/princess_celestia.txt
-DOCUMENTATION/characters/princess_luna.txt
-DOCUMENTATION/characters/rainbow_dash.txt
-DOCUMENTATION/characters/rarity.txt
-DOCUMENTATION/characters/spike.txt
-DOCUMENTATION/characters/twilight_sparkle.txt
+# Personal companion character files (only the import template is tracked)
+DOCUMENTATION/characters/
+DOCUMENTATION/4-companion/*.txt
+!DOCUMENTATION/4-companion/message-import-template.txt
+
+# Personal health data (Eight Journeys export)
+DOCUMENTATION/7-eight-journeys/

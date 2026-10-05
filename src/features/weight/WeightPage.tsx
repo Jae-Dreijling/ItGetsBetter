@@ -1,3 +1,4 @@
+import { useChartColors } from '../../hooks/useChartColors'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { format } from 'date-fns'
@@ -11,6 +12,7 @@ import { getLogicalDate } from '../../lib/date'
 import { getWeightComparison } from '../../lib/weightComparisons'
 
 export default function WeightPage() {
+  const chartColors = useChartColors()
   const navigate = useNavigate()
   const { profile } = useProfile()
   const entries = useWeightEntries()
@@ -122,23 +124,23 @@ export default function WeightPage() {
             <h3 className="mb-3 text-sm font-semibold text-muted">Trend</h3>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0e6df" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#8c7a6e" />
-                <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fontSize: 11 }} stroke="#8c7a6e" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke={chartColors.axis} />
+                <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fontSize: 11 }} stroke={chartColors.axis} />
                 <Tooltip />
                 <Line
                   type="monotone"
                   dataKey="weight"
-                  stroke="#f47e6c"
+                  stroke={chartColors.primary}
                   strokeWidth={2}
-                  dot={{ fill: '#f47e6c', r: 4 }}
+                  dot={{ fill: chartColors.primary, r: 4 }}
                 />
                 {profile && (
                   <ReferenceLine
                     y={profile.goal_weight_milestone_kg}
-                    stroke="#4eb499"
+                    stroke={chartColors.secondary}
                     strokeDasharray="5 5"
-                    label={{ value: 'Goal', position: 'right', fill: '#4eb499', fontSize: 11 }}
+                    label={{ value: 'Goal', position: 'right', fill: chartColors.secondary, fontSize: 11 }}
                   />
                 )}
               </LineChart>

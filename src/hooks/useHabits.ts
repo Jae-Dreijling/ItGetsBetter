@@ -245,3 +245,14 @@ export async function checkProgressionAdvancements() {
     }
   }
 }
+
+// Marks exactly these habits as the daily floor (see lib/floor).
+export async function setFloorHabits(ids: number[]) {
+  await db.transaction('rw', db.habits, async () => {
+    const habits = await db.habits.toArray()
+    for (const habit of habits) {
+      const shouldBeFloor = ids.includes(habit.id!)
+      if (!!habit.is_floor !== shouldBeFloor) await db.habits.update(habit.id!, { is_floor: shouldBeFloor })
+    }
+  })
+}

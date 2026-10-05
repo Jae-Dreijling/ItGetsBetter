@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { db } from '../db'
 import { getLogicalDate } from '../lib/date'
 import { useTodaySchedule } from './useSchedule'
+import { getFeatureTiers } from './useFeatures'
+import { isOn, isSpotlight } from '../lib/features'
 
 export interface AppNotification {
   id: string
@@ -51,13 +53,18 @@ export function useNotifications() {
 
       if (Date.now() - getLastNotificationTime() < 3600000) return
 
+      // Meal and water reminders only for Spotlight features (Rulebook 2.4).
+      // Medicine and low-mood support are safety-relevant, so they stay on
+      // unless the feature is switched off entirely.
+      const tiers = await getFeatureTiers()
+
       if (profile) {
         const phoneFreeHour = parseInt(profile.phone_free_until?.split(':')[0] ?? '0')
         const phoneAwayHour = parseInt(profile.phone_away_at?.split(':')[0] ?? '23')
         if (hour < phoneFreeHour || hour >= phoneAwayHour) return
       }
 
-      if (mode !== 'exam' && mode !== 'social') {
+      if (mode !== 'exam' && mode !== 'social' && isSpotlight(tiers, 'meals')) {
         const meals = await db.mealEntries.where('date').equals(today).count()
         if (meals === 0 && hour >= 13 && getDismissCount('meal_reminder', today) < 2) {
           setNotification({
@@ -69,7 +76,7 @@ export function useNotifications() {
         }
       }
 
-      if (mode !== 'exam' && mode !== 'social') {
+      if (mode !== 'exam' && mode !== 'social' && isSpotlight(tiers, 'water')) {
         const water = await db.waterEntries.where('date').equals(today).toArray()
         const totalMl = water.reduce((s, w) => s + w.amount_ml, 0)
         if (totalMl < 1000 && hour >= 15 && getDismissCount('water_nudge', today) < 2) {
@@ -82,7 +89,7 @@ export function useNotifications() {
         }
       }
 
-      const activeMeds = await db.medicines.filter(m => m.is_active === true).toArray()
+      const activeMeds = isOn(tiers, 'medicine') ? await db.medicines.filter(m => m.is_active === true).toArray() : []
       if (activeMeds.length > 0) {
         const todaysLogs = await db.medicineLogs.where('date').equals(today).toArray()
         const untaken = activeMeds.filter(m => !todaysLogs.some(l => l.medicine_id === m.id))
@@ -96,7 +103,7 @@ export function useNotifications() {
         }
       }
 
-      const moods = await db.moodEntries.where('date').equals(today).toArray()
+      const moods = isOn(tiers, 'mood') ? await db.moodEntries.where('date').equals(today).toArray() : []
       if (moods.length > 0) {
         const lastMood = moods[moods.length - 1]
         if (lastMood.score <= 2) {
