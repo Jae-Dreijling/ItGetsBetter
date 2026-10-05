@@ -1,60 +1,169 @@
 import { db } from '../db'
-import type { Task } from '../types/entities'
 import { GUILD_ROOMS } from './game'
 import { BOSSES } from './bosses'
 
-// JSON.stringify silently turns Blob fields into `{}` — encode them as data
-// URLs before stringifying, and decode them back to Blobs on restore.
-function blobToDataURL(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onloadend = () => resolve(reader.result as string)
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(blob)
+// Backups cover every table in the database automatically: export and restore
+// both loop over `db.tables`, so a table added in a future schema version is
+// included without touching this file.
+//
+// Format history:
+//   v6+  { version, exportedAt, tables: { [tableName]: rows[] }, ...localStorage extras }
+//        Blobs (photos, avatars) anywhere in a row are stored as EncodedBlob.
+//   ≤v5  every table at the top level; Blobs only in LEGACY_BLOB_FIELDS, as data URLs.
+const BACKUP_VERSION = 6
+
+type Row = Record<string, unknown>
+
+interface EncodedBlob {
+  __blob: true
+  type: string
+  base64: string
+}
+
+export interface BackupData {
+  version: number
+  exportedAt: string
+  tables: Record<string, Row[]>
+  guildRoomsBuilt: string[]
+  bossesDefeated: string[]
+}
+
+// Blob fields in ≤v5 backups, which stored them as data URL strings.
+const LEGACY_BLOB_FIELDS: Record<string, string> = {
+  mealEntries: 'photo',
+  rewards: 'image',
+  progressPhotos: 'photo',
+  companions: 'avatar',
+  motivationNotes: 'photo',
+}
+
+// Rows that are useless without their Blob (a photo entry with no photo would
+// crash the viewer), so they're dropped if the Blob can't be restored.
+const REQUIRED_BLOB_FIELDS: Record<string, string> = {
+  progressPhotos: 'photo',
+}
+
+// Restored rows skip Dexie's upgrade functions, so rows from older backups get
+// the same defaults here that a schema upgrade would have given them.
+const ROW_FIXUPS: Record<string, (row: Row) => Row> = {
+  tasks: row => ({ ...row, show_in_today: row.show_in_today ?? true }),
+}
+
+function isEncodedBlob(value: unknown): value is EncodedBlob {
+  return typeof value === 'object' && value !== null && (value as EncodedBlob).__blob === true
+}
+
+async function encodeBlob(blob: Blob): Promise<EncodedBlob> {
+  return { __blob: true, type: blob.type, base64: arrayToBase64(new Uint8Array(await blob.arrayBuffer())) }
+}
+
+function decodeBlob(encoded: EncodedBlob): Blob {
+  return new Blob([base64ToArray(encoded.base64) as Uint8Array<ArrayBuffer>], { type: encoded.type })
+}
+
+function dataURLToBlob(dataURL: string): Blob | null {
+  const match = /^data:([^;,]*)(;base64)?,(.*)$/s.exec(dataURL)
+  if (!match) return null
+  const [, type, isBase64, body] = match
+  const bytes = isBase64 ? base64ToArray(body) : new TextEncoder().encode(decodeURIComponent(body))
+  return new Blob([bytes as Uint8Array<ArrayBuffer>], { type })
+}
+
+// JSON.stringify silently turns Blobs into `{}`, so every top-level Blob field
+// is encoded before export, whichever table or field it's in.
+async function encodeRow(row: Row): Promise<Row> {
+  const out: Row = {}
+  for (const [key, value] of Object.entries(row)) {
+    out[key] = value instanceof Blob ? await encodeBlob(value) : value
+  }
+  return out
+}
+
+function decodeRow(row: Row): Row {
+  const out: Row = {}
+  for (const [key, value] of Object.entries(row)) {
+    out[key] = isEncodedBlob(value) ? decodeBlob(value) : value
+  }
+  return out
+}
+
+// ≤v5: data URL strings become Blobs again; anything else in a Blob field
+// (including the `{}` left by very old backups) becomes null rather than a
+// fake Blob that would crash on URL.createObjectURL.
+function decodeLegacyRow(row: Row, blobField: string | undefined): Row {
+  if (!blobField) return row
+  const value = row[blobField]
+  const blob = typeof value === 'string' && value.startsWith('data:') ? dataURLToBlob(value) : null
+  return { ...row, [blobField]: blob }
+}
+
+export async function collectBackupData(): Promise<BackupData> {
+  const tables: Record<string, Row[]> = {}
+  for (const table of db.tables) {
+    const rows = (await table.toArray()) as Row[]
+    tables[table.name] = await Promise.all(rows.map(encodeRow))
+  }
+
+  return {
+    version: BACKUP_VERSION,
+    exportedAt: new Date().toISOString(),
+    tables,
+    // Guild rooms built and defeated bosses live in localStorage, not IndexedDB.
+    guildRoomsBuilt: GUILD_ROOMS.filter(r => localStorage.getItem(`igb_guild_${r.id}`) === '1').map(r => r.id),
+    bossesDefeated: Object.keys(BOSSES).filter(id => localStorage.getItem(`igb_boss_${id}_won`) === '1'),
+  }
+}
+
+// Replaces everything in the database with the backup's contents. Returns the
+// names of tables in the backup that this version of the app doesn't have.
+export async function applyBackupData(data: unknown): Promise<{ skippedTables: string[] }> {
+  const raw = data as Record<string, unknown> | null
+  if (!raw || typeof raw.version !== 'number') {
+    throw new Error('Invalid backup file format')
+  }
+
+  const isLegacy = raw.version <= 5
+  const sourceTables = (isLegacy ? raw : raw.tables) as Record<string, unknown> | undefined
+  if (!sourceTables || !Array.isArray(sourceTables.userProfile)) {
+    throw new Error('Invalid backup file format')
+  }
+
+  const knownTables = new Set(db.tables.map(t => t.name))
+  const restored: Record<string, Row[]> = {}
+  const skippedTables: string[] = []
+
+  for (const [name, value] of Object.entries(sourceTables)) {
+    if (!Array.isArray(value)) continue // top-level metadata in ≤v5 files
+    if (!knownTables.has(name)) {
+      skippedTables.push(name)
+      continue
+    }
+    let rows = (value as Row[]).map(row =>
+      isLegacy ? decodeLegacyRow(row, LEGACY_BLOB_FIELDS[name]) : decodeRow(row),
+    )
+    const requiredField = REQUIRED_BLOB_FIELDS[name]
+    if (requiredField) rows = rows.filter(row => row[requiredField] instanceof Blob)
+    const fixup = ROW_FIXUPS[name]
+    if (fixup) rows = rows.map(fixup)
+    restored[name] = rows
+  }
+
+  await db.transaction('rw', db.tables, async () => {
+    for (const table of db.tables) {
+      await table.clear()
+      const rows = restored[table.name]
+      if (rows?.length) await table.bulkAdd(rows)
+    }
   })
-}
 
-async function dataURLToBlob(dataURL: string): Promise<Blob> {
-  const res = await fetch(dataURL)
-  return res.blob()
-}
+  const guildRoomsBuilt = Array.isArray(raw.guildRoomsBuilt) ? (raw.guildRoomsBuilt as string[]) : []
+  const bossesDefeated = Array.isArray(raw.bossesDefeated) ? (raw.bossesDefeated as string[]) : []
+  for (const room of GUILD_ROOMS) localStorage.removeItem(`igb_guild_${room.id}`)
+  for (const id of guildRoomsBuilt) localStorage.setItem(`igb_guild_${id}`, '1')
+  for (const id of Object.keys(BOSSES)) localStorage.removeItem(`igb_boss_${id}_won`)
+  for (const id of bossesDefeated) localStorage.setItem(`igb_boss_${id}_won`, '1')
 
-// `data` here is always dynamic (it comes from db.table().toArray() ahead of
-// JSON.stringify, or from JSON.parse of an untrusted/legacy file on restore),
-// so these operate on plain records rather than the strict entity types.
-async function encodeBlobField<T extends object>(rows: T[], field: string): Promise<T[]> {
-  return Promise.all(rows.map(async row => {
-    const value = (row as Record<string, unknown>)[field]
-    if (value instanceof Blob) return { ...row, [field]: await blobToDataURL(value) }
-    return row
-  }))
-}
-
-// Restores real Blobs from data URLs; any other value (including the `{}`
-// left behind by backups made before this fix) is nulled out rather than
-// carried forward as a fake Blob that would crash on URL.createObjectURL.
-async function decodeBlobField<T extends object>(rows: T[], field: string): Promise<T[]> {
-  return Promise.all(rows.map(async row => {
-    const value = (row as Record<string, unknown>)[field]
-    if (typeof value === 'string' && value.startsWith('data:')) {
-      return { ...row, [field]: await dataURLToBlob(value) }
-    }
-    return { ...row, [field]: null }
-  }))
-}
-
-// For fields that must always be a real Blob (e.g. progress photos): rows
-// that can't be decoded (corrupted by a pre-fix backup) are dropped instead
-// of being kept around with a null/fake photo that would crash the viewer.
-async function decodeRequiredBlobField<T extends object>(rows: T[], field: string): Promise<T[]> {
-  const decoded = await Promise.all(rows.map(async row => {
-    const value = (row as Record<string, unknown>)[field]
-    if (typeof value === 'string' && value.startsWith('data:')) {
-      return { ...row, [field]: await dataURLToBlob(value) }
-    }
-    return null
-  }))
-  return decoded.filter(row => row !== null) as T[]
+  return { skippedTables }
 }
 
 async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
@@ -82,51 +191,7 @@ async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promi
 }
 
 export async function createBackup(password: string): Promise<Blob> {
-  const data = {
-    version: 5,
-    exportedAt: new Date().toISOString(),
-    userProfile: await db.userProfile.toArray(),
-    weightEntries: await db.weightEntries.toArray(),
-    mealEntries: await encodeBlobField(await db.mealEntries.toArray(), 'photo'),
-    measurements: await db.measurements.toArray(),
-    appOpenLog: await db.appOpenLog.toArray(),
-    labels: await db.labels.toArray(),
-    habits: await db.habits.toArray(),
-    habitCompletions: await db.habitCompletions.toArray(),
-    tasks: await db.tasks.toArray(),
-    projects: await db.projects.toArray(),
-    waterEntries: await db.waterEntries.toArray(),
-    exerciseEntries: await db.exerciseEntries.toArray(),
-    moodEntries: await db.moodEntries.toArray(),
-    moodTags: await db.moodTags.toArray(),
-    sleepEntries: await db.sleepEntries.toArray(),
-    medicines: await db.medicines.toArray(),
-    medicineLogs: await db.medicineLogs.toArray(),
-    pointsTransactions: await db.pointsTransactions.toArray(),
-    rewards: await encodeBlobField(await db.rewards.toArray(), 'image'),
-    rewardClaims: await db.rewardClaims.toArray(),
-    achievements: await db.achievements.toArray(),
-    progressPhotos: await encodeBlobField(await db.progressPhotos.toArray(), 'photo'),
-    healthInsights: await db.table('healthInsights').toArray(),
-    customQuotes: await db.table('customQuotes').toArray(),
-    scheduleProfiles: await db.table('scheduleProfiles').toArray(),
-    dayConfigs: await db.table('dayConfigs').toArray(),
-    groceryLists: await db.groceryLists.toArray(),
-    groceryItems: await db.groceryItems.toArray(),
-    books: await db.books.toArray(),
-    companions: await encodeBlobField(await db.companions.toArray(), 'avatar'),
-    motivationNotes: await encodeBlobField(await db.motivationNotes.toArray(), 'photo'),
-    gameState: await db.gameState.toArray(),
-    gameQuests: await db.gameQuests.toArray(),
-    gameCompanionAffinity: await db.gameCompanionAffinity.toArray(),
-    gameCustomQuestions: await db.gameCustomQuestions.toArray(),
-    fastingRecords: await db.fastingRecords.toArray(),
-    personalityGroups: await db.personalityGroups.toArray(),
-    guildRoomsBuilt: GUILD_ROOMS.filter(r => localStorage.getItem(`igb_guild_${r.id}`) === '1').map(r => r.id),
-    bossesDefeated: Object.keys(BOSSES).filter(id => localStorage.getItem(`igb_boss_${id}_won`) === '1'),
-  }
-
-  const json = JSON.stringify(data)
+  const json = JSON.stringify(await collectBackupData())
   const encoder = new TextEncoder()
   const plaintext = encoder.encode(json)
 
@@ -151,7 +216,7 @@ export async function createBackup(password: string): Promise<Blob> {
   return new Blob([JSON.stringify(payload)], { type: 'application/octet-stream' })
 }
 
-export async function restoreBackup(file: File, password: string): Promise<void> {
+export async function restoreBackup(file: Blob, password: string): Promise<void> {
   const text = await file.text()
   const payload = JSON.parse(text)
 
@@ -173,114 +238,16 @@ export async function restoreBackup(file: File, password: string): Promise<void>
   }
 
   const decoder = new TextDecoder()
-  const json = decoder.decode(plaintext)
-  const data = JSON.parse(json)
-
-  if (!data.version || !data.userProfile) {
-    throw new Error('Invalid backup file format')
-  }
-
-  if (data.mealEntries?.length) data.mealEntries = await decodeBlobField(data.mealEntries, 'photo')
-  if (data.progressPhotos?.length) data.progressPhotos = await decodeRequiredBlobField(data.progressPhotos, 'photo')
-  if (data.companions?.length) data.companions = await decodeBlobField(data.companions, 'avatar')
-  if (data.motivationNotes?.length) data.motivationNotes = await decodeBlobField(data.motivationNotes, 'photo')
-  if (data.rewards?.length) data.rewards = await decodeBlobField(data.rewards, 'image')
-
-  const allTables = [db.userProfile, db.weightEntries, db.mealEntries, db.measurements, db.appOpenLog, db.labels, db.habits, db.habitCompletions, db.tasks, db.projects, db.waterEntries, db.exerciseEntries, db.moodEntries, db.moodTags, db.sleepEntries, db.medicines, db.medicineLogs, db.pointsTransactions, db.rewards, db.rewardClaims, db.achievements, db.progressPhotos, db.table('healthInsights'), db.table('customQuotes'), db.table('scheduleProfiles'), db.table('dayConfigs'), db.groceryLists, db.groceryItems, db.books, db.companions, db.motivationNotes, db.gameState, db.gameQuests, db.gameCompanionAffinity, db.gameCustomQuestions, db.fastingRecords, db.personalityGroups]
-
-  await db.transaction('rw', allTables, async () => {
-      await db.userProfile.clear()
-      await db.weightEntries.clear()
-      await db.mealEntries.clear()
-      await db.measurements.clear()
-      await db.appOpenLog.clear()
-      await db.labels.clear()
-      await db.habits.clear()
-      await db.habitCompletions.clear()
-      await db.tasks.clear()
-      await db.projects.clear()
-      await db.waterEntries.clear()
-      await db.exerciseEntries.clear()
-      await db.moodEntries.clear()
-      await db.moodTags.clear()
-      await db.sleepEntries.clear()
-      await db.medicines.clear()
-      await db.medicineLogs.clear()
-      await db.pointsTransactions.clear()
-      await db.rewards.clear()
-      await db.rewardClaims.clear()
-      await db.achievements.clear()
-      await db.progressPhotos.clear()
-      await db.table('healthInsights').clear()
-      await db.table('customQuotes').clear()
-      await db.table('scheduleProfiles').clear()
-      await db.table('dayConfigs').clear()
-      await db.groceryLists.clear()
-      await db.groceryItems.clear()
-      await db.books.clear()
-      await db.companions.clear()
-      await db.motivationNotes.clear()
-      await db.gameState.clear()
-      await db.gameQuests.clear()
-      await db.gameCompanionAffinity.clear()
-      await db.gameCustomQuestions.clear()
-      await db.fastingRecords.clear()
-      await db.personalityGroups.clear()
-
-      if (data.userProfile?.length) await db.userProfile.bulkAdd(data.userProfile)
-      if (data.weightEntries?.length) await db.weightEntries.bulkAdd(data.weightEntries)
-      if (data.mealEntries?.length) await db.mealEntries.bulkAdd(data.mealEntries)
-      if (data.measurements?.length) await db.measurements.bulkAdd(data.measurements)
-      if (data.appOpenLog?.length) await db.appOpenLog.bulkAdd(data.appOpenLog)
-      if (data.labels?.length) await db.labels.bulkAdd(data.labels)
-      if (data.habits?.length) await db.habits.bulkAdd(data.habits)
-      if (data.habitCompletions?.length) await db.habitCompletions.bulkAdd(data.habitCompletions)
-      if (data.tasks?.length) {
-        const tasks = data.tasks.map((t: Task) => ({ ...t, show_in_today: t.show_in_today ?? true }))
-        await db.tasks.bulkAdd(tasks)
-      }
-      if (data.projects?.length) await db.projects.bulkAdd(data.projects)
-      if (data.waterEntries?.length) await db.waterEntries.bulkAdd(data.waterEntries)
-      if (data.exerciseEntries?.length) await db.exerciseEntries.bulkAdd(data.exerciseEntries)
-      if (data.moodEntries?.length) await db.moodEntries.bulkAdd(data.moodEntries)
-      if (data.moodTags?.length) await db.moodTags.bulkAdd(data.moodTags)
-      if (data.sleepEntries?.length) await db.sleepEntries.bulkAdd(data.sleepEntries)
-      if (data.medicines?.length) await db.medicines.bulkAdd(data.medicines)
-      if (data.medicineLogs?.length) await db.medicineLogs.bulkAdd(data.medicineLogs)
-      if (data.pointsTransactions?.length) await db.pointsTransactions.bulkAdd(data.pointsTransactions)
-      if (data.rewards?.length) await db.rewards.bulkAdd(data.rewards)
-      if (data.rewardClaims?.length) await db.rewardClaims.bulkAdd(data.rewardClaims)
-      if (data.achievements?.length) await db.achievements.bulkAdd(data.achievements)
-      if (data.progressPhotos?.length) await db.progressPhotos.bulkAdd(data.progressPhotos)
-      if (data.healthInsights?.length) await db.table('healthInsights').bulkAdd(data.healthInsights)
-      if (data.customQuotes?.length) await db.table('customQuotes').bulkAdd(data.customQuotes)
-      if (data.scheduleProfiles?.length) await db.table('scheduleProfiles').bulkAdd(data.scheduleProfiles)
-      if (data.dayConfigs?.length) await db.table('dayConfigs').bulkAdd(data.dayConfigs)
-      if (data.groceryLists?.length) await db.groceryLists.bulkAdd(data.groceryLists)
-      if (data.groceryItems?.length) await db.groceryItems.bulkAdd(data.groceryItems)
-      if (data.books?.length) await db.books.bulkAdd(data.books)
-      if (data.companions?.length) await db.companions.bulkAdd(data.companions)
-      if (data.motivationNotes?.length) await db.motivationNotes.bulkAdd(data.motivationNotes)
-      if (data.gameState?.length) await db.gameState.bulkAdd(data.gameState)
-      if (data.gameQuests?.length) await db.gameQuests.bulkAdd(data.gameQuests)
-      if (data.gameCompanionAffinity?.length) await db.gameCompanionAffinity.bulkAdd(data.gameCompanionAffinity)
-      if (data.gameCustomQuestions?.length) await db.gameCustomQuestions.bulkAdd(data.gameCustomQuestions)
-      if (data.fastingRecords?.length) await db.fastingRecords.bulkAdd(data.fastingRecords)
-      if (data.personalityGroups?.length) await db.personalityGroups.bulkAdd(data.personalityGroups)
-    }
-  )
-
-  // Guild rooms built and defeated bosses live in localStorage, not IndexedDB.
-  for (const room of GUILD_ROOMS) localStorage.removeItem(`igb_guild_${room.id}`)
-  for (const id of data.guildRoomsBuilt ?? []) localStorage.setItem(`igb_guild_${id}`, '1')
-  for (const id of Object.keys(BOSSES)) localStorage.removeItem(`igb_boss_${id}_won`)
-  for (const id of data.bossesDefeated ?? []) localStorage.setItem(`igb_boss_${id}_won`, '1')
+  await applyBackupData(JSON.parse(decoder.decode(plaintext)))
 }
 
+// Built in chunks: String.fromCharCode(...bytes) on a multi-MB photo would
+// overflow the call stack, and per-byte concatenation is very slow.
 function arrayToBase64(arr: Uint8Array): string {
   let binary = ''
-  for (let i = 0; i < arr.length; i++) {
-    binary += String.fromCharCode(arr[i])
+  const chunkSize = 0x8000
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    binary += String.fromCharCode(...arr.subarray(i, i + chunkSize))
   }
   return btoa(binary)
 }
