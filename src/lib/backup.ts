@@ -1,6 +1,7 @@
 import { db } from '../db'
 import { GUILD_ROOMS } from './game'
 import { BOSSES } from './bosses'
+import { mergeQuotesIntoCompanions } from './quotesMigration'
 
 // Backups cover every table in the database automatically: export and restore
 // both loop over `db.tables`, so a table added in a future schema version is
@@ -47,6 +48,15 @@ const REQUIRED_BLOB_FIELDS: Record<string, string> = {
 // the same defaults here that a schema upgrade would have given them.
 const ROW_FIXUPS: Record<string, (row: Row) => Row> = {
   tasks: row => ({ ...row, show_in_today: row.show_in_today ?? true }),
+}
+
+// Tables that no longer exist but whose rows still matter: when an older
+// backup contains them, their rows are folded into the restored data the same
+// way the database upgrade that removed them did.
+const REMOVED_TABLE_MERGES: Record<string, (restored: Record<string, Row[]>, rows: Row[]) => void> = {
+  customQuotes: (restored, rows) => {
+    restored.companions = mergeQuotesIntoCompanions(restored.companions ?? [], rows)
+  },
 }
 
 function isEncodedBlob(value: unknown): value is EncodedBlob {
@@ -130,12 +140,14 @@ export async function applyBackupData(data: unknown): Promise<{ skippedTables: s
 
   const knownTables = new Set(db.tables.map(t => t.name))
   const restored: Record<string, Row[]> = {}
+  const removedTables: [string, Row[]][] = []
   const skippedTables: string[] = []
 
   for (const [name, value] of Object.entries(sourceTables)) {
     if (!Array.isArray(value)) continue // top-level metadata in ≤v5 files
     if (!knownTables.has(name)) {
-      skippedTables.push(name)
+      if (REMOVED_TABLE_MERGES[name]) removedTables.push([name, value as Row[]])
+      else skippedTables.push(name)
       continue
     }
     let rows = (value as Row[]).map(row =>
@@ -147,6 +159,7 @@ export async function applyBackupData(data: unknown): Promise<{ skippedTables: s
     if (fixup) rows = rows.map(fixup)
     restored[name] = rows
   }
+  for (const [name, rows] of removedTables) REMOVED_TABLE_MERGES[name](restored, rows)
 
   await db.transaction('rw', db.tables, async () => {
     for (const table of db.tables) {

@@ -7,7 +7,7 @@ import { getLogicalDate } from '../../lib/date'
 
 const MODES: { value: ActiveMode; label: string; description: string; color: string }[] = [
   { value: 'none', label: 'Normal', description: 'All notifications active', color: 'bg-surface text-muted' },
-  { value: 'exam', label: 'Exam', description: 'Only medicine & quotes', color: 'bg-accent-100 text-accent-700' },
+  { value: 'exam', label: 'Exam', description: 'Meal & water nudges off', color: 'bg-accent-100 text-accent-700' },
   { value: 'social', label: 'Social', description: 'Meal & water nudges off', color: 'bg-primary-100 text-primary-700' },
   { value: 'quiet', label: 'Quiet', description: 'All notifications off', color: 'bg-secondary-100 text-secondary-700' },
 ]

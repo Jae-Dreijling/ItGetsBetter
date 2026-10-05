@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Target, X, Wrench, Sprout } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Target, X, Wrench, Sprout } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
@@ -88,17 +88,6 @@ export default function SettingsPage() {
             <div>
               <p className="font-medium text-text-primary">Labels</p>
               <p className="text-sm text-muted">Manage habit & task categories</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/settings/quotes')}
-            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
-          >
-            <MessageCircleHeart className="h-5 w-5 text-primary-400" />
-            <div>
-              <p className="font-medium text-text-primary">My Quotes</p>
-              <p className="text-sm text-muted">Custom messages for your home screen</p>
             </div>
           </button>
 

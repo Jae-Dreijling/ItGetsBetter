@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup } from './types'
+import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 
 const DEFAULT_LABELS = [
   { name: 'Health', color: '#5cb176' },
@@ -8,7 +9,7 @@ const DEFAULT_LABELS = [
   { name: 'Work', color: '#eaaa08' },
 ]
 
-class ItGetsBetterDB extends Dexie {
+export class ItGetsBetterDB extends Dexie {
   userProfile!: EntityTable<UserProfile, 'id'>
   weightEntries!: EntityTable<WeightEntry, 'id'>
   mealEntries!: EntityTable<MealEntry, 'id'>
@@ -43,8 +44,9 @@ class ItGetsBetterDB extends Dexie {
   fastingRecords!: EntityTable<FastingRecord, 'id'>
   personalityGroups!: EntityTable<PersonalityGroup, 'id'>
 
-  constructor() {
-    super('ItGetsBetter')
+  // The name is only overridden in tests, to run upgrades on a separate database.
+  constructor(name = 'ItGetsBetter') {
+    super(name)
 
     this.version(1).stores({
       userProfile: '++id',
@@ -506,6 +508,21 @@ class ItGetsBetterDB extends Dexie {
         }
         if (claim.note === undefined) claim.note = null
       })
+    })
+
+    // "My Quotes" was replaced by the companion: saved quotes move into the
+    // default companion's General lines, then the table is removed. Dexie runs
+    // this upgrade before deleting the table, so it can still read it.
+    this.version(16).stores({
+      customQuotes: null,
+    }).upgrade(async tx => {
+      const quotes = await tx.table('customQuotes').toArray()
+      if (quotes.length === 0) return
+      const companions = await tx.table('companions').toArray()
+      const merged = mergeQuotesIntoCompanions(companions, quotes)
+      for (let i = 0; i < merged.length; i++) {
+        if (merged[i] !== companions[i]) await tx.table('companions').put(merged[i])
+      }
     })
 
     this.on('populate', () => {

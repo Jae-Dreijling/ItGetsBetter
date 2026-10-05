@@ -107,6 +107,19 @@ describe('backup', () => {
     expect(result.skippedTables).toEqual(['someRemovedTable'])
   })
 
+  it('moves My Quotes from older backups into the default companion', async () => {
+    await db.table('userProfile').add({ display_name: 'Test' })
+    await db.table('companions').add({ name: 'ItGetsBetter', is_default: true, messages: { general: ['Hi'] } })
+    const data = await collectBackupData()
+    const withQuotes = { ...data, tables: { ...data.tables, customQuotes: [{ id: 1, text: 'Keep going' }] } }
+
+    const result = await applyBackupData(throughJson(withQuotes))
+
+    expect(result.skippedTables).toEqual([])
+    const [companion] = await db.table('companions').toArray()
+    expect(companion.messages.general).toEqual(['Hi', 'Keep going'])
+  })
+
   describe('legacy (≤v5) backups', () => {
     const pngDataURL = 'data:image/png;base64,' + btoa('legacy-photo')
 

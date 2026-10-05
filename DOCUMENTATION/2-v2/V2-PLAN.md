@@ -246,7 +246,7 @@ Things to know:
 | ✅ **Switching names** (done 2026-10-05) | The display name can already be changed in Settings → Profile, but only by retyping it. | **Saved names** with one-tap switching (e.g. your real name / a fake name for showing the app to others or taking screenshots). The companion and everything else use the active one. |
 | ✅ **Backups list every table by hand** (done 2026-10-05) | [backup.ts](../../src/lib/backup.ts) names each of the 37 tables in four places. All are covered today, but every 2.0 feature adds tables, and a forgotten one silently isn't backed up. | Make backup/restore loop over all tables automatically, with a test. Do this first: the APK makes backups more important. |
 | ✅ **Pick the current companion** (done 2026-10-05) | When several companions are on, a random one speaks each session and you can't choose. | **Tap a companion's card** on the Companions page to make it the one speaking right now. Lasts **this session** (decided 2026-10-05): next app open picks randomly again. Its on/off switch isn't changed, and the card shows which companion is current. |
-| **"My Quotes" is obsolete** | Still has a Settings entry, page (`QuoteManager`), route, hook and database table, but the companion took over its role. | Remove the page, route, hook and Settings entry. If any quotes are stored, **move them into the companion's General lines** first, then drop the table in a database version bump. Remove it from backup/restore. |
+| ✅ **"My Quotes" is obsolete** (done 2026-10-05) | Still has a Settings entry, page (`QuoteManager`), route, hook and database table, but the companion took over its role. | Remove the page, route, hook and Settings entry. If any quotes are stored, **move them into the companion's General lines** first, then drop the table in a database version bump. Remove it from backup/restore. |
 
 ## 13. To-do redesign (habits + tasks)
 
@@ -294,7 +294,7 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 
 | # | Step | Why here |
 |---|---|---|
-| 0 | **Small fixes:** backup hardening, companion idle, "Start fresh", pick current companion, saved names, remove My Quotes (one at a time) | Quick wins, each tested on its own |
+| 0 ✅ | **Small fixes:** backup hardening, companion idle, "Start fresh", pick current companion, saved names, remove My Quotes (one at a time) | Quick wins, each tested on its own |
 | 1 | **Smoothness foundation:** fix companion drag, add the animation library + presets, measure and slim the bundle | Fixes the "clunky" feeling right away; everything after builds on it |
 | 2 | **Themes** | Colour refactor before redesigning screens, so new screens support themes from the start |
 | 2b | **Feature system + navigation:** spotlight/available/off tiers, Settings → Features, where every page lives (four-tab ceiling; off features disappear from menus) | Every new feature plugs into this, and the Today screen depends on it |
