@@ -8,10 +8,13 @@ import { useIsPhoneFreeTime, useIsGoodnightTime } from '../hooks/useSchedule'
 import { useCompanionAffinityFor } from '../hooks/useGame'
 import { getDataAwareNudge } from '../lib/companionNudges'
 import { registerCompanionMessageHandler } from '../lib/companionMessenger'
-
+import { startIdleTimer } from '../lib/idleTimer'
 
 const POSITION_KEY = 'igb_companion_position'
-const IDLE_TIMEOUT = 10000
+// "Idle" means the user stepped away: no touch, scroll or typing anywhere.
+const IDLE_TIMEOUT = 2 * 60 * 1000
+// During phone-free time the companion nudges regardless of activity.
+const PHONE_FREE_NUDGE_INTERVAL = 60 * 1000
 
 export default function FloatingCompanion() {
   const companion = useSessionCompanion()
@@ -36,16 +39,13 @@ export default function FloatingCompanion() {
   const [chatOpen, setChatOpen] = useState(false)
   const dragOffset = useRef({ x: 0, y: 0 })
   const messageTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasLongPress = useRef(false)
   const name = profile?.display_name ?? 'friend'
 
-  // Kept in refs (rather than useCallback deps) so showMessage/resetIdleTimer
+  // Kept in refs (rather than useCallback deps) so showMessage/handleIdle
   // never change identity when this reactive data updates — otherwise the
-  // listener-attaching effect below would re-run and reset the idle countdown
-  // far more often than actual user inactivity, making idle messages fire
-  // much too frequently.
+  // effect that starts the idle timer would re-run and restart the countdown.
   const messagesRef = useRef(effectiveMessages)
   const nameRef = useRef(name)
   const moodScoreRef = useRef(latestMoodScore)
@@ -91,61 +91,48 @@ export default function FloatingCompanion() {
     return () => registerCompanionMessageHandler(null)
   }, [showMessage])
 
-  const resetIdleTimer = useCallback(() => {
-    if (idleTimer.current) clearTimeout(idleTimer.current)
-    idleTimer.current = setTimeout(async () => {
-      // Phone-free time takes over completely — the companion should always
-      // nudge you to put the phone down during that window. Re-arms itself
-      // rather than waiting for a touch/scroll, since the point is you're
-      // not supposed to be interacting with the phone right now.
-      if (isPhoneFreeTimeRef.current) {
-        showMessage('phone_free')
-        // Re-arms itself; works at runtime because this runs after declaration.
-        // Removed in the step 0 idle-timer rewrite (see V2-PLAN section 12).
-        // eslint-disable-next-line react-hooks/immutability
-        resetIdleTimer()
+  const handleIdle = useCallback(async () => {
+    // Phone-free time has its own repeating nudge (below) and takes over completely.
+    if (isPhoneFreeTimeRef.current) return
+
+    // One-time wind-down nudge in the 30 minutes before phone-free kicks in.
+    if (isGoodnightTimeRef.current && Math.random() < 0.6) {
+      showMessage('goodnight')
+      return
+    }
+
+    if (Math.random() < 0.2) {
+      const motMsg = await tryGetMotivationMessage()
+      if (motMsg) {
+        showRawText(`💭 "${motMsg}"`)
         return
       }
+    }
 
-      // One-time wind-down nudge in the 30 minutes before phone-free kicks in.
-      if (isGoodnightTimeRef.current && Math.random() < 0.6) {
-        showMessage('goodnight')
+    if (Math.random() < 0.2) {
+      const nudge = await getDataAwareNudge(nameRef.current)
+      if (nudge) {
+        showRawText(nudge)
         return
       }
+    }
 
-      if (Math.random() < 0.2) {
-        const motMsg = await tryGetMotivationMessage()
-        if (motMsg) {
-          showRawText(`💭 "${motMsg}"`)
-          return
-        }
-      }
+    const moodIsLow = moodScoreRef.current !== null && moodScoreRef.current !== undefined && moodScoreRef.current <= 3
+    if (moodIsLow && Math.random() < 0.7) {
+      showMessage('mood_low')
+      return
+    }
 
-      if (Math.random() < 0.2) {
-        const nudge = await getDataAwareNudge(nameRef.current)
-        if (nudge) {
-          showRawText(nudge)
-          return
-        }
-      }
+    // Affinity bleeding into the home screen: a Lover with high affinity
+    // occasionally shows one of their Lover Messages instead of plain idle text.
+    const currentAffinity = affinityRef.current
+    if (currentAffinity?.is_lover && currentAffinity.affinity >= 60 && currentAffinity.lover_dialogue.length > 0 && Math.random() < 0.3) {
+      const line = currentAffinity.lover_dialogue[Math.floor(Math.random() * currentAffinity.lover_dialogue.length)]
+      showRawText(line.replace('{name}', nameRef.current), 5000)
+      return
+    }
 
-      const moodIsLow = moodScoreRef.current !== null && moodScoreRef.current !== undefined && moodScoreRef.current <= 3
-      if (moodIsLow && Math.random() < 0.7) {
-        showMessage('mood_low')
-        return
-      }
-
-      // Affinity bleeding into the home screen: a Lover with high affinity
-      // occasionally shows one of their Lover Messages instead of plain idle text.
-      const currentAffinity = affinityRef.current
-      if (currentAffinity?.is_lover && currentAffinity.affinity >= 60 && currentAffinity.lover_dialogue.length > 0 && Math.random() < 0.3) {
-        const line = currentAffinity.lover_dialogue[Math.floor(Math.random() * currentAffinity.lover_dialogue.length)]
-        showRawText(line.replace('{name}', nameRef.current), 5000)
-        return
-      }
-
-      showMessage('idle')
-    }, IDLE_TIMEOUT)
+    showMessage('idle')
   }, [showMessage, showRawText])
 
   useEffect(() => {
@@ -160,20 +147,23 @@ export default function FloatingCompanion() {
   }, [])
 
   useEffect(() => {
-    const events = ['touchstart', 'mousedown', 'scroll', 'keydown'] as const
-    const handler = () => resetIdleTimer()
-    events.forEach(e => window.addEventListener(e, handler, { passive: true }))
-    resetIdleTimer()
-    return () => {
-      events.forEach(e => window.removeEventListener(e, handler))
-      if (idleTimer.current) clearTimeout(idleTimer.current)
-    }
-  }, [resetIdleTimer])
+    const timer = startIdleTimer({ timeoutMs: IDLE_TIMEOUT, onIdle: () => void handleIdle() })
+    return () => timer.stop()
+  }, [handleIdle])
+
+  // Phone-free time: the point is to put the phone down, so the nudge repeats
+  // while the app is open, whatever the user is doing.
+  useEffect(() => {
+    if (!isPhoneFreeTime) return
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') showMessage('phone_free')
+    }, PHONE_FREE_NUDGE_INTERVAL)
+    return () => clearInterval(interval)
+  }, [isPhoneFreeTime, showMessage])
 
   function handleTap() {
     if (!dragging && !wasLongPress.current) {
       showMessage('general')
-      resetIdleTimer()
     }
     wasLongPress.current = false
   }
