@@ -299,7 +299,7 @@ export interface Companion {
 }
 
 // A shared message pool multiple companions can draw from alongside their own
-// custom lines (Option B personality templates — see DOCUMENTATION/IDEAS.md #27).
+// custom lines (Option B personality templates — see DOCUMENTATION/5-ideas/IDEAS.md #27).
 export interface PersonalityGroup {
   id?: number
   name: string

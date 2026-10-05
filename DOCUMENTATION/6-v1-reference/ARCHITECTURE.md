@@ -1234,7 +1234,7 @@ All 7 phases have been implemented. See [ROADMAP.md](ROADMAP.md) for the detaile
 - Multi-device sync (Dexie Cloud)
 - Smartwatch data import
 - Companion character
-- See [IDEAS.md](IDEAS.md) for the full list of future feature concepts
+- See [IDEAS.md](../5-ideas/IDEAS.md) for the full list of future feature concepts
 
 ---
 

@@ -31,7 +31,7 @@ All phases implemented between 2026-06-18 and 2026-06-22.
 | Phase 6: Notifications | ✅ Complete | 2026-06-22 |
 | Phase 7: Polish & Optimization | ✅ Complete | 2026-06-22 |
 
-For future feature ideas, see [IDEAS.md](IDEAS.md).
+For future feature ideas, see [IDEAS.md](../5-ideas/IDEAS.md).
 
 ---
 
@@ -832,4 +832,4 @@ No new screens. Existing screens are enhanced.
 
 ---
 
-*All 7 phases were completed in 4 days (2026-06-18 to 2026-06-22). The app is deployed, installed, and in daily use. Future development continues via [IDEAS.md](IDEAS.md).*
+*All 7 phases were completed in 4 days (2026-06-18 to 2026-06-22). The app is deployed, installed, and in daily use. Future development continues via [IDEAS.md](../5-ideas/IDEAS.md).*
