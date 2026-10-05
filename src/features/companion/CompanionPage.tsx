@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
-import imageCompression from 'browser-image-compression'
+import { compressImage } from '../../lib/compressImage'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useCompanions, useSessionCompanion, addCompanion, updateCompanion, deleteCompanion, setCompanionActive } from '../../hooks/useCompanion'
@@ -207,7 +207,7 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const compressed = await imageCompression(file, { maxSizeMB: 0.1, maxWidthOrHeight: 256, useWebWorker: true })
+    const compressed = await compressImage(file, { maxSizeMB: 0.1, maxWidthOrHeight: 256, useWebWorker: true })
     setAvatar(compressed)
     if (avatarPreview) URL.revokeObjectURL(avatarPreview)
     setAvatarPreview(URL.createObjectURL(compressed))

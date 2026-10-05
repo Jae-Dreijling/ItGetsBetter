@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
-import imageCompression from 'browser-image-compression'
+import { compressImage } from '../../lib/compressImage'
 import { Camera, X, Flame } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import TopBar from '../../components/layout/TopBar'
@@ -52,7 +52,7 @@ export default function MealsPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const compressed = await imageCompression(file, {
+    const compressed = await compressImage(file, {
       maxSizeMB: 0.2,
       maxWidthOrHeight: 1024,
       useWebWorker: true,

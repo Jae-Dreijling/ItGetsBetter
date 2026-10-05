@@ -1,7 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
-import { DEFAULT_PERSONALITY_GROUPS } from '../lib/defaultPersonalityGroups'
 import type { CompanionMessages } from '../types'
 
 const EMPTY_MESSAGES: CompanionMessages = {
@@ -49,6 +48,15 @@ export async function ensureDefaultPersonalityGroups() {
   if (localStorage.getItem(SEEDED_KEY)) return
   localStorage.setItem(SEEDED_KEY, '1')
 
+  // 44 KB of message text, only needed this once, so loaded on demand. If that
+  // download fails, clear the flag so the next app start tries again.
+  let DEFAULT_PERSONALITY_GROUPS
+  try {
+    ({ DEFAULT_PERSONALITY_GROUPS } = await import('../lib/defaultPersonalityGroups'))
+  } catch (err) {
+    localStorage.removeItem(SEEDED_KEY)
+    throw err
+  }
   for (const preset of DEFAULT_PERSONALITY_GROUPS) {
     await db.personalityGroups.add({
       name: preset.name,

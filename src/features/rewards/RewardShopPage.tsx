@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { Star, Plus, Pencil, Trash2, ExternalLink, Pin, X, Clock, Gift, History, Sparkles, Check } from 'lucide-react'
-import imageCompression from 'browser-image-compression'
+import { compressImage } from '../../lib/compressImage'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { usePointsBalance } from '../../hooks/usePoints'
@@ -280,7 +280,7 @@ function RewardFormSheet({
   async function handleImagePick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const compressed = await imageCompression(file, { maxSizeMB: 0.1, maxWidthOrHeight: 256, useWebWorker: true })
+    const compressed = await compressImage(file, { maxSizeMB: 0.1, maxWidthOrHeight: 256, useWebWorker: true })
     setImage(compressed)
   }
 

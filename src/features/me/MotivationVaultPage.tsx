@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Trash2, Plus, Camera, X, Heart } from 'lucide-react'
-import imageCompression from 'browser-image-compression'
+import { compressImage } from '../../lib/compressImage'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import {
@@ -82,7 +82,7 @@ export default function MotivationVaultPage() {
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const compressed = await imageCompression(file, { maxSizeMB: 1, maxWidthOrHeight: 1200, useWebWorker: true })
+    const compressed = await compressImage(file, { maxSizeMB: 1, maxWidthOrHeight: 1200, useWebWorker: true })
     setPhoto(compressed)
     if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPhotoPreview(URL.createObjectURL(compressed))

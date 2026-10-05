@@ -41,7 +41,7 @@ The stack (React, Vite, Tailwind, Dexie/IndexedDB) is fine. The slowness comes f
 |---|---|---|
 | Dragging the companion stutters | [FloatingCompanion.tsx](../../src/components/FloatingCompanion.tsx) calls `setPosition` on every touch-move, so React re-renders the whole 288-line component every frame | Move the element directly (ref + `transform`) during the drag and only save to state on release. Or use the animation library's built-in drag (below). |
 | Companion position sometimes "jumps back" | Mouse drag saves the position from *before* the drag (stale closure) | Same fix |
-| Slow first load | Main JS bundle is **900 KB (266 KB gzipped)**, measured on a fresh build 2026-10-05 | Move big static data (companion lines, encounters) and charts out of the main bundle |
+| Slow first load | Main JS bundle was **900 KB (266 KB gzipped)**; ✅ now 386 KB (123 KB gzipped) after step 1 | Move big static data (companion lines, encounters) and charts out of the main bundle |
 | Pages feel "stiff" | No transitions; content just appears | Animation layer (section 2) |
 
 A rewrite would cost months and throw away 26 working features plus your data. An upgrade lets you use the app the whole time, which is the point.
@@ -296,7 +296,7 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 | # | Step | Why here |
 |---|---|---|
 | 0 ✅ | **Small fixes:** backup hardening, companion idle, "Start fresh", pick current companion, saved names, remove My Quotes (one at a time) | Quick wins, each tested on its own |
-| 1 🔄 | **Smoothness foundation:** fix companion drag, add the animation library + presets, measure and slim the bundle | Fixes the "clunky" feeling right away; everything after builds on it |
+| 1 ✅ | **Smoothness foundation:** fix companion drag, add the animation library + presets, measure and slim the bundle | Fixes the "clunky" feeling right away; everything after builds on it |
 | 2 | **Themes** | Colour refactor before redesigning screens, so new screens support themes from the start |
 | 2b | **Feature system + navigation:** spotlight/available/off tiers, Settings → Features, where every page lives (four-tab ceiling; off features disappear from menus) | Every new feature plugs into this, and the Today screen depends on it |
 | 3 | **Today screen + Daily Check** | The core ADHD change |
