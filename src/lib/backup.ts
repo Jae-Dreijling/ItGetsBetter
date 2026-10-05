@@ -216,6 +216,17 @@ export async function createBackup(password: string): Promise<Blob> {
   return new Blob([JSON.stringify(payload)], { type: 'application/octet-stream' })
 }
 
+// Creates an encrypted backup and hands it to the browser as a download.
+export async function downloadBackup(password: string): Promise<void> {
+  const blob = await createBackup(password)
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `itgetsbetter-backup-${new Date().toISOString().slice(0, 10)}.igb`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export async function restoreBackup(file: Blob, password: string): Promise<void> {
   const text = await file.text()
   const payload = JSON.parse(text)

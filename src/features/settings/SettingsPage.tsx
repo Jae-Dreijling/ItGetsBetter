@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Target, X, Wrench } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, MessageCircleHeart, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Target, X, Wrench, Sprout } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
@@ -110,6 +110,17 @@ export default function SettingsPage() {
             <div>
               <p className="font-medium text-text-primary">Backup & Restore</p>
               <p className="text-sm text-muted">Export or import your data</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/settings/start-fresh')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <Sprout className="h-5 w-5 text-secondary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Start Fresh</p>
+              <p className="text-sm text-muted">Clean slate, optionally keeping your companions</p>
             </div>
           </button>
 

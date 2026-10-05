@@ -1,17 +1,16 @@
 import { useState, useRef } from 'react'
-import { Download, Upload, Shield, AlertTriangle, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router'
+import { Download, Upload, Shield, AlertTriangle, Sprout } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
-import { createBackup, restoreBackup } from '../../lib/backup'
-import { db } from '../../db'
+import { downloadBackup, restoreBackup } from '../../lib/backup'
 
 export default function BackupPage() {
+  const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [working, setWorking] = useState(false)
   const [showRestore, setShowRestore] = useState(false)
-  const [showReset, setShowReset] = useState(false)
-  const [resetConfirm, setResetConfirm] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function handleBackup() {
@@ -20,13 +19,7 @@ export default function BackupPage() {
     setStatus(null)
 
     try {
-      const blob = await createBackup(password)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `itgetsbetter-backup-${new Date().toISOString().slice(0, 10)}.igb`
-      a.click()
-      URL.revokeObjectURL(url)
+      await downloadBackup(password)
       setStatus({ type: 'success', message: 'Backup created and downloaded!' })
       setPassword('')
     } catch (err) {
@@ -128,51 +121,16 @@ export default function BackupPage() {
           )}
         </div>
 
-        <div className="mt-4 rounded-xl bg-card p-4 shadow-sm">
-          <button
-            onClick={() => setShowReset(!showReset)}
-            className="flex w-full items-center gap-2 font-semibold text-danger"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete All Data
-          </button>
-
-          {showReset && (
-            <div className="mt-3 space-y-3">
-              <div className="flex items-start gap-2 rounded-lg bg-danger/10 p-3">
-                <AlertTriangle className="mt-0.5 h-4 w-4 text-danger shrink-0" />
-                <div className="text-xs text-danger">
-                  <p className="font-semibold">This will permanently delete ALL your data.</p>
-                  <p className="mt-1">Create a backup first if you want to restore it later. This cannot be undone.</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs text-muted mb-1">Type <strong>DELETE</strong> to confirm</p>
-                <input
-                  type="text"
-                  value={resetConfirm}
-                  onChange={e => setResetConfirm(e.target.value)}
-                  placeholder="DELETE"
-                  className="w-full rounded-lg border border-danger/30 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-danger focus:outline-none"
-                />
-              </div>
-
-              <button
-                onClick={async () => {
-                  if (resetConfirm !== 'DELETE') return
-                  await db.delete()
-                  localStorage.clear()
-                  window.location.reload()
-                }}
-                disabled={resetConfirm !== 'DELETE'}
-                className="w-full rounded-lg bg-danger py-2.5 font-semibold text-white disabled:opacity-30"
-              >
-                Delete Everything & Start Fresh
-              </button>
-            </div>
-          )}
-        </div>
+        <button
+          onClick={() => navigate('/settings/start-fresh')}
+          className="mt-4 flex w-full items-center gap-3 rounded-xl bg-card p-4 text-left shadow-sm"
+        >
+          <Sprout className="h-5 w-5 text-secondary-500" />
+          <div>
+            <p className="font-medium text-text-primary">Want a clean slate?</p>
+            <p className="text-sm text-muted">Start fresh, with the option to keep your companions</p>
+          </div>
+        </button>
 
         {status && (
           <div className={`mt-4 rounded-lg p-3 text-sm ${

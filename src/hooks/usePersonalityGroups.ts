@@ -43,7 +43,7 @@ export async function deletePersonalityGroup(id: number) {
 // Seeds a starter library of personality types (MLP Mane-Six-inspired archetypes
 // plus a few originals) exactly once — deleting them afterward is respected,
 // they won't come back on the next app open.
-const SEEDED_KEY = 'igb_personality_groups_seeded'
+export const SEEDED_KEY = 'igb_personality_groups_seeded'
 
 export async function ensureDefaultPersonalityGroups() {
   if (localStorage.getItem(SEEDED_KEY)) return
