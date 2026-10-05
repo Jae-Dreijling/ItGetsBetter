@@ -1,15 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router'
 import BottomTabs from './BottomTabs'
 import SideMenu from './SideMenu'
-
-export const SideMenuContext = {
-  open: () => {},
-}
+import { registerSideMenuOpener } from '../../lib/sideMenu'
 
 export default function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false)
-  SideMenuContext.open = () => setMenuOpen(true)
+
+  useEffect(() => {
+    registerSideMenuOpener(() => setMenuOpen(true))
+    return () => registerSideMenuOpener(null)
+  }, [])
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface">

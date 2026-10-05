@@ -147,7 +147,7 @@ export default function ScheduleSettings() {
                         <label className="text-xs text-muted">{field.label}</label>
                         <input
                           type="time"
-                          value={(editingProfile as any)[field.key]}
+                          value={String(editingProfile![field.key as keyof ScheduleProfile] ?? '')}
                           onChange={e => setEditingProfile({ ...editingProfile!, [field.key]: e.target.value })}
                           className="rounded-lg border border-primary-100 dark:border-primary-900 bg-surface px-2 py-1 text-sm text-text-primary focus:border-primary-400 focus:outline-none"
                         />

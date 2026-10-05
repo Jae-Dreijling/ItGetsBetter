@@ -123,7 +123,8 @@ export default function EncounterPage() {
       if (prev.phase !== 'fighting') return prev
 
       const log = [...prev.log]
-      let { playerHp, encounterHp, focusing, healsLeft, enemyCharging } = prev
+      let { playerHp, encounterHp, focusing, healsLeft } = prev
+      const { enemyCharging } = prev
       let playerDefending = false
 
       // ── Player turn ──────────────────────────────────────────────────────────

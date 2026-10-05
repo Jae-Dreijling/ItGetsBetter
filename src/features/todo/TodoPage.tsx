@@ -315,8 +315,9 @@ function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habi
   const completions = useHabitCompletions(habit.id!, 30)
   const streakCount = completions?.length ?? 0
 
+  const [now] = useState(() => Date.now())
   const daysSinceActivation = habit.activated_at
-    ? Math.floor((Date.now() - new Date(habit.activated_at).getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.floor((now - new Date(habit.activated_at).getTime()) / (1000 * 60 * 60 * 24))
     : 0
 
   const freq = habit.frequency

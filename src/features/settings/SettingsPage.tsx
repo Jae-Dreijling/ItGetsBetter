@@ -5,7 +5,7 @@ import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
 import { useStorageEstimate, formatBytes } from '../../hooks/useStorage'
-import { isLockEnabled, enableLock, disableLock } from '../../components/AppLock'
+import { isLockEnabled, enableLock, disableLock } from '../../lib/appLock'
 import { isWeatherEnabled, setWeatherEnabled } from '../../hooks/useWeather'
 import { useFocus, FOCUS_OPTIONS } from '../../hooks/useFocus'
 

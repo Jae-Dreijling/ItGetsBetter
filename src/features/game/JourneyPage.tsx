@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import { Sparkles, Coins, RefreshCw, CheckCircle2, Clock, ShieldCheck, Zap, Home, Swords, Heart, Map as MapIcon } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
-import { triggerCompanionMessage } from '../../components/FloatingCompanion'
+import { triggerCompanionMessage } from '../../lib/companionMessenger'
 import { useGameState, useActiveQuests, useCustomQuestions, useQuestProgress, useCompanionAffinities, useCompanions } from '../../hooks/useGame'
 import {
   beg, canBegToday,

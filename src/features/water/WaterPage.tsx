@@ -20,7 +20,7 @@ export default function WaterPage() {
   const [customAmount, setCustomAmount] = useState('')
   const [showCustom, setShowCustom] = useState(false)
 
-  const goalMl = (profile as any)?.water_goal_ml ?? 2000
+  const goalMl = (profile as { water_goal_ml?: number } | undefined)?.water_goal_ml ?? 2000
   const progressPercent = total !== null && total !== undefined
     ? Math.min((total / goalMl) * 100, 100)
     : 0

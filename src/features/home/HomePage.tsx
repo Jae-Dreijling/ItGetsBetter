@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { Scale, UtensilsCrossed, Droplets, Timer, AlertCircle, Dumbbell, CheckCircle2, ChevronRight, Pill, Check, Star } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
-import { SideMenuContext } from '../../components/layout/AppShell'
+import { openSideMenu } from '../../lib/sideMenu'
 import PageContainer from '../../components/layout/PageContainer'
 import MoodPrompt from '../../components/MoodPrompt'
 import NotificationToast from '../../components/NotificationToast'
@@ -101,7 +101,7 @@ export default function HomePage() {
     <>
       <TopBar
         title="Home"
-        onMenuClick={() => SideMenuContext.open()}
+        onMenuClick={openSideMenu}
         rightContent={weatherData ? (
           <span className="text-xs text-muted">{weatherEmoji} {weatherData.temp}°</span>
         ) : undefined}

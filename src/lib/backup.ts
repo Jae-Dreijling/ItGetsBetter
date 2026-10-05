@@ -1,4 +1,5 @@
 import { db } from '../db'
+import type { Task } from '../types/entities'
 import { GUILD_ROOMS } from './game'
 import { BOSSES } from './bosses'
 
@@ -21,9 +22,9 @@ async function dataURLToBlob(dataURL: string): Promise<Blob> {
 // `data` here is always dynamic (it comes from db.table().toArray() ahead of
 // JSON.stringify, or from JSON.parse of an untrusted/legacy file on restore),
 // so these operate on plain records rather than the strict entity types.
-async function encodeBlobField(rows: Record<string, any>[], field: string): Promise<Record<string, any>[]> {
+async function encodeBlobField<T extends object>(rows: T[], field: string): Promise<T[]> {
   return Promise.all(rows.map(async row => {
-    const value = row[field]
+    const value = (row as Record<string, unknown>)[field]
     if (value instanceof Blob) return { ...row, [field]: await blobToDataURL(value) }
     return row
   }))
@@ -32,9 +33,9 @@ async function encodeBlobField(rows: Record<string, any>[], field: string): Prom
 // Restores real Blobs from data URLs; any other value (including the `{}`
 // left behind by backups made before this fix) is nulled out rather than
 // carried forward as a fake Blob that would crash on URL.createObjectURL.
-async function decodeBlobField(rows: Record<string, any>[], field: string): Promise<Record<string, any>[]> {
+async function decodeBlobField<T extends object>(rows: T[], field: string): Promise<T[]> {
   return Promise.all(rows.map(async row => {
-    const value = row[field]
+    const value = (row as Record<string, unknown>)[field]
     if (typeof value === 'string' && value.startsWith('data:')) {
       return { ...row, [field]: await dataURLToBlob(value) }
     }
@@ -45,15 +46,15 @@ async function decodeBlobField(rows: Record<string, any>[], field: string): Prom
 // For fields that must always be a real Blob (e.g. progress photos): rows
 // that can't be decoded (corrupted by a pre-fix backup) are dropped instead
 // of being kept around with a null/fake photo that would crash the viewer.
-async function decodeRequiredBlobField(rows: Record<string, any>[], field: string): Promise<Record<string, any>[]> {
+async function decodeRequiredBlobField<T extends object>(rows: T[], field: string): Promise<T[]> {
   const decoded = await Promise.all(rows.map(async row => {
-    const value = row[field]
+    const value = (row as Record<string, unknown>)[field]
     if (typeof value === 'string' && value.startsWith('data:')) {
       return { ...row, [field]: await dataURLToBlob(value) }
     }
     return null
   }))
-  return decoded.filter((row): row is Record<string, any> => row !== null)
+  return decoded.filter(row => row !== null) as T[]
 }
 
 async function deriveKey(password: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
@@ -235,7 +236,7 @@ export async function restoreBackup(file: File, password: string): Promise<void>
       if (data.habits?.length) await db.habits.bulkAdd(data.habits)
       if (data.habitCompletions?.length) await db.habitCompletions.bulkAdd(data.habitCompletions)
       if (data.tasks?.length) {
-        const tasks = data.tasks.map((t: any) => ({ ...t, show_in_today: t.show_in_today ?? true }))
+        const tasks = data.tasks.map((t: Task) => ({ ...t, show_in_today: t.show_in_today ?? true }))
         await db.tasks.bulkAdd(tasks)
       }
       if (data.projects?.length) await db.projects.bulkAdd(data.projects)

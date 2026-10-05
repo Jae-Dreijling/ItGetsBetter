@@ -140,7 +140,8 @@ export default function BossPage() {
       if (prev.phase !== 'fighting') return prev
 
       const log = [...prev.log]
-      let { playerHp, bossHp, focusing, healsLeft, bossCharging } = prev
+      let { playerHp, bossHp, focusing, healsLeft } = prev
+      const { bossCharging } = prev
       let playerDefending = false
 
       // ── Player turn ──────────────────────────────────────────────────────────

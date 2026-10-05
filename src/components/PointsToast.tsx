@@ -1,19 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Star } from 'lucide-react'
-
-interface PointsEvent {
-  amount: number
-  source: string
-  id: number
-}
-
-let listener: ((event: PointsEvent) => void) | null = null
-
-export function emitPointsEarned(amount: number, source: string) {
-  if (listener) {
-    listener({ amount, source, id: Date.now() })
-  }
-}
+import { setPointsListener, type PointsEvent } from '../lib/pointsEvents'
 
 const SOURCE_LABELS: Record<string, string> = {
   meal_logged: 'logging a meal',
@@ -34,13 +21,13 @@ export default function PointsToast() {
   const [events, setEvents] = useState<PointsEvent[]>([])
 
   useEffect(() => {
-    listener = (event) => {
+    setPointsListener((event) => {
       setEvents(prev => [...prev, event])
       setTimeout(() => {
         setEvents(prev => prev.filter(e => e.id !== event.id))
       }, 2500)
-    }
-    return () => { listener = null }
+    })
+    return () => setPointsListener(null)
   }, [])
 
   if (events.length === 0) return null

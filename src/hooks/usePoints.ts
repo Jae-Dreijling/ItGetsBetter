@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { POINT_VALUES, type PointSource } from '../lib/points'
-import { emitPointsEarned } from '../components/PointsToast'
+import { emitPointsEarned } from '../lib/pointsEvents'
 import { awardSparks } from '../lib/game'
 import { triggerCompanionMessage } from '../lib/companionMessenger'
 

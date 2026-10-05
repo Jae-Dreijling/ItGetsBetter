@@ -9,7 +9,6 @@ import { useCompanionAffinityFor } from '../hooks/useGame'
 import { getDataAwareNudge } from '../lib/companionNudges'
 import { registerCompanionMessageHandler } from '../lib/companionMessenger'
 
-export { triggerCompanionMessage } from '../lib/companionMessenger'
 
 const POSITION_KEY = 'igb_companion_position'
 const IDLE_TIMEOUT = 10000
@@ -101,6 +100,9 @@ export default function FloatingCompanion() {
       // not supposed to be interacting with the phone right now.
       if (isPhoneFreeTimeRef.current) {
         showMessage('phone_free')
+        // Re-arms itself; works at runtime because this runs after declaration.
+        // Removed in the step 0 idle-timer rewrite (see V2-PLAN section 12).
+        // eslint-disable-next-line react-hooks/immutability
         resetIdleTimer()
         return
       }
