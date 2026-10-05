@@ -93,6 +93,8 @@ export interface Habit {
   chain_order: number
   is_active: boolean
   is_queued: boolean
+  // Part of the daily floor (max 3, see lib/floor). Missing means no.
+  is_floor?: boolean
   activated_at: string | null
   created_at: string
 }

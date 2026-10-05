@@ -127,7 +127,7 @@ function WeightAnswer({ onAnswered }: { onAnswered: () => Promise<void> }) {
         onChange={e => setValue(e.target.value)}
         placeholder={latest ? `${latest.value_kg}` : 'kg'}
         aria-label="Weight in kg"
-        className="min-w-0 flex-1 rounded-xl border border-primary-100 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+        className="min-w-0 flex-1 rounded-xl border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
       />
       <button type="submit" disabled={!valid} className={primaryButton}>Save</button>
     </form>
@@ -239,7 +239,7 @@ function WinAnswer({ onAnswered }: { onAnswered: () => Promise<void> }) {
         onChange={e => setText(e.target.value)}
         placeholder="e.g. walked up the stairs easily"
         aria-label="Your win"
-        className="min-w-0 flex-1 rounded-xl border border-primary-100 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
+        className="min-w-0 flex-1 rounded-xl border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
       />
       <button type="submit" disabled={!text.trim()} className={primaryButton}>Save</button>
     </form>

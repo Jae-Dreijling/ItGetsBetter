@@ -18,6 +18,7 @@ const SOURCE_LABELS: Record<string, string> = {
   medicine_taken: 'taking medicine',
   streak_bonus_per_day: 'streak bonus',
   daily_check: 'daily check',
+  floor_complete: 'full day! floor done',
 }
 
 export default function PointsToast() {

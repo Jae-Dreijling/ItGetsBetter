@@ -38,7 +38,7 @@ export async function awardPoints(source: PointSource, sourceId?: number) {
     .and(t => t.source_type === source && (sourceId === undefined || t.source_id === sourceId))
     .first()
 
-  if (alreadyAwarded && ['weight_logged', 'sleep_logged', 'water_goal_met', 'fasting_goal_met'].includes(source)) {
+  if (alreadyAwarded && ['weight_logged', 'sleep_logged', 'water_goal_met', 'fasting_goal_met', 'daily_check', 'floor_complete'].includes(source)) {
     return
   }
 
