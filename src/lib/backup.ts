@@ -2,6 +2,7 @@ import { db } from '../db'
 import { GUILD_ROOMS } from './game'
 import { BOSSES } from './bosses'
 import { mergeQuotesIntoCompanions } from './quotesMigration'
+import { saveFile } from './saveFile'
 
 // Backups cover every table in the database automatically: export and restore
 // both loop over `db.tables`, so a table added in a future schema version is
@@ -229,15 +230,11 @@ export async function createBackup(password: string): Promise<Blob> {
   return new Blob([JSON.stringify(payload)], { type: 'application/octet-stream' })
 }
 
-// Creates an encrypted backup and hands it to the browser as a download.
+// Creates an encrypted backup and saves it (download, or the share sheet in
+// the Android app).
 export async function downloadBackup(password: string): Promise<void> {
   const blob = await createBackup(password)
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `itgetsbetter-backup-${new Date().toISOString().slice(0, 10)}.igb`
-  a.click()
-  URL.revokeObjectURL(url)
+  await saveFile(blob, `itgetsbetter-backup-${new Date().toISOString().slice(0, 10)}.igb`)
 }
 
 export async function restoreBackup(file: Blob, password: string): Promise<void> {

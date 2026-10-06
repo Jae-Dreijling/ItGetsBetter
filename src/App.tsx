@@ -14,6 +14,7 @@ import UpdatePrompt from './components/UpdatePrompt'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppLock from './components/AppLock'
 import { isLockEnabled } from './lib/appLock'
+import { isNativeApp } from './lib/platform'
 import { applyColorTheme, resolveColorTheme } from './lib/themes'
 import InstallPrompt from './components/InstallPrompt'
 import { triggerCompanionMessage } from './lib/companionMessenger'
@@ -227,12 +228,14 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <UpdatePrompt />
+      {/* Web-only: the Android app ships its files inside the APK, so the
+          PWA service worker and install banner don't apply there. */}
+      {!isNativeApp() && <UpdatePrompt />}
       <ErrorBoundary feature="the app">
         <AppContent />
       </ErrorBoundary>
       <PointsToast />
-      <InstallPrompt />
+      {!isNativeApp() && <InstallPrompt />}
     </BrowserRouter>
   )
 }

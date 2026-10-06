@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:phone": "vite --host --mode phone",
+    "android:apk": "node scripts/build-apk.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -13,6 +14,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/share": "^8.0.3",
     "browser-image-compression": "^2.0.2",
     "date-fns": "^4.4.0",
     "dexie": "^4.4.4",
@@ -28,6 +33,8 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.1",
     "@types/node": "^24.12.3",

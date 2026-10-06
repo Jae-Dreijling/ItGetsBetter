@@ -300,7 +300,7 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 | 2 ✅ | **Themes** | Colour refactor before redesigning screens, so new screens support themes from the start |
 | 2b ✅ | **Feature system + navigation:** spotlight/available/off tiers, Settings → Features, where every page lives (four-tab ceiling; off features disappear from menus) | Every new feature plugs into this, and the Today screen depends on it |
 | 3 ✅ | **Today screen + Daily Check** | The core ADHD change |
-| 4 | **APK + notifications (Capacitor)** | Real phone app early, so the next features can use notifications |
+| 4 🔄 | **APK + notifications (Capacitor)** | Real phone app early, so the next features can use notifications |
 | ⏸ | **2.0 release** (steps 0–4). Later steps ship as 2.1, 2.2, … | |
 | 5 | **To-do redesign** (habits + tasks) | Design with mockups first; uses the animations and fits with the Today screen |
 | 6 | **Abstinence page** | Self-contained, high personal value |
@@ -339,7 +339,7 @@ A step is finished, and can be merged to `main`, when:
 | 4 | APK timing | **Step 4** in the build order |
 | 5 | Scope | **Many features are allowed,** as long as they're optional and only a few get the spotlight (core principle above) |
 | 6 | Phone testing | **Local Wi-Fi:** the dev server runs on the PC and you open it on your phone on the same network. Nothing gets published. |
-| 7 | Current app data | **Decide at step 4** (the APK move). Until then treat it as "keep": every database change carries existing data over, and you make a backup before step 0. |
+| 7 | Current app data | **Bring everything over** (decided 2026-10-06, step 4): back up in the web app, restore in the APK. |
 | 8 | Start fresh | Wiping data offers the **option to keep companions & personality groups** |
 | 9 | Navigation | Tabs become **Today · Log · Plan · Me**. Plan = habits, tasks, goals, stepping away (abstinence), focus timer. Me = journey, companions, people (social), progress, tools. |
 | 10 | Spotlight cap | **3 cards** on Today, besides the Daily Check, the daily floor and the companion |

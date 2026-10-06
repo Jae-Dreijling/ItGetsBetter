@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx'
+import { saveFile } from './saveFile'
 import { db } from '../db'
 
 export async function exportToExcel() {
@@ -114,12 +115,7 @@ export async function exportToExcel() {
 
   const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `itgetsbetter-export-${new Date().toISOString().slice(0, 10)}.xlsx`
-  a.click()
-  URL.revokeObjectURL(url)
+  await saveFile(blob, `itgetsbetter-export-${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 
 export async function exportPhotosAsZip() {
@@ -136,10 +132,5 @@ export async function exportPhotosAsZip() {
   }
 
   const blob = await zip.generateAsync({ type: 'blob' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `itgetsbetter-photos-${new Date().toISOString().slice(0, 10)}.zip`
-  a.click()
-  URL.revokeObjectURL(url)
+  await saveFile(blob, `itgetsbetter-photos-${new Date().toISOString().slice(0, 10)}.zip`)
 }

@@ -4,6 +4,7 @@ import { Download, Upload, Shield, AlertTriangle, Sprout } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { downloadBackup, restoreBackup } from '../../lib/backup'
+import { isNativeApp } from '../../lib/platform'
 
 export default function BackupPage() {
   const navigate = useNavigate()
@@ -20,7 +21,7 @@ export default function BackupPage() {
 
     try {
       await downloadBackup(password)
-      setStatus({ type: 'success', message: 'Backup created and downloaded!' })
+      setStatus({ type: 'success', message: 'Backup created and saved!' })
       setPassword('')
     } catch (err) {
       setStatus({ type: 'error', message: `Backup failed: ${err instanceof Error ? err.message : 'Unknown error'}` })
@@ -98,7 +99,9 @@ export default function BackupPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".igb,.json"
+                // Android's file picker filters by file type and doesn't know .igb,
+                // so in the app it shows every file; restore checks the file anyway.
+                accept={isNativeApp() ? undefined : '.igb,.json'}
                 className="w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-surface file:px-3 file:py-2 file:text-sm file:font-medium file:text-muted hover:file:bg-primary-50"
               />
 
