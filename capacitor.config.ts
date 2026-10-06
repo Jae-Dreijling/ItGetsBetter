@@ -9,6 +9,13 @@ const config: CapacitorConfig = {
   appId: 'app.itgetsbetter',
   appName: 'ItGetsBetter',
   webDir: 'dist',
+  plugins: {
+    LocalNotifications: {
+      // android/app/src/main/res/drawable/ic_stat_heart.xml
+      smallIcon: 'ic_stat_heart',
+      iconColor: '#f47e6c',
+    },
+  },
 }
 
 export default config

@@ -1,5 +1,6 @@
 import type { MealSlot, HabitFrequency, TaskPriority, Weekday } from './enums'
 import type { FeatureTiers } from '../lib/features'
+import type { NotificationPrefs } from '../lib/notifications/plan'
 
 export interface UserProfile {
   id?: number
@@ -18,6 +19,8 @@ export interface UserProfile {
   feature_tiers?: FeatureTiers
   // When the one-time 2.0 feature picker was completed or skipped.
   features_picked_at?: string
+  // Phone notification settings (Android app). See lib/notifications.
+  notification_prefs?: NotificationPrefs
   created_at: string
 }
 
@@ -298,6 +301,10 @@ export interface CompanionMessages {
   goodnight: string[]
   first_milestone: string[]
   idle: string[]
+  // Phone notifications (Android app), spoken by the companion. Older
+  // companions may not have these yet; code falls back to built-in lines.
+  reminder_daily_check?: string[]
+  reminder_floor?: string[]
 }
 
 export interface Companion {

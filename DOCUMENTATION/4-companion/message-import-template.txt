@@ -133,13 +133,22 @@ First-Time Milestone
   entry, habit completion, task completion, or finish a book.
 
 Idle / AFK
-  Fallback shown after ~10 seconds of no interaction, when none of
+  Fallback shown after ~2 minutes of no interaction, when none of
   the higher-priority conditions above (phone-free, goodnight, mood,
   affinity) apply. Sometimes replaced by a data-aware nudge (e.g.
   overdue tasks, low water) or, for a Lover companion with high
   affinity, one of their Lover Messages instead.
 
-The 22 real category names (must match one of these, spelling doesn't
+Daily Check Reminder
+  Phone notification (Android app) at the time set in Settings ->
+  Notifications, only while today's check is still open. The
+  companion's name is the notification title.
+
+Floor Reminder
+  Phone notification (Android app) in the evening, only while your
+  daily floor isn't done yet. Keep it gentle: even one counts.
+
+The 24 real category names (must match one of these, spelling doesn't
 matter as long as the words are the same):
 
   General / Default
@@ -164,6 +173,8 @@ matter as long as the words are the same):
   Goodnight
   First-Time Milestone
   Idle / AFK
+  Daily Check Reminder
+  Floor Reminder
 
 --- COPY EVERYTHING BELOW THIS LINE INTO THE IMPORT BOX ---
 
@@ -255,6 +266,14 @@ First time's always special, {name}. Nicely done.
 [Idle / AFK]
 Still here, {name}? Need anything?
 Take your time, {name}. I'm not going anywhere.
+
+[Daily Check Reminder]
+{name}, today's little check is waiting for you. No rush.
+One quick question for you today, {name}, whenever you're ready.
+
+[Floor Reminder]
+Your floor is still open, {name}. Even one counts.
+{name}, a tiny bit of your floor before bed? Only if it feels okay.
 
 [Lover]
 I'm really glad you're here, {name}.

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router'
 import { COLOR_THEMES, resolveColorTheme, type ColorThemeSetting } from '../../lib/themes'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Wrench, Sprout, Palette, LayoutGrid } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Wrench, Sprout, Palette, LayoutGrid, BellRing } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
@@ -81,6 +81,17 @@ export default function SettingsPage() {
             <div>
               <p className="font-medium text-text-primary">Features</p>
               <p className="text-sm text-muted">Choose what's in your spotlight, on or off</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/settings/notifications')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <BellRing className="h-5 w-5 text-secondary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Notifications</p>
+              <p className="text-sm text-muted">Gentle reminders from your companion</p>
             </div>
           </button>
 

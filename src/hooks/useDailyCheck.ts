@@ -7,6 +7,7 @@ import { CHECKS, pickCheck, type CheckKind } from '../lib/dailyCheck'
 import { isOn } from '../lib/features'
 import { getFeatureTiers } from './useFeatures'
 import { awardPoints } from './usePoints'
+import { requestReschedule } from '../lib/notifications/native'
 
 const STORAGE_KEY = 'igb_daily_check'
 
@@ -85,6 +86,8 @@ export function useDailyCheck() {
       writeStored(next)
       return next
     })
+    // Today's reminder isn't needed anymore.
+    requestReschedule()
   }, [])
 
   const markAnswered = useCallback(async () => {
@@ -103,4 +106,11 @@ export function useDailyCheck() {
 
 export async function addWin(text: string) {
   await db.wins.add({ date: getLogicalDate(), text: text.trim(), source: 'daily_check', logged_at: nowISO() })
+}
+
+// For the notification planner: answered, skipped or already logged today.
+export async function isTodaysCheckDone(): Promise<boolean> {
+  const check = await getTodaysCheck()
+  if (!check.kind || check.status !== 'pending') return true
+  return (await db.table(TABLE_FOR[check.kind]).where('date').equals(check.date).count()) > 0
 }

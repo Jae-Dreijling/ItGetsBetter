@@ -77,6 +77,7 @@ export default function CompanionPage() {
                   companion={c}
                   isCurrent={current?.id === c.id}
                   canDeactivate={activeCount > 1 || !c.is_active}
+                  canDelete={companions.length > 1}
                   onMakeCurrent={() => setSessionCompanionId(c.id!)}
                   onToggleActive={next => {
                     setCompanionActive(c.id!, next)
@@ -95,11 +96,12 @@ export default function CompanionPage() {
   )
 }
 
-function CompanionCard({ companion, isCurrent, canDeactivate, onMakeCurrent, onToggleActive, onEdit, onDelete }: {
+function CompanionCard({ companion, isCurrent, canDeactivate, canDelete, onMakeCurrent, onToggleActive, onEdit, onDelete }: {
   companion: Companion
   isCurrent: boolean
   canDeactivate: boolean
   onMakeCurrent: () => void
+  canDelete: boolean
   onToggleActive: (next: boolean) => void
   onEdit: () => void
   onDelete: () => void
@@ -157,13 +159,33 @@ function CompanionCard({ companion, isCurrent, canDeactivate, onMakeCurrent, onT
         <button onClick={onEdit} className="p-1.5 text-muted hover:text-primary-500">
           <Pencil className="h-4 w-4" />
         </button>
-        {!companion.is_default && (
-          <button onClick={onDelete} className="p-1.5 text-muted hover:text-danger">
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
+        {canDelete && <DeleteButton name={companion.name} onDelete={onDelete} />}
       </div>
     </div>
+  )
+}
+
+// Deleting removes the companion's messages too, so it takes a second tap.
+function DeleteButton({ name, onDelete }: { name: string; onDelete: () => void }) {
+  const [armed, setArmed] = useState(false)
+
+  useEffect(() => {
+    if (!armed) return
+    const timer = setTimeout(() => setArmed(false), 3000)
+    return () => clearTimeout(timer)
+  }, [armed])
+
+  if (armed) {
+    return (
+      <button onClick={onDelete} className="rounded-lg bg-danger/10 px-2.5 py-1.5 text-xs font-semibold text-danger">
+        Tap again to remove {name}
+      </button>
+    )
+  }
+  return (
+    <button onClick={() => setArmed(true)} aria-label={`Remove ${name}`} className="p-1.5 text-muted hover:text-danger">
+      <Trash2 className="h-4 w-4" />
+    </button>
   )
 }
 
