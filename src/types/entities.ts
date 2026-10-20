@@ -372,6 +372,9 @@ export interface Recipe {
   fat_g: number | null
   // 1–5, copied to the meal log when a planned portion is eaten.
   health_score: number
+  // Set for recipes imported from another app: its id for the recipe, so a
+  // re-import updates instead of duplicating. See MEAL-PLAN-IMPORT.md.
+  source_id?: string | null
   created_at: string
 }
 

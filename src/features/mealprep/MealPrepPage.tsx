@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AnimatePresence, m } from 'motion/react'
 import { format, parseISO } from 'date-fns'
-import { BookOpen, Check, ChevronLeft, ChevronRight, Copy, Plus, Search } from 'lucide-react'
+import { BookOpen, Check, ChevronLeft, ChevronRight, Copy, FileUp, Plus, Search } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { getLogicalDate } from '../../lib/date'
@@ -11,11 +11,12 @@ import {
   PLAN_SLOTS, weekStartOf, weekDays, shiftDate, sumNutrition, itemNutrition, formatPortions, recipeSummary,
 } from '../../lib/mealPlan'
 import {
-  useRecipes, usePlanItems, addPlanItem, removePlanItem, setPlanPortions, markEaten, unmarkEaten, copyPreviousWeek,
+  useRecipes, usePlanItems, addPlanItem, removePlanItem, setPlanPortions, markEaten, unmarkEaten, copyPreviousWeek, clearPlan,
 } from '../../hooks/useMealPlan'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
 import Sheet from './Sheet'
 import RecipeForm from './RecipeForm'
+import ImportSheet from './ImportSheet'
 import type { MealPlanItem, MealSlot, Recipe } from '../../types'
 
 const PORTION_CHOICES = [0.5, 1, 1.5, 2, 3]
@@ -39,6 +40,7 @@ export default function MealPrepPage() {
   const [openItemId, setOpenItemId] = useState<number | null>(null)
   const [lastItemId, setLastItemId] = useState<number | null>(null)
   const [targetOpen, setTargetOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
 
   const weekItems = items?.filter(i => i.date >= weekStart) ?? []
   const lastWeekHasItems = items?.some(i => i.date < weekStart) ?? false
@@ -58,6 +60,14 @@ export default function MealPrepPage() {
     setAddSlot(slot)
   }
 
+  // After an import, show the imported week (today if it's in it).
+  function showImported(firstDate: string) {
+    const start = weekStartOf(firstDate)
+    setWeekStart(start)
+    setSelectedDay(weekStartOf(today) === start ? today : firstDate)
+    setImportOpen(false)
+  }
+
   function openItem(id: number) {
     setLastItemId(id)
     setOpenItemId(id)
@@ -73,9 +83,14 @@ export default function MealPrepPage() {
         title="Meal prep"
         onBack={() => navigate('/todo')}
         rightContent={
-          <button onClick={() => navigate('/todo/meal-prep/recipes')} className="p-1.5 text-muted hover:text-text-primary" aria-label="Recipes">
-            <BookOpen className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setImportOpen(true)} className="p-1.5 text-muted hover:text-text-primary" aria-label="Import a meal plan">
+              <FileUp className="h-5 w-5" />
+            </button>
+            <button onClick={() => navigate('/todo/meal-prep/recipes')} className="p-1.5 text-muted hover:text-text-primary" aria-label="Recipes">
+              <BookOpen className="h-5 w-5" />
+            </button>
+          </div>
         }
       />
       <PageContainer>
@@ -138,6 +153,14 @@ export default function MealPrepPage() {
           ))}
         </div>
 
+        <ClearButtons
+          key={`${weekStart}-${selectedDay}`}
+          dayCount={dayItems.filter(i => i.meal_entry_id === null).length}
+          weekCount={weekItems.filter(i => i.meal_entry_id === null).length}
+          onClearDay={() => clearPlan(selectedDay, selectedDay)}
+          onClearWeek={() => clearPlan(days[0], days[6])}
+        />
+
         {weekItems.length === 0 && lastWeekHasItems && (
           <button
             onClick={() => copyPreviousWeek(weekStart)}
@@ -171,6 +194,10 @@ export default function MealPrepPage() {
             onRemoved={() => setOpenItemId(null)}
           />
         )}
+      </Sheet>
+
+      <Sheet open={importOpen} onClose={() => setImportOpen(false)} title="Import a meal plan">
+        <ImportSheet onDone={showImported} />
       </Sheet>
 
       <Sheet open={targetOpen} onClose={() => setTargetOpen(false)} title="Daily target">
@@ -420,6 +447,41 @@ function TargetForm({ current, onSave }: { current: number | null; onSave: (valu
           No target
         </button>
       )}
+    </div>
+  )
+}
+
+// Two taps each, so a stray tap can't wipe a plan. Eaten meals are kept.
+function ClearButtons({ dayCount, weekCount, onClearDay, onClearWeek }: {
+  dayCount: number
+  weekCount: number
+  onClearDay: () => void
+  onClearWeek: () => void
+}) {
+  const [armed, setArmed] = useState<'day' | 'week' | null>(null)
+  if (weekCount === 0) return null
+
+  function tap(which: 'day' | 'week') {
+    if (armed !== which) return setArmed(which)
+    setArmed(null)
+    if (which === 'day') onClearDay()
+    else onClearWeek()
+  }
+
+  const button = 'flex-1 rounded-lg py-2 text-sm transition-colors'
+  return (
+    <div className="mt-6">
+      <div className="flex gap-2">
+        {dayCount > 0 && (
+          <button onClick={() => tap('day')} className={`${button} ${armed === 'day' ? 'bg-primary-100 font-medium text-primary-700' : 'bg-surface text-muted'}`}>
+            {armed === 'day' ? `Tap again: clear ${dayCount}` : 'Clear this day'}
+          </button>
+        )}
+        <button onClick={() => tap('week')} className={`${button} ${armed === 'week' ? 'bg-primary-100 font-medium text-primary-700' : 'bg-surface text-muted'}`}>
+          {armed === 'week' ? `Tap again: clear ${weekCount}` : 'Clear this week'}
+        </button>
+      </div>
+      {armed && <p className="mt-1.5 text-center text-xs text-muted">Meals you already ate stay in your log.</p>}
     </div>
   )
 }

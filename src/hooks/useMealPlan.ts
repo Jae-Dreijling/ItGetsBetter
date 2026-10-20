@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { copyWeekItems, itemNutrition, shiftDate } from '../lib/mealPlan'
+import { planImport, type ImportPlan, type ImportRecipe, type MealPlanFile } from '../lib/mealPlanImport'
 import { addMealEntry } from './useMealEntries'
 import type { MealSlot, Recipe } from '../types'
 
@@ -91,10 +92,83 @@ export async function unmarkEaten(itemId: number) {
   await db.mealPlanItems.update(itemId, { meal_entry_id: null })
 }
 
+// Removes planned meals between two dates. Eaten ones stay: they're in the meal log.
+export async function clearPlan(from: string, to: string): Promise<number> {
+  return db.mealPlanItems
+    .where('date').between(from, to, true, true)
+    .and(item => item.meal_entry_id === null)
+    .delete()
+}
+
 export async function copyPreviousWeek(weekStart: string) {
   const fromStart = shiftDate(weekStart, -7)
   const items = await db.mealPlanItems.where('date').between(fromStart, shiftDate(fromStart, 6), true, true).toArray()
   const copies = copyWeekItems(items, fromStart, weekStart, nowISO())
   if (copies.length) await db.mealPlanItems.bulkAdd(copies)
   return copies.length
+}
+
+export async function previewImport(file: MealPlanFile): Promise<ImportPlan> {
+  return planImport(file, await db.recipes.toArray(), await db.mealPlanItems.toArray())
+}
+
+// Imported values fill in or replace, but an empty value in the file never
+// wipes something already known.
+function recipeChanges(recipe: ImportRecipe, existing: Recipe): Partial<Recipe> {
+  return {
+    name: recipe.name,
+    source_id: recipe.sourceId,
+    servings: recipe.servings,
+    ingredients: recipe.ingredients || existing.ingredients,
+    steps: recipe.steps || existing.steps,
+    kcal: recipe.kcal ?? existing.kcal,
+    protein_g: recipe.protein_g ?? existing.protein_g,
+    carbs_g: recipe.carbs_g ?? existing.carbs_g,
+    fat_g: recipe.fat_g ?? existing.fat_g,
+  }
+}
+
+export async function applyImport(plan: ImportPlan, dailyKcalTarget: number | null) {
+  await db.transaction('rw', db.recipes, db.mealPlanItems, db.userProfile, async () => {
+    const idBySource = new Map<string, number>()
+    for (const { id, recipe } of plan.updatedRecipes) {
+      const existing = await db.recipes.get(id)
+      if (!existing) continue
+      await db.recipes.update(id, recipeChanges(recipe, existing))
+      idBySource.set(recipe.sourceId, id)
+    }
+    for (const recipe of plan.newRecipes) {
+      const id = await db.recipes.add({
+        name: recipe.name,
+        source_id: recipe.sourceId,
+        servings: recipe.servings,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        kcal: recipe.kcal,
+        protein_g: recipe.protein_g,
+        carbs_g: recipe.carbs_g,
+        fat_g: recipe.fat_g,
+        health_score: 3,
+        created_at: nowISO(),
+      }) as number
+      idBySource.set(recipe.sourceId, id)
+    }
+
+    await db.mealPlanItems.bulkDelete(plan.replacedItemIds)
+    const now = nowISO()
+    await db.mealPlanItems.bulkAdd(plan.entries.map(entry => ({
+      date: entry.date,
+      meal_slot: entry.slot,
+      recipe_id: idBySource.get(entry.sourceId)!,
+      portions: entry.portions,
+      meal_entry_id: null,
+      points_given: false,
+      created_at: now,
+    })))
+
+    if (dailyKcalTarget !== null) {
+      const profile = await db.userProfile.toCollection().first()
+      if (profile) await db.userProfile.update(profile.id!, { daily_kcal_target: dailyKcalTarget })
+    }
+  })
 }
