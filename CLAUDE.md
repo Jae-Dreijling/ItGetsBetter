@@ -33,6 +33,9 @@ npm run dev:phone  # https dev server reachable from a phone on the same Wi-Fi
 npm test           # vitest
 npm run lint       # eslint
 npm run build      # tsc + vite build
+npm run android:apk  # build the Android app (debug APK) with Capacitor
 ```
+
+**Android app:** `android/` is the Capacitor project (app id `app.itgetsbetter`, permanent). `npm run android:apk` builds `android/app/build/outputs/apk/debug/app-debug.apk` using Android Studio's bundled Java (Android Studio 2026.x ships Java 25, so the Gradle wrapper is pinned to 9.1+). Installing a newer APK over the old one keeps the app's data, as long as it's signed with this PC's debug key (`~/.android/debug.keystore`). In the app, browser downloads don't work: save files through `saveFile()` (`src/lib/saveFile.ts`), which uses the share sheet; use `isNativeApp()` for other web/app differences.
 
 **Windows quirk:** if every test file fails with `Cannot read properties of undefined (reading 'config')` and the run header shows a lowercase `c:/` path, Vitest was started from a lowercase drive-letter working directory and loaded itself twice. Run it from `C:\Github\ItGetsBetter` (upper-case `C:`). CI is unaffected.

@@ -26,6 +26,8 @@ const EVENT_LABELS: { key: CompanionEvent; label: string }[] = [
   { key: 'goodnight', label: 'Goodnight' },
   { key: 'first_milestone', label: 'First-Time Milestone' },
   { key: 'idle', label: 'Idle / AFK' },
+  { key: 'reminder_daily_check', label: 'Daily Check Reminder' },
+  { key: 'reminder_floor', label: 'Floor Reminder' },
 ]
 
 const WRAPPING_QUOTE_CHARS = ['"', "'", '“', '”', '‘', '’']
@@ -289,7 +291,7 @@ export function MessagePoolEditor({ messages, onChange, showLoverImport = false,
   }
 
   function removeMessage(event: CompanionEvent, index: number) {
-    onChange(prev => ({ ...prev, [event]: prev[event].filter((_, i) => i !== index) }))
+    onChange(prev => ({ ...prev, [event]: (prev[event] ?? []).filter((_, i) => i !== index) }))
   }
 
   function addLoverMessage() {

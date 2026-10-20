@@ -14,6 +14,9 @@ import UpdatePrompt from './components/UpdatePrompt'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppLock from './components/AppLock'
 import { isLockEnabled } from './lib/appLock'
+import { isNativeApp } from './lib/platform'
+import { requestReschedule } from './lib/notifications/native'
+import { backupIfDue } from './lib/autoBackup'
 import { applyColorTheme, resolveColorTheme } from './lib/themes'
 import InstallPrompt from './components/InstallPrompt'
 import { triggerCompanionMessage } from './lib/companionMessenger'
@@ -48,6 +51,7 @@ const DevToolsPage = lazy(() => import('./features/settings/DevToolsPage'))
 const StartFreshPage = lazy(() => import('./features/settings/StartFreshPage'))
 const ThemePage = lazy(() => import('./features/settings/ThemePage'))
 const FeaturesPage = lazy(() => import('./features/settings/FeaturesPage'))
+const NotificationsPage = lazy(() => import('./features/settings/NotificationsPage'))
 const ScheduleSettings = lazy(() => import('./features/settings/ScheduleSettings'))
 const LabelManager = lazy(() => import('./features/settings/LabelManager'))
 const GroceryPage = lazy(() => import('./features/grocery/GroceryPage'))
@@ -64,6 +68,8 @@ const InsightsPage = lazy(() => import('./features/insights/InsightsPage'))
 const MotivationVaultPage = lazy(() => import('./features/me/MotivationVaultPage'))
 const TimelinePage = lazy(() => import('./features/me/TimelinePage'))
 const PomodoroPage = lazy(() => import('./features/todo/PomodoroPage'))
+const MealPrepPage = lazy(() => import('./features/mealprep/MealPrepPage'))
+const RecipesPage = lazy(() => import('./features/mealprep/RecipesPage'))
 const MeditationPage = lazy(() => import('./features/me/MeditationPage'))
 const CharacterPage = lazy(() => import('./features/me/CharacterPage'))
 const JourneyPage = lazy(() => import('./features/game/JourneyPage'))
@@ -133,6 +139,8 @@ function AppContent() {
         <Route path="todo/habits" element={<HabitsPage />} />
         <Route path="todo/tasks" element={<TasksPage />} />
         <Route path="todo/pomodoro" element={<PomodoroPage />} />
+        <Route path="todo/meal-prep" element={<MealPrepPage />} />
+        <Route path="todo/meal-prep/recipes" element={<RecipesPage />} />
         <Route path="me" element={<MePage />} />
         <Route path="me/measurements" element={<MeasurementsPage />} />
         <Route path="me/rewards" element={<RewardShopPage />} />
@@ -148,6 +156,7 @@ function AppContent() {
         <Route path="settings/start-fresh" element={<StartFreshPage />} />
         <Route path="settings/theme" element={<ThemePage />} />
         <Route path="settings/features" element={<FeaturesPage />} />
+        <Route path="settings/notifications" element={<NotificationsPage />} />
         <Route path="settings/export" element={<ExportPage />} />
         <Route path="settings/devtools" element={<DevToolsPage />} />
         <Route path="settings/schedule" element={<ScheduleSettings />} />
@@ -181,6 +190,22 @@ function prefetchTabs() {
 
 export default function App() {
   const [unlocked, setUnlocked] = useState(!isLockEnabled())
+
+  // Android app: re-plan phone notifications on start and whenever the app
+  // comes back to the foreground, so reminders reflect what's already done.
+  // The weekly automatic backup is checked at the same moments.
+  useEffect(() => {
+    if (!isNativeApp()) return
+    requestReschedule()
+    backupIfDue()
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return
+      requestReschedule()
+      backupIfDue()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [])
 
   useEffect(() => {
     if ('requestIdleCallback' in window) {
@@ -227,12 +252,14 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <UpdatePrompt />
+      {/* Web-only: the Android app ships its files inside the APK, so the
+          PWA service worker and install banner don't apply there. */}
+      {!isNativeApp() && <UpdatePrompt />}
       <ErrorBoundary feature="the app">
         <AppContent />
       </ErrorBoundary>
       <PointsToast />
-      <InstallPrompt />
+      {!isNativeApp() && <InstallPrompt />}
     </BrowserRouter>
   )
 }

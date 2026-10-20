@@ -44,3 +44,10 @@ export const slideFromLeft: Variants = {
   visible: { x: 0, transition: transitions.slide },
   exit: { x: '-100%', transition: transitions.slide },
 }
+
+// Bottom sheets rising from the bottom edge.
+export const slideUp: Variants = {
+  hidden: { y: '100%' },
+  visible: { y: 0, transition: transitions.slide },
+  exit: { y: '100%', transition: transitions.slide },
+}

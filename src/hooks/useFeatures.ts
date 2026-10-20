@@ -40,6 +40,7 @@ export async function getFeatureUsage(): Promise<Partial<Record<FeatureId, boole
     motivation_vault: vault,
     rewards,
     journey: !!game?.activated,
+    meal_prep: await has('recipes'),
   }
 }
 

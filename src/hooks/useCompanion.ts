@@ -29,6 +29,8 @@ const EMPTY_MESSAGES: CompanionMessages = {
   goodnight: [],
   first_milestone: [],
   idle: [],
+  reminder_daily_check: [],
+  reminder_floor: [],
 }
 
 export type CompanionEvent = keyof CompanionMessages
@@ -119,8 +121,19 @@ export async function updateCompanion(id: number, changes: Partial<{
   await db.companions.update(id, changes)
 }
 
+// Any companion can be removed, including the built-in one, as long as
+// another remains. If none is switched on afterwards, one is switched on so
+// the app always has someone to talk to.
 export async function deleteCompanion(id: number) {
-  await db.companions.delete(id)
+  await db.transaction('rw', db.companions, async () => {
+    if ((await db.companions.count()) <= 1) return
+    await db.companions.delete(id)
+    if ((await db.companions.filter(c => c.is_active).count()) === 0) {
+      const next = await db.companions.orderBy('id').first()
+      if (next) await db.companions.update(next.id!, { is_active: true })
+    }
+  })
+  if (getSessionCompanionId() === id) setSessionCompanionId(null)
 }
 
 export async function setCompanionActive(id: number, isActive: boolean) {
@@ -131,16 +144,18 @@ export async function setCompanionActive(id: number, isActive: boolean) {
 // so the check and the add share one transaction: otherwise two concurrent
 // calls both see "no default yet" and the app gets two default companions.
 //
-// Installs from before that fix can already have duplicates, and default
-// companions can't be deleted in the UI. Extras become normal companions
-// named "... (copy)", so nothing is lost and the user can delete them.
+// The built-in companion is only created when there are no companions at
+// all (first launch, Start Fresh): someone who removed it keeps it removed.
+//
+// Installs from before the transaction fix can have duplicate defaults.
+// Extras become normal companions named "... (copy)", so nothing is lost.
 export async function ensureDefaultCompanion() {
   await db.transaction('rw', db.companions, async () => {
-    const defaults = await db.companions.filter(c => c.is_default === true).sortBy('id')
-    if (defaults.length === 0) {
+    if ((await db.companions.count()) === 0) {
       await db.companions.add(createDefaultCompanion())
       return
     }
+    const defaults = await db.companions.filter(c => c.is_default === true).sortBy('id')
     for (const extra of defaults.slice(1)) {
       await db.companions.update(extra.id!, { is_default: false, name: `${extra.name} (copy)` })
     }

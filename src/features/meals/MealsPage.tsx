@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import { format } from 'date-fns'
 import { compressImage } from '../../lib/compressImage'
 import { Camera, X, Flame } from 'lucide-react'
@@ -8,6 +9,8 @@ import PageContainer from '../../components/layout/PageContainer'
 import { useTodaysMeals, addMealEntry } from '../../hooks/useMealEntries'
 import { DEFAULT_KCAL_PER_MIN } from '../../hooks/useExercise'
 import { db } from '../../db'
+import { useFeatureTiers } from '../../hooks/useFeatures'
+import { isOn } from '../../lib/features'
 import { getLogicalDate } from '../../lib/date'
 import type { MealSlot } from '../../types'
 
@@ -41,6 +44,8 @@ export default function MealsPage() {
   const [date, setDate] = useState(getLogicalDate())
   const [saving, setSaving] = useState(false)
   const [burnOffMeal, setBurnOffMeal] = useState<{ name: string | null; calories: number } | null>(null)
+  const navigate = useNavigate()
+  const mealPrepOn = isOn(useFeatureTiers(), 'meal_prep')
 
   useEffect(() => {
     return () => {
@@ -97,6 +102,14 @@ export default function MealsPage() {
     <>
       <TopBar title="Meals" />
       <PageContainer>
+        {mealPrepOn && (
+          <button
+            onClick={() => navigate('/todo/meal-prep')}
+            className="mb-3 w-full text-right text-sm font-medium text-primary-500"
+          >
+            🥗 Eating something you planned? Tick it off in Meal prep →
+          </button>
+        )}
         <form onSubmit={handleSubmit} className="mb-6 rounded-xl bg-card p-4 shadow-sm">
           <div className="mb-4 flex gap-2">
             {MEAL_SLOTS.map((s) => (

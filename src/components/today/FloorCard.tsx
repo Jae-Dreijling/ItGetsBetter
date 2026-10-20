@@ -5,6 +5,7 @@ import { fadeUp, pop } from '../../lib/animations'
 import { FLOOR_MAX, floorHabits, floorProgress, toggleFloorPick } from '../../lib/floor'
 import { useActiveHabits, useTodaysCompletions, toggleHabitCompletion, isTodayScheduled, setFloorHabits } from '../../hooks/useHabits'
 import { awardPoints } from '../../hooks/usePoints'
+import { requestReschedule } from '../../lib/notifications/native'
 import type { Habit } from '../../types'
 
 // The daily floor on Today: the 2–3 habits that make a day count. Finishing
@@ -21,6 +22,8 @@ export default function FloorCard() {
   // A full day earns a small bonus, once per day (deduplicated in awardPoints).
   useEffect(() => {
     if (complete) void awardPoints('floor_complete')
+    // A done floor doesn't need tonight's reminder (and an undone one does).
+    requestReschedule()
   }, [complete])
 
   if (!habits || habits.length === 0) return null
@@ -107,6 +110,7 @@ function FloorPicker({ habits, editing, onDone, onStart }: {
 
   async function save() {
     await setFloorHabits(picked)
+    requestReschedule()
     onDone()
   }
 

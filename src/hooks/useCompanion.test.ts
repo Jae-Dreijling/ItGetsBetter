@@ -1,7 +1,15 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { db } from '../db'
 import { clearDb } from '../test/dbHelpers'
-import { ensureDefaultCompanion } from './useCompanion'
+import { ensureDefaultCompanion, deleteCompanion } from './useCompanion'
+
+// The test environment is Node, which has no sessionStorage.
+const session = new Map<string, string>()
+vi.stubGlobal('sessionStorage', {
+  getItem: (k: string) => session.get(k) ?? null,
+  setItem: (k: string, v: string) => void session.set(k, v),
+  removeItem: (k: string) => void session.delete(k),
+})
 
 describe('ensureDefaultCompanion', () => {
   beforeEach(clearDb)
@@ -36,5 +44,38 @@ describe('ensureDefaultCompanion with existing duplicates', () => {
       ['ItGetsBetter', true],
       ['ItGetsBetter (copy)', false],
     ])
+  })
+})
+
+describe('removing companions', () => {
+  const base = { avatar: null, personality_group_id: null, messages: {} as never, created_at: '2026-10-06' }
+
+  beforeEach(async () => {
+    await clearDb()
+    session.clear()
+  })
+
+  it("doesn't bring the built-in companion back once it was removed", async () => {
+    await db.companions.add({ ...base, name: 'Pip', is_default: false, is_active: true })
+    await ensureDefaultCompanion()
+    expect((await db.companions.toArray()).map(c => c.name)).toEqual(['Pip'])
+  })
+
+  it('can remove the built-in companion when another exists', async () => {
+    const builtIn = await db.companions.add({ ...base, name: 'ItGetsBetter', is_default: true, is_active: true }) as number
+    await db.companions.add({ ...base, name: 'Pip', is_default: false, is_active: false })
+
+    await deleteCompanion(builtIn)
+
+    const left = await db.companions.toArray()
+    expect(left.map(c => c.name)).toEqual(['Pip'])
+    // It was the only active one, so Pip is switched on.
+    expect(left[0].is_active).toBe(true)
+  })
+
+  it('never removes the last companion', async () => {
+    const only = await db.companions.add({ ...base, name: 'ItGetsBetter', is_default: true, is_active: true }) as number
+    await deleteCompanion(only)
+    expect(await db.companions.count()).toBe(1)
   })
 })

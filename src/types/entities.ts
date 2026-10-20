@@ -1,5 +1,6 @@
 import type { MealSlot, HabitFrequency, TaskPriority, Weekday } from './enums'
 import type { FeatureTiers } from '../lib/features'
+import type { NotificationPrefs } from '../lib/notifications/plan'
 
 export interface UserProfile {
   id?: number
@@ -18,6 +19,10 @@ export interface UserProfile {
   feature_tiers?: FeatureTiers
   // When the one-time 2.0 feature picker was completed or skipped.
   features_picked_at?: string
+  // Phone notification settings (Android app). See lib/notifications.
+  notification_prefs?: NotificationPrefs
+  // Daily calorie target for the meal planner. Missing or null means none.
+  daily_kcal_target?: number | null
   created_at: string
 }
 
@@ -37,6 +42,11 @@ export interface MealEntry {
   photo: Blob | null
   health_score: number
   calories: number | null
+  // Filled in when the meal comes from the meal planner ("eaten").
+  protein_g?: number | null
+  carbs_g?: number | null
+  fat_g?: number | null
+  recipe_id?: number | null
   logged_at: string
   is_backfill: boolean
 }
@@ -298,6 +308,10 @@ export interface CompanionMessages {
   goodnight: string[]
   first_milestone: string[]
   idle: string[]
+  // Phone notifications (Android app), spoken by the companion. Older
+  // companions may not have these yet; code falls back to built-in lines.
+  reminder_daily_check?: string[]
+  reminder_floor?: string[]
 }
 
 export interface Companion {
@@ -340,6 +354,42 @@ export interface Win {
   text: string
   source: 'daily_check'
   logged_at: string
+}
+
+// A recipe in the meal-prep library. Nutrition is per portion; null means
+// unknown, so a recipe can be as little as a name.
+export interface Recipe {
+  id?: number
+  name: string
+  // How many portions the recipe makes.
+  servings: number
+  // Free text, one ingredient per line.
+  ingredients: string
+  steps: string
+  kcal: number | null
+  protein_g: number | null
+  carbs_g: number | null
+  fat_g: number | null
+  // 1–5, copied to the meal log when a planned portion is eaten.
+  health_score: number
+  // Set for recipes imported from another app: its id for the recipe, so a
+  // re-import updates instead of duplicating. See MEAL-PLAN-IMPORT.md.
+  source_id?: string | null
+  created_at: string
+}
+
+// One recipe planned into a day's meal slot.
+export interface MealPlanItem {
+  id?: number
+  date: string
+  meal_slot: MealSlot
+  recipe_id: number
+  portions: number
+  // The meal log created by "eaten"; null while it's only planned.
+  meal_entry_id: number | null
+  // Points are paid once per item, so un-eating and eating again doesn't pay twice.
+  points_given: boolean
+  created_at: string
 }
 
 export interface ProgressPhoto {

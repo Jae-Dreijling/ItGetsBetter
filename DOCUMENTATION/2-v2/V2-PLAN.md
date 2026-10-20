@@ -1,7 +1,7 @@
 # ItGetsBetter 2.0 — Plan
 
 **Date:** 2026-10-05
-**Status:** Direction agreed (see Decisions). Nothing built yet.
+**Status:** **2.0 released** (2026-10-20, tag `v2.0.0`): steps 0–4 plus meal prep (4b). Next: step 5, the to-do redesign, shipping as 2.1.
 **Reviewed:** [V2-PLAN-REVIEW](V2-PLAN-REVIEW.md) (2026-10-05). Corrections from it are already applied below.
 **Read with:** [RULEBOOK](../1-principles/RULEBOOK.md) (still applies), [EIGHT-JOURNEYS-LESSONS](EIGHT-JOURNEYS-LESSONS.md) (ideas this plan draws on)
 
@@ -156,7 +156,7 @@ Rule from the Rulebook that stays: **nothing is lost by being away.** No decayin
 Mostly from [EIGHT-JOURNEYS-LESSONS](EIGHT-JOURNEYS-LESSONS.md):
 - **Smoothed weight trend** as the main number; daily value small or hidden (+ explanations for normal jumps). Not a plain 7-day average: with the Daily Check, weigh-ins are irregular (~2–3 a week), so use an **exponentially smoothed trend** (Hacker's Diet style) that scales with the days since the last weigh-in.
 - **Staged goals** relative to your start, plus **non-scale wins** shown next to the scale
-- **Personal meal menu** + "decide today" picker (no calorie counting)
+- **Personal meal menu** + "decide today" picker (no calorie counting). *Pulled forward as **Meal prep** (2026-10-20, step 4b): recipe library with per-portion kcal/protein/carbs/fat, a Mon–Sun planner with breakfast/lunch/dinner/snacks, an optional daily kcal target (never shown in red), and "Eaten", which logs the planned portion as a normal meal. Values are entered once per recipe and added up by the app, so there is still no counting.*
 - **Recipe library** linked to the menu and grocery list
 - **Craving flow** (am I hungry → name it → 10-min timer → portioned version still counts), guided by the companion
 - **Weigh-in safety valve** (daily / weekly / trend only)
@@ -230,6 +230,7 @@ Mostly from [EIGHT-JOURNEYS-LESSONS](EIGHT-JOURNEYS-LESSONS.md):
 Things to know:
 - Building the APK needs **Android Studio / the Android SDK** installed.
 - **No auto-updates:** unlike the PWA, every new version has to be built and installed again. Optional: a "new version available" check (e.g. against GitHub releases).
+- **The APK is signed with the debug key on the build PC** (`%USERPROFILE%\.android\debug.keystore`). Android only installs updates signed with the same key, so keep a copy of that file somewhere safe (never in this public repo). Losing it means uninstalling to update, which deletes the data (restore from the weekly backup).
 - **Uninstalling deletes the data**, so the APK gets **automatic backups** to phone storage (e.g. weekly).
 - **Notification text is fixed when it's scheduled.** Every time the app opens, it reschedules the next ~7 days of notifications from current data.
 - **Android rules:** ask for notification permission (Android 13+) at a calm moment with an explanation; use normal (inexact) timing, since exact alarms are restricted on Android 12+; in battery-saving mode, notifications fire at most once per 9 minutes.
@@ -300,8 +301,9 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 | 2 ✅ | **Themes** | Colour refactor before redesigning screens, so new screens support themes from the start |
 | 2b ✅ | **Feature system + navigation:** spotlight/available/off tiers, Settings → Features, where every page lives (four-tab ceiling; off features disappear from menus) | Every new feature plugs into this, and the Today screen depends on it |
 | 3 ✅ | **Today screen + Daily Check** | The core ADHD change |
-| 4 | **APK + notifications (Capacitor)** | Real phone app early, so the next features can use notifications |
-| ⏸ | **2.0 release** (steps 0–4). Later steps ship as 2.1, 2.2, … | |
+| 4 ✅ | **APK + notifications (Capacitor)**. Done (2026-10-20): APK, companion-voiced reminders (tested on the phone, also with the app closed), weekly encrypted automatic backups to Documents/ItGetsBetter, PWA data moved into the app. Skipped: a "new version" check (needs published builds) | Real phone app early, so the next features can use notifications |
+| 4b ✅ | **Meal prep** (pulled forward from step 9 on request): recipes, week planner, "eaten" → meal log. Next, one at a time: **import a meal plan from a file** (JSON exported by another meal-planning web app; format in [MEAL-PLAN-IMPORT](MEAL-PLAN-IMPORT.md)), grocery list from the plan, a "today's plan" card on Today, starter recipes | Asked for directly; self-contained, lands as Available |
+| ✅ | **2.0 release** (steps 0–4 and 4b), 2026-10-20, tag `v2.0.0`. Later steps ship as 2.1, 2.2, … | |
 | 5 | **To-do redesign** (habits + tasks) | Design with mockups first; uses the animations and fits with the Today screen |
 | 6 | **Abstinence page** | Self-contained, high personal value |
 | 7 | **Social page** | Self-contained, uses notifications |
@@ -339,7 +341,7 @@ A step is finished, and can be merged to `main`, when:
 | 4 | APK timing | **Step 4** in the build order |
 | 5 | Scope | **Many features are allowed,** as long as they're optional and only a few get the spotlight (core principle above) |
 | 6 | Phone testing | **Local Wi-Fi:** the dev server runs on the PC and you open it on your phone on the same network. Nothing gets published. |
-| 7 | Current app data | **Decide at step 4** (the APK move). Until then treat it as "keep": every database change carries existing data over, and you make a backup before step 0. |
+| 7 | Current app data | **Bring everything over** (decided 2026-10-06, step 4): back up in the web app, restore in the APK. |
 | 8 | Start fresh | Wiping data offers the **option to keep companions & personality groups** |
 | 9 | Navigation | Tabs become **Today · Log · Plan · Me**. Plan = habits, tasks, goals, stepping away (abstinence), focus timer. Me = journey, companions, people (social), progress, tools. |
 | 10 | Spotlight cap | **3 cards** on Today, besides the Daily Check, the daily floor and the companion |
