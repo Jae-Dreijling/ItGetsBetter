@@ -29,3 +29,6 @@ DOCUMENTATION/4-companion/*.txt
 
 # Personal health data (Eight Journeys export)
 DOCUMENTATION/7-eight-journeys/
+
+# Real exports from other apps, kept local (the repo is public)
+EXAMPLES/

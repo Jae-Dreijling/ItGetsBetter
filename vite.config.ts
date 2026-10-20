@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import { execSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 
 function getCommitHash(): string {
   try {
@@ -15,6 +16,7 @@ function getCommitHash(): string {
 
 export default defineConfig(({ mode }) => ({
   define: {
+    __APP_VERSION__: JSON.stringify(JSON.parse(readFileSync('package.json', 'utf8')).version),
     __APP_COMMIT__: JSON.stringify(getCommitHash()),
     __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },

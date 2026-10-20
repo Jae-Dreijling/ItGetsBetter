@@ -292,7 +292,7 @@ export default function SettingsPage() {
         </button>
 
         <p className="mt-4 text-center text-xs text-muted">
-          ItGetsBetter · build {__APP_COMMIT__} · {new Date(__APP_BUILD_TIME__).toLocaleDateString()}
+          ItGetsBetter {__APP_VERSION__} · build {__APP_COMMIT__} · {new Date(__APP_BUILD_TIME__).toLocaleDateString()}
         </p>
       </PageContainer>
 
