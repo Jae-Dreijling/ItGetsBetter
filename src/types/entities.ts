@@ -394,6 +394,30 @@ export interface MealPlanItem {
   created_at: string
 }
 
+// Something the user is stepping away from (V2-PLAN §9). See lib/abstinence.
+export interface AbstinenceCounter {
+  id?: number
+  name: string
+  emoji: string
+  // When the current effort started (the first free moment).
+  started_at: string
+  why: string | null
+  // What the habit costs per day, for "money saved". Optional.
+  cost_per_day: number | null
+  archived: boolean
+  created_at: string
+}
+
+// "It happened" (a slip) or a craving that passed without one.
+export interface AbstinenceEvent {
+  id?: number
+  counter_id: number
+  kind: 'slip' | 'craving_resisted'
+  at: string
+  // stressed / bored / social / tired / ...; optional, for patterns.
+  context: string | null
+}
+
 export interface ProgressPhoto {
   id?: number
   date: string

@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 
 const DEFAULT_LABELS = [
@@ -46,6 +46,8 @@ export class ItGetsBetterDB extends Dexie {
   wins!: EntityTable<Win, 'id'>
   recipes!: EntityTable<Recipe, 'id'>
   mealPlanItems!: EntityTable<MealPlanItem, 'id'>
+  abstinenceCounters!: EntityTable<AbstinenceCounter, 'id'>
+  abstinenceEvents!: EntityTable<AbstinenceEvent, 'id'>
 
   // The name is only overridden in tests, to run upgrades on a separate database.
   constructor(name = 'ItGetsBetter') {
@@ -538,6 +540,12 @@ export class ItGetsBetterDB extends Dexie {
     this.version(18).stores({
       recipes: '++id, name',
       mealPlanItems: '++id, date, recipe_id',
+    })
+
+    // Abstinence counters and their slips / resisted cravings. New tables only.
+    this.version(19).stores({
+      abstinenceCounters: '++id, created_at',
+      abstinenceEvents: '++id, counter_id, at',
     })
 
     this.on('populate', () => {

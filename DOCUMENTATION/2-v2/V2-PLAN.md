@@ -305,7 +305,7 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 | 4b ✅ | **Meal prep** (pulled forward from step 9 on request): recipes, week planner, "eaten" → meal log. Next, one at a time: **import a meal plan from a file** (JSON exported by another meal-planning web app; format in [MEAL-PLAN-IMPORT](MEAL-PLAN-IMPORT.md)), grocery list from the plan, a "today's plan" card on Today, starter recipes | Asked for directly; self-contained, lands as Available |
 | ✅ | **2.0 release** (steps 0–4 and 4b), 2026-10-20, tag `v2.0.0`. Later steps ship as 2.1, 2.2, … | |
 | 5 🔄 | **To-do redesign** (habits + tasks). Built and approved from screenshots 2026-10-20, still to try on the phone: Habits / Tasks / Both switch, label chips, compact rows, a + button that adds in place, a detail page per task and habit, done items folded away. Meal prep moved to Log | Design with mockups first; uses the animations and fits with the Today screen |
-| 6 | **Abstinence page** | Self-contained, high personal value |
+| 6 🔄 | **Abstinence page**. Built and approved from screenshots 2026-10-20 (Me → Abstinence), still to try on the phone: "27 of 30" as the main number, live current run, longest run, total free days, milestones that stay, "it happened" with optional context, a simple craving helper (why + 10-minute timer, "it passed" counts), optional money saved | Self-contained, high personal value |
 | 7 | **Social page** | Self-contained, uses notifications |
 | 8 | **Mini-goals** | General milestone system; the weight stages in step 9 are built on it |
 | 9 | **Weight content:** trend, stages, non-scale wins, craving flow, meal menu | Builds on Today, abstinence (craving flow is shared) and mini-goals |

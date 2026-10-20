@@ -41,6 +41,7 @@ export async function getFeatureUsage(): Promise<Partial<Record<FeatureId, boole
     rewards,
     journey: !!game?.activated,
     meal_prep: await has('recipes'),
+    abstinence: await has('abstinenceCounters'),
   }
 }
 

@@ -11,7 +11,7 @@ import type { GameQuestObjective } from '../types'
 export type FeatureTier = 'spotlight' | 'available' | 'off'
 
 export type FeatureId =
-  | 'weight' | 'meals' | 'water' | 'fasting' | 'exercise' | 'mood' | 'sleep' | 'medicine' | 'measurements' | 'photos'
+  | 'weight' | 'meals' | 'abstinence' | 'water' | 'fasting' | 'exercise' | 'mood' | 'sleep' | 'medicine' | 'measurements' | 'photos'
   | 'habits' | 'tasks' | 'focus_timer' | 'meal_prep'
   | 'timeline' | 'insights' | 'graphs' | 'weekly_review' | 'achievements'
   | 'meditation' | 'grocery' | 'books' | 'motivation_vault'
@@ -46,6 +46,7 @@ export const FEATURES: Feature[] = [
   { id: 'mood', name: 'Mood', emoji: '🙂', description: 'How you feel', group: 'Tracking', paths: ['/log/mood'], canSpotlight: true, questObjectives: ['log_mood'] },
   { id: 'sleep', name: 'Sleep', emoji: '😴', description: "Last night's sleep", group: 'Tracking', paths: ['/log/sleep'], canSpotlight: true, questObjectives: ['log_sleep'] },
   { id: 'medicine', name: 'Medicine', emoji: '💊', description: 'Medication and reminders', group: 'Tracking', paths: ['/log/medicine'], canSpotlight: true, questObjectives: ['log_medicine'] },
+  { id: 'abstinence', name: 'Abstinence', emoji: '🌿', description: "Days free from something you're stepping away from", group: 'Tracking', paths: ['/me/abstinence'], canSpotlight: false },
   { id: 'measurements', name: 'Body measurements', emoji: '📏', description: 'Waist, chest and more', group: 'Tracking', paths: ['/me/measurements'], canSpotlight: false },
   { id: 'photos', name: 'Progress photos', emoji: '📸', description: 'Before and after', group: 'Tracking', paths: ['/me/photos'], canSpotlight: false },
   { id: 'habits', name: 'Habits', emoji: '✅', description: 'Small daily routines', group: 'Planning', paths: ['/todo/habits'], canSpotlight: true, questObjectives: ['complete_habits'] },

@@ -69,6 +69,8 @@ const InsightsPage = lazy(() => import('./features/insights/InsightsPage'))
 const MotivationVaultPage = lazy(() => import('./features/me/MotivationVaultPage'))
 const TimelinePage = lazy(() => import('./features/me/TimelinePage'))
 const PomodoroPage = lazy(() => import('./features/todo/PomodoroPage'))
+const AbstinencePage = lazy(() => import('./features/abstinence/AbstinencePage'))
+const CounterDetailPage = lazy(() => import('./features/abstinence/CounterDetailPage'))
 const MealPrepPage = lazy(() => import('./features/mealprep/MealPrepPage'))
 const RecipesPage = lazy(() => import('./features/mealprep/RecipesPage'))
 const MeditationPage = lazy(() => import('./features/me/MeditationPage'))
@@ -171,6 +173,8 @@ function AppContent() {
         <Route path="me/companion" element={<CompanionPage />} />
         <Route path="me/companion/personalities" element={<PersonalityGroupsPage />} />
         <Route path="me/vault" element={<MotivationVaultPage />} />
+        <Route path="me/abstinence" element={<AbstinencePage />} />
+        <Route path="me/abstinence/:id" element={<CounterDetailPage />} />
         <Route path="me/timeline" element={<TimelinePage />} />
         <Route path="me/meditation" element={<MeditationPage />} />
         <Route path="me/character" element={<CharacterPage />} />
