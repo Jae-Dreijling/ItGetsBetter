@@ -1,10 +1,14 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router'
-import { Download, Upload, Shield, AlertTriangle, Sprout } from 'lucide-react'
+import { Download, Upload, Shield, AlertTriangle, Sprout, CalendarClock } from 'lucide-react'
+import { format } from 'date-fns'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { downloadBackup, restoreBackup } from '../../lib/backup'
 import { isNativeApp } from '../../lib/platform'
+import {
+  AUTO_BACKUP_FOLDER, AUTO_BACKUP_KEEP, isAutoBackupOn, lastAutoBackup, enableAutoBackup, disableAutoBackup, runAutoBackup,
+} from '../../lib/autoBackup'
 
 export default function BackupPage() {
   const navigate = useNavigate()
@@ -58,6 +62,8 @@ export default function BackupPage() {
             Your backup is encrypted with your password. Without the password, the file is unreadable.
           </p>
         </div>
+
+        {isNativeApp() && <AutoBackupCard />}
 
         <div className="mb-4 rounded-xl bg-card p-4 shadow-sm">
           <h3 className="mb-3 font-semibold text-text-primary">Create Backup</h3>
@@ -144,5 +150,109 @@ export default function BackupPage() {
         )}
       </PageContainer>
     </>
+  )
+}
+
+const inputClass = 'w-full rounded-lg border border-primary-100 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none'
+
+function AutoBackupCard() {
+  const [on, setOn] = useState(isAutoBackupOn)
+  const [last, setLast] = useState(lastAutoBackup)
+  const [password, setPassword] = useState('')
+  const [repeat, setRepeat] = useState('')
+  const [working, setWorking] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const mismatch = repeat.length > 0 && password !== repeat
+
+  async function backUpNow() {
+    setWorking(true)
+    setMessage(null)
+    try {
+      await runAutoBackup()
+      setLast(lastAutoBackup())
+      setMessage(`Saved to Documents/${AUTO_BACKUP_FOLDER}.`)
+    } catch (err) {
+      setMessage(`Couldn't save the backup: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setWorking(false)
+    }
+  }
+
+  async function turnOn() {
+    if (!password || password !== repeat) return
+    enableAutoBackup(password)
+    setOn(true)
+    setPassword('')
+    setRepeat('')
+    await backUpNow()
+  }
+
+  function turnOff() {
+    disableAutoBackup()
+    setOn(false)
+    setLast(null)
+    setMessage(null)
+  }
+
+  return (
+    <div className="mb-4 rounded-xl bg-card p-4 shadow-sm">
+      <div className="mb-2 flex items-center gap-2">
+        <CalendarClock className="h-4 w-4 text-primary-500" />
+        <h3 className="font-semibold text-text-primary">Automatic backups</h3>
+      </div>
+
+      {on ? (
+        <>
+          <p className="text-sm text-text-primary">
+            Once a week, saved to <span className="font-medium">Documents/{AUTO_BACKUP_FOLDER}</span>. The last {AUTO_BACKUP_KEEP} are kept.
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            {last ? `Last backup: ${format(new Date(last), 'EEE d MMM, HH:mm')}` : 'No backup yet.'}
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={backUpNow}
+              disabled={working}
+              className="flex-1 rounded-lg bg-primary-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {working ? 'Saving...' : 'Back up now'}
+            </button>
+            <button onClick={turnOff} className="rounded-lg bg-surface px-4 py-2.5 text-sm text-muted">
+              Turn off
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="mb-3 text-sm text-muted">
+            Uninstalling the app deletes its data. Weekly backups in your phone's Documents folder survive that.
+            Choose a password once; you'll need it to restore, so write it down somewhere safe.
+          </p>
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="Backup password"
+            className={`mb-2 ${inputClass}`}
+          />
+          <input
+            type="password"
+            value={repeat}
+            onChange={e => setRepeat(e.target.value)}
+            placeholder="Same password again"
+            className={`mb-1 ${inputClass}`}
+          />
+          {mismatch && <p className="mb-1 text-xs text-muted">The two passwords aren't the same yet.</p>}
+          <button
+            onClick={turnOn}
+            disabled={!password || password !== repeat || working}
+            className="mt-2 w-full rounded-lg bg-primary-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            Turn on weekly backups
+          </button>
+        </>
+      )}
+      {message && <p className="mt-2 text-xs text-text-primary">{message}</p>}
+    </div>
   )
 }

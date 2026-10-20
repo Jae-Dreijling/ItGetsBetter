@@ -16,6 +16,7 @@ import AppLock from './components/AppLock'
 import { isLockEnabled } from './lib/appLock'
 import { isNativeApp } from './lib/platform'
 import { requestReschedule } from './lib/notifications/native'
+import { backupIfDue } from './lib/autoBackup'
 import { applyColorTheme, resolveColorTheme } from './lib/themes'
 import InstallPrompt from './components/InstallPrompt'
 import { triggerCompanionMessage } from './lib/companionMessenger'
@@ -192,10 +193,16 @@ export default function App() {
 
   // Android app: re-plan phone notifications on start and whenever the app
   // comes back to the foreground, so reminders reflect what's already done.
+  // The weekly automatic backup is checked at the same moments.
   useEffect(() => {
     if (!isNativeApp()) return
     requestReschedule()
-    const onVisible = () => { if (document.visibilityState === 'visible') requestReschedule() }
+    backupIfDue()
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return
+      requestReschedule()
+      backupIfDue()
+    }
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
