@@ -12,7 +12,7 @@ export type FeatureTier = 'spotlight' | 'available' | 'off'
 
 export type FeatureId =
   | 'weight' | 'meals' | 'water' | 'fasting' | 'exercise' | 'mood' | 'sleep' | 'medicine' | 'measurements' | 'photos'
-  | 'habits' | 'tasks' | 'focus_timer'
+  | 'habits' | 'tasks' | 'focus_timer' | 'meal_prep'
   | 'timeline' | 'insights' | 'graphs' | 'weekly_review' | 'achievements'
   | 'meditation' | 'grocery' | 'books' | 'motivation_vault'
   | 'journey' | 'rewards'
@@ -50,6 +50,7 @@ export const FEATURES: Feature[] = [
   { id: 'photos', name: 'Progress photos', emoji: '📸', description: 'Before and after', group: 'Tracking', paths: ['/me/photos'], canSpotlight: false },
   { id: 'habits', name: 'Habits', emoji: '✅', description: 'Small daily routines', group: 'Planning', paths: ['/todo/habits'], canSpotlight: true, questObjectives: ['complete_habits'] },
   { id: 'tasks', name: 'Tasks', emoji: '📝', description: 'One-off to-dos', group: 'Planning', paths: ['/todo/tasks'], canSpotlight: true },
+  { id: 'meal_prep', name: 'Meal prep', emoji: '🥗', description: 'Plan your week with recipes', group: 'Planning', paths: ['/todo/meal-prep'], canSpotlight: false },
   { id: 'focus_timer', name: 'Focus timer', emoji: '🍅', description: 'Pomodoro sessions', group: 'Planning', paths: ['/todo/pomodoro'], canSpotlight: false },
   { id: 'timeline', name: 'My Day', emoji: '🕒', description: 'Everything you logged, in order', group: 'Progress', paths: ['/me/timeline'], canSpotlight: false },
   { id: 'insights', name: 'Health insights', emoji: '💡', description: 'Patterns in your data', group: 'Progress', paths: ['/me/insights'], canSpotlight: false },

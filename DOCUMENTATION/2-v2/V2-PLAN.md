@@ -156,7 +156,7 @@ Rule from the Rulebook that stays: **nothing is lost by being away.** No decayin
 Mostly from [EIGHT-JOURNEYS-LESSONS](EIGHT-JOURNEYS-LESSONS.md):
 - **Smoothed weight trend** as the main number; daily value small or hidden (+ explanations for normal jumps). Not a plain 7-day average: with the Daily Check, weigh-ins are irregular (~2–3 a week), so use an **exponentially smoothed trend** (Hacker's Diet style) that scales with the days since the last weigh-in.
 - **Staged goals** relative to your start, plus **non-scale wins** shown next to the scale
-- **Personal meal menu** + "decide today" picker (no calorie counting)
+- **Personal meal menu** + "decide today" picker (no calorie counting). *Pulled forward as **Meal prep** (2026-10-20, step 4b): recipe library with per-portion kcal/protein/carbs/fat, a Mon–Sun planner with breakfast/lunch/dinner/snacks, an optional daily kcal target (never shown in red), and "Eaten", which logs the planned portion as a normal meal. Values are entered once per recipe and added up by the app, so there is still no counting.*
 - **Recipe library** linked to the menu and grocery list
 - **Craving flow** (am I hungry → name it → 10-min timer → portioned version still counts), guided by the companion
 - **Weigh-in safety valve** (daily / weekly / trend only)
@@ -301,6 +301,7 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 | 2b ✅ | **Feature system + navigation:** spotlight/available/off tiers, Settings → Features, where every page lives (four-tab ceiling; off features disappear from menus) | Every new feature plugs into this, and the Today screen depends on it |
 | 3 ✅ | **Today screen + Daily Check** | The core ADHD change |
 | 4 🔄 | **APK + notifications (Capacitor)** | Real phone app early, so the next features can use notifications |
+| 4b | **Meal prep** (pulled forward from step 9 on request): recipes, week planner, "eaten" → meal log. Next, one at a time: **import a meal plan from a file** (CSV/Excel exported by another meal-planning app, which you'll name; recipes + week plan), grocery list from the plan, a "today's plan" card on Today, starter recipes | Asked for directly; self-contained, lands as Available |
 | ⏸ | **2.0 release** (steps 0–4). Later steps ship as 2.1, 2.2, … | |
 | 5 | **To-do redesign** (habits + tasks) | Design with mockups first; uses the animations and fits with the Today screen |
 | 6 | **Abstinence page** | Self-contained, high personal value |

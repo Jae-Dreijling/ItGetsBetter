@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Target, CheckCircle2, Timer } from 'lucide-react'
+import { Plus, Target, CheckCircle2, Timer, ChevronRight } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import { useFeatureTiers } from '../../hooks/useFeatures'
 import { isOn } from '../../lib/features'
@@ -299,6 +299,20 @@ export default function TodoPage() {
               <p className="text-center text-sm text-muted py-3">No pending tasks</p>
             )}
           </div>
+        )}
+
+        {isOn(tiers, 'meal_prep') && (
+          <button
+            onClick={() => navigate('/todo/meal-prep')}
+            className="mb-4 flex w-full items-center gap-3 rounded-lg bg-card px-4 py-3 text-left shadow-sm"
+          >
+            <span className="text-2xl">🥗</span>
+            <div className="flex-1">
+              <p className="font-medium text-text-primary">Meal prep</p>
+              <p className="text-xs text-muted">Plan your week with recipes</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted" />
+          </button>
         )}
 
         <div className="flex gap-2">

@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 
 const DEFAULT_LABELS = [
@@ -44,6 +44,8 @@ export class ItGetsBetterDB extends Dexie {
   fastingRecords!: EntityTable<FastingRecord, 'id'>
   personalityGroups!: EntityTable<PersonalityGroup, 'id'>
   wins!: EntityTable<Win, 'id'>
+  recipes!: EntityTable<Recipe, 'id'>
+  mealPlanItems!: EntityTable<MealPlanItem, 'id'>
 
   // The name is only overridden in tests, to run upgrades on a separate database.
   constructor(name = 'ItGetsBetter') {
@@ -529,6 +531,13 @@ export class ItGetsBetterDB extends Dexie {
     // Non-scale wins from the Daily Check (and later the wins jar).
     this.version(17).stores({
       wins: '++id, date',
+    })
+
+    // Meal prep: a recipe library and a week planner. New tables only;
+    // mealEntries gains optional nutrition fields that need no index.
+    this.version(18).stores({
+      recipes: '++id, name',
+      mealPlanItems: '++id, date, recipe_id',
     })
 
     this.on('populate', () => {
