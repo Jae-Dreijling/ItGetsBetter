@@ -18,20 +18,23 @@ const PLAN_DAYS = 7
 const OUR_IDS = { min: 1000, max: 1999 }
 const TEST_ID = 999
 
-async function plugin() {
-  return (await import('@capacitor/local-notifications')).LocalNotifications
+// Resolves to the module, never to the plugin itself: a Capacitor plugin
+// answers every property, `then` included, so a promise that resolves to it
+// calls LocalNotifications.then() and fails ("not implemented on android").
+function pluginModule() {
+  return import('@capacitor/local-notifications')
 }
 
 export async function notificationPermission(): Promise<'granted' | 'denied' | 'prompt'> {
   if (!isNativeApp()) return 'denied'
-  const { display } = await (await plugin()).checkPermissions()
+  const { display } = await (await pluginModule()).LocalNotifications.checkPermissions()
   return display === 'granted' ? 'granted' : display === 'denied' ? 'denied' : 'prompt'
 }
 
 // Asks Android for permission (shows the system dialog the first time).
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!isNativeApp()) return false
-  const { display } = await (await plugin()).requestPermissions()
+  const { display } = await (await pluginModule()).LocalNotifications.requestPermissions()
   return display === 'granted'
 }
 
@@ -67,7 +70,7 @@ async function todayStatus(today: string) {
 }
 
 async function cancelOurs() {
-  const notifications = await plugin()
+  const notifications = (await pluginModule()).LocalNotifications
   const { notifications: pending } = await notifications.getPending()
   const ours = pending.filter(n => n.id >= OUR_IDS.min && n.id <= OUR_IDS.max)
   if (ours.length > 0) await notifications.cancel({ notifications: ours.map(n => ({ id: n.id })) })
@@ -93,7 +96,7 @@ async function reschedule() {
     // screen, and a reminder a few minutes late is fine.
     return { id: p.id, title: voice.title, body: voice.body, isExactNotification: false, schedule: { at: p.at, allowWhileIdle: true } }
   }))
-  await (await plugin()).schedule({ notifications })
+  await (await pluginModule()).LocalNotifications.schedule({ notifications })
 }
 
 let timer: ReturnType<typeof setTimeout> | null = null
@@ -108,10 +111,42 @@ export function requestReschedule() {
   }, 800)
 }
 
-// A sample from today's companion, a few seconds from now.
-export async function sendTestNotification(userName: string) {
+// A sample from today's companion. Without a delay it's shown right away (no
+// alarm involved); with one it goes through an alarm like real reminders.
+export async function sendTestNotification(userName: string, delayMs = 0) {
   const voice = await voiceFor('daily_check', getLogicalDate(), userName)
-  await (await plugin()).schedule({
-    notifications: [{ id: TEST_ID, title: voice.title, body: voice.body, isExactNotification: false, schedule: { at: new Date(Date.now() + 3000), allowWhileIdle: true } }],
+  const schedule = delayMs > 0 ? { at: new Date(Date.now() + delayMs), allowWhileIdle: true } : undefined
+  await (await pluginModule()).LocalNotifications.schedule({
+    notifications: [{ id: TEST_ID, title: voice.title, body: voice.body, isExactNotification: false, schedule }],
   })
+}
+
+export interface NotificationDiagnostics {
+  permission: string
+  enabled: boolean
+  exactAlarms: string
+  // Importance 0 means the channel was switched off in Android's settings.
+  channels: { id: string; name: string; importance: number | null }[]
+  pending: { id: number; at: string | null }[]
+}
+
+// Everything that can silently stop a notification, for the settings page.
+export async function getNotificationDiagnostics(): Promise<NotificationDiagnostics> {
+  const n = (await pluginModule()).LocalNotifications
+  const [permission, enabled, exact, channels, pending] = await Promise.all([
+    n.checkPermissions().then(r => r.display, () => 'unknown'),
+    n.areEnabled().then(r => r.value, () => false),
+    n.checkExactNotificationSetting().then(r => r.exact_alarm, () => 'unknown'),
+    n.listChannels().then(r => r.channels, () => []),
+    n.getPending().then(r => r.notifications, () => []),
+  ])
+  return {
+    permission,
+    enabled,
+    exactAlarms: exact,
+    channels: channels.map(c => ({ id: c.id, name: c.name, importance: c.importance ?? null })),
+    pending: pending
+      .map(p => ({ id: p.id, at: p.schedule?.at ? new Date(p.schedule.at).toISOString() : null }))
+      .sort((a, b) => (a.at ?? '').localeCompare(b.at ?? '')),
+  }
 }
