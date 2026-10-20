@@ -304,7 +304,7 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 | 4 ✅ | **APK + notifications (Capacitor)**. Done (2026-10-20): APK, companion-voiced reminders (tested on the phone, also with the app closed), weekly encrypted automatic backups to Documents/ItGetsBetter, PWA data moved into the app. Skipped: a "new version" check (needs published builds) | Real phone app early, so the next features can use notifications |
 | 4b ✅ | **Meal prep** (pulled forward from step 9 on request): recipes, week planner, "eaten" → meal log. Next, one at a time: **import a meal plan from a file** (JSON exported by another meal-planning web app; format in [MEAL-PLAN-IMPORT](MEAL-PLAN-IMPORT.md)), grocery list from the plan, a "today's plan" card on Today, starter recipes | Asked for directly; self-contained, lands as Available |
 | ✅ | **2.0 release** (steps 0–4 and 4b), 2026-10-20, tag `v2.0.0`. Later steps ship as 2.1, 2.2, … | |
-| 5 | **To-do redesign** (habits + tasks) | Design with mockups first; uses the animations and fits with the Today screen |
+| 5 🔄 | **To-do redesign** (habits + tasks). Built and approved from screenshots 2026-10-20, still to try on the phone: Habits / Tasks / Both switch, label chips, compact rows, a + button that adds in place, a detail page per task and habit, done items folded away. Meal prep moved to Log | Design with mockups first; uses the animations and fits with the Today screen |
 | 6 | **Abstinence page** | Self-contained, high personal value |
 | 7 | **Social page** | Self-contained, uses notifications |
 | 8 | **Mini-goals** | General milestone system; the weight stages in step 9 are built on it |
@@ -353,4 +353,4 @@ A step is finished, and can be merged to `main`, when:
 
 2. **AI:** OK with bringing your own API key and paying per use, or should AI wait/skip? (Decide before step 12.)
 3. **Fasting points:** keep the "fasting goal met" points and companion trigger with the manual timer, or make fasting points-free? *Review recommends points-free* (restriction is a known binge trigger).
-4. **To-do redesign:** what overwhelms you most right now? (Input for the mockups in step 5.)
+4. **To-do redesign:** what overwhelms you most right now? (Input for the mockups in step 5.) *Answer (2026-10-20):* too many taps to get anywhere ("Add habit" first opens the Habits page instead of adding one), and rows take too much space; it should be smaller and easier to overview. Wanted: a switch at the top for habits / tasks / both, habits and tasks as their own pages, and meal prep moved out of Plan (to Log, Today or Me). Visual examples of the ideal look follow.

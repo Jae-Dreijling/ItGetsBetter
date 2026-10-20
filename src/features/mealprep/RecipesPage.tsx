@@ -4,7 +4,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useRecipes, deleteRecipe } from '../../hooks/useMealPlan'
-import Sheet from './Sheet'
+import Sheet from '../../components/Sheet'
 import RecipeForm from './RecipeForm'
 import { recipeSummary } from '../../lib/mealPlan'
 import type { Recipe } from '../../types'
@@ -38,7 +38,7 @@ export default function RecipesPage() {
 
   return (
     <>
-      <TopBar title="Recipes" onBack={() => navigate('/todo/meal-prep')} />
+      <TopBar title="Recipes" onBack={() => navigate('/log/meal-prep')} />
       <PageContainer>
         <button
           onClick={() => open(null)}

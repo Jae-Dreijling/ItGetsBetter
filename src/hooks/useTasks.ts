@@ -21,6 +21,16 @@ export function useTasks(filters?: { projectId?: number; completed?: boolean }) 
   }, [filters?.projectId, filters?.completed])
 }
 
+// Every task, subtasks included (for subtask counts on the list).
+export function useAllTasks() {
+  return useLiveQuery(() => db.tasks.toArray())
+}
+
+// undefined while loading, null when the task doesn't exist.
+export function useTask(id: number) {
+  return useLiveQuery(async () => (await db.tasks.get(id)) ?? null, [id])
+}
+
 export function useSubTasks(parentId: number) {
   return useLiveQuery(
     () => db.tasks.where('parent_task_id').equals(parentId).toArray(),
@@ -62,6 +72,7 @@ export async function updateTask(id: number, changes: Partial<{
   priority: TaskPriority
   label_ids: number[]
   show_in_today: boolean
+  notes: string | null
 }>) {
   await db.tasks.update(id, changes)
 }

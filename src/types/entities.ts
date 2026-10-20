@@ -127,6 +127,8 @@ export interface Task {
   priority: TaskPriority
   label_ids: number[]
   show_in_today: boolean
+  // Free text from the task's detail page. Missing means none.
+  notes?: string | null
   completed_at: string | null
   created_at: string
 }

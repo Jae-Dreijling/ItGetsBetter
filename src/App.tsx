@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { db, ensureDefaults } from './db'
 import { checkProgressionAdvancements } from './hooks/useHabits'
 import { ensureDefaultCompanion } from './hooks/useCompanion'
@@ -45,7 +45,8 @@ const MePage = lazy(loadMePage)
 const loadTodoPage = () => import('./features/todo/TodoPage')
 const TodoPage = lazy(loadTodoPage)
 const HabitsPage = lazy(() => import('./features/todo/HabitsPage'))
-const TasksPage = lazy(() => import('./features/todo/TasksPage'))
+const TaskDetailPage = lazy(() => import('./features/todo/TaskDetailPage'))
+const HabitDetailPage = lazy(() => import('./features/todo/HabitDetailPage'))
 const ExportPage = lazy(() => import('./features/settings/ExportPage'))
 const DevToolsPage = lazy(() => import('./features/settings/DevToolsPage'))
 const StartFreshPage = lazy(() => import('./features/settings/StartFreshPage'))
@@ -136,11 +137,15 @@ function AppContent() {
         <Route path="log/sleep" element={<SleepPage />} />
         <Route path="log/medicine" element={<MedicinePage />} />
         <Route path="todo" element={<TodoPage />} />
-        <Route path="todo/habits" element={<HabitsPage />} />
-        <Route path="todo/tasks" element={<TasksPage />} />
+        {/* Habits and tasks live on the Plan tab; old links open the matching view. */}
+        <Route path="todo/habits" element={<Navigate to="/todo?view=habits" replace />} />
+        <Route path="todo/habits/manage" element={<HabitsPage />} />
+        <Route path="todo/habits/:id" element={<HabitDetailPage />} />
+        <Route path="todo/tasks" element={<Navigate to="/todo?view=tasks" replace />} />
+        <Route path="todo/tasks/:id" element={<TaskDetailPage />} />
         <Route path="todo/pomodoro" element={<PomodoroPage />} />
-        <Route path="todo/meal-prep" element={<MealPrepPage />} />
-        <Route path="todo/meal-prep/recipes" element={<RecipesPage />} />
+        <Route path="log/meal-prep" element={<MealPrepPage />} />
+        <Route path="log/meal-prep/recipes" element={<RecipesPage />} />
         <Route path="me" element={<MePage />} />
         <Route path="me/measurements" element={<MeasurementsPage />} />
         <Route path="me/rewards" element={<RewardShopPage />} />

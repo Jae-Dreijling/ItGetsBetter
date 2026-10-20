@@ -24,6 +24,11 @@ export function useInactiveHabits() {
   )
 }
 
+// undefined while loading, null when the habit doesn't exist.
+export function useHabit(id: number) {
+  return useLiveQuery(async () => (await db.habits.get(id)) ?? null, [id])
+}
+
 export function useAllHabits() {
   return useLiveQuery(() => db.habits.toArray())
 }

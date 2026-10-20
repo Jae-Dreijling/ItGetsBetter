@@ -104,7 +104,7 @@ export default function MealsPage() {
       <PageContainer>
         {mealPrepOn && (
           <button
-            onClick={() => navigate('/todo/meal-prep')}
+            onClick={() => navigate('/log/meal-prep')}
             className="mb-3 w-full text-right text-sm font-medium text-primary-500"
           >
             🥗 Eating something you planned? Tick it off in Meal prep →

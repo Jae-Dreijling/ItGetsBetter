@@ -14,7 +14,7 @@ import {
   useRecipes, usePlanItems, addPlanItem, removePlanItem, setPlanPortions, markEaten, unmarkEaten, copyPreviousWeek, clearPlan,
 } from '../../hooks/useMealPlan'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
-import Sheet from './Sheet'
+import Sheet from '../../components/Sheet'
 import RecipeForm from './RecipeForm'
 import ImportSheet from './ImportSheet'
 import type { MealPlanItem, MealSlot, Recipe } from '../../types'
@@ -81,13 +81,13 @@ export default function MealPrepPage() {
     <>
       <TopBar
         title="Meal prep"
-        onBack={() => navigate('/todo')}
+        onBack={() => navigate('/log')}
         rightContent={
           <div className="flex items-center gap-1">
             <button onClick={() => setImportOpen(true)} className="p-1.5 text-muted hover:text-text-primary" aria-label="Import a meal plan">
               <FileUp className="h-5 w-5" />
             </button>
-            <button onClick={() => navigate('/todo/meal-prep/recipes')} className="p-1.5 text-muted hover:text-text-primary" aria-label="Recipes">
+            <button onClick={() => navigate('/log/meal-prep/recipes')} className="p-1.5 text-muted hover:text-text-primary" aria-label="Recipes">
               <BookOpen className="h-5 w-5" />
             </button>
           </div>

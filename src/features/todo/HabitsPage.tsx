@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { Plus, Trash2, Play, Pause, Pencil, Link, X } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
@@ -33,12 +34,13 @@ export default function HabitsPage() {
   const inactiveHabits = useInactiveHabits()
   const labels = useLabels()
   const [showForm, setShowForm] = useState(false)
+  const navigate = useNavigate()
 
   const labelsMap = new Map(labels?.map(l => [l.id!, l]))
 
   return (
     <>
-      <TopBar title="Habits" />
+      <TopBar title="All habits" onBack={() => navigate('/todo?view=habits')} />
       <PageContainer>
         <button
           onClick={() => setShowForm(!showForm)}
@@ -98,7 +100,7 @@ export default function HabitsPage() {
   )
 }
 
-function HabitForm({ labels, onSave, initial }: {
+export function HabitForm({ labels, onSave, initial }: {
   labels: Label[]
   onSave: () => void
   initial?: Habit
