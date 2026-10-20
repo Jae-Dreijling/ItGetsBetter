@@ -3,7 +3,7 @@
 // turns the plan into scheduled Android notifications. The app re-plans every
 // time it opens or something relevant changes, so reminders never go stale.
 
-export type ReminderKind = 'daily_check' | 'floor'
+export type ReminderKind = 'daily_check' | 'floor' | 'social'
 
 export interface ReminderPref {
   on: boolean
@@ -14,11 +14,13 @@ export interface ReminderPref {
 export interface NotificationPrefs {
   daily_check?: ReminderPref
   floor?: ReminderPref
+  social?: ReminderPref
 }
 
 export const DEFAULT_TIMES: Record<ReminderKind, string> = {
   daily_check: '19:00',
   floor: '20:30',
+  social: '17:00',
 }
 
 // Max reminders a day (Rulebook: help, don't nag). Medicine won't count.
@@ -47,7 +49,7 @@ export interface PlannedReminder {
   at: Date
 }
 
-const KIND_ORDER: ReminderKind[] = ['daily_check', 'floor']
+const KIND_ORDER: ReminderKind[] = ['daily_check', 'floor', 'social']
 
 export function minutesOf(time: string): number {
   const [h, m] = time.split(':').map(Number)
@@ -69,6 +71,8 @@ export function planReminders(
   days: DayWindow[],
   prefs: NotificationPrefs | undefined,
   today: TodayStatus,
+  // Dates with a social reason (someone coming due, a birthday); see lib/social.
+  socialDates: Set<string> = new Set(),
 ): PlannedReminder[] {
   const planned: PlannedReminder[] = []
 
@@ -82,6 +86,7 @@ export function planReminders(
       if (!pref?.on) continue
       if (kind === 'daily_check' && isToday && today.dailyCheckDone) continue
       if (kind === 'floor' && (!today.hasFloor || (isToday && today.floorComplete))) continue
+      if (kind === 'social' && !socialDates.has(day.date)) continue
 
       // Too early: move to the start of the allowed window. Too late: skip.
       const minute = Math.max(minutesOf(pref.time), day.startMinute)

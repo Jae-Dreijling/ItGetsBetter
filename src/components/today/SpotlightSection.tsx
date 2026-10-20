@@ -19,6 +19,10 @@ import { useTodaysMood } from '../../hooks/useMood'
 import { useTodaysSleep } from '../../hooks/useSleep'
 import { useTodaysMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
 import { useGameState, useActiveQuests, useQuestProgress } from '../../hooks/useGame'
+import { usePeople, useContacts } from '../../hooks/useSocial'
+import { dueSoon, dueLine, upcomingBirthdays, birthdayLine } from '../../lib/social'
+import { ContactButtons, THANKS } from '../../features/social/parts'
+import { useThanks } from '../../features/social/useThanks'
 import type { GameQuest } from '../../types'
 
 // The Today screen's spotlight: a one-tap card for each starred feature
@@ -36,6 +40,7 @@ const CARDS: Partial<Record<FeatureId, { path: string; Body: () => React.ReactNo
   habits: { path: '/todo', Body: HabitsBody },
   tasks: { path: '/todo/tasks', Body: TasksBody },
   journey: { path: '/journey', Body: JourneyBody },
+  social: { path: '/me/social', Body: SocialBody },
 }
 
 export default function SpotlightSection({ tiers }: { tiers: FeatureTiers | undefined }) {
@@ -214,6 +219,31 @@ function TasksBody() {
 
   if (tasks.length === 0) return <p className={status}>Nothing for today. 🌿</p>
   return <CheckList items={tasks.map(t => ({ id: t.id!, label: t.title }))} onCheck={id => toggleTask(id)} />
+}
+
+// The person it's been longest since, with one-tap logging; birthdays today
+// or tomorrow come first.
+function SocialBody() {
+  const people = usePeople()
+  const contacts = useContacts()
+  const today = getLogicalDate()
+  const birthday = upcomingBirthdays(people ?? [], today, 1)[0]
+  const due = dueSoon(people ?? [], contacts, today).find(d => d.daysUntil <= 0)
+  const [thanks, showThanks] = useThanks()
+
+  if (thanks && !due) return <p className="text-sm font-medium text-success">{THANKS}</p>
+  if (!birthday && !due) return <p className={status}>Everyone's caught up for now. 🌿</p>
+  return (
+    <div className="space-y-2">
+      {birthday && <p className="text-sm text-text-primary">{birthdayLine(birthday)}</p>}
+      {due && (
+        <>
+          <p className="text-sm text-text-primary">{dueLine(due)}</p>
+          <ContactButtons person={due.person} compact onLogged={showThanks} />
+        </>
+      )}
+    </div>
+  )
 }
 
 // Tap the circle (or the row) to complete; the row then fades away.

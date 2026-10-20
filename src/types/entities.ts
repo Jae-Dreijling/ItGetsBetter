@@ -418,6 +418,33 @@ export interface AbstinenceEvent {
   context: string | null
 }
 
+// Someone on the Social page (V2-PLAN §10). See lib/social.
+export interface Person {
+  id?: number
+  name: string
+  emoji: string
+  group: 'partner' | 'family' | 'friend' | 'other'
+  // "MM-DD"; the year is separate and optional (for "turning 30").
+  birthday: string | null
+  birth_year: number | null
+  notes: string | null
+  // How often you'd like to connect, in days; null means no rhythm.
+  rhythm_days: number | null
+  // With 'in_person', only meeting up counts towards the rhythm.
+  prefer: 'in_person' | 'either'
+  archived: boolean
+  created_at: string
+}
+
+export interface SocialContact {
+  id?: number
+  person_id: number
+  // Logical date of the contact.
+  date: string
+  kind: 'saw' | 'talked'
+  logged_at: string
+}
+
 export interface ProgressPhoto {
   id?: number
   date: string

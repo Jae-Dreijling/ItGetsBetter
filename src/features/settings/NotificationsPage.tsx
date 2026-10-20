@@ -5,12 +5,14 @@ import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
 import { isNativeApp } from '../../lib/platform'
+import { isOn, isSpotlight } from '../../lib/features'
 import { DAILY_CAP, DEFAULT_TIMES, type NotificationPrefs, type ReminderKind } from '../../lib/notifications/plan'
 import { notificationPermission, requestNotificationPermission, requestReschedule, sendTestNotification, getNotificationDiagnostics, type NotificationDiagnostics } from '../../lib/notifications/native'
 
 const REMINDERS: { kind: ReminderKind; emoji: string; title: string; description: string }[] = [
   { kind: 'daily_check', emoji: '🗓️', title: 'Daily Check', description: "Only if today's check is still open." },
   { kind: 'floor', emoji: '🌱', title: 'Floor nudge', description: "Only if your floor isn't done yet." },
+  { kind: 'social', emoji: '🫂', title: 'Social', description: "3 days before it's time to see someone, and for birthdays." },
 ]
 
 export default function NotificationsPage() {
@@ -19,6 +21,9 @@ export default function NotificationsPage() {
   const [testStatus, setTestStatus] = useState<string | null>(null)
   const native = isNativeApp()
   const prefs: NotificationPrefs = profile?.notification_prefs ?? {}
+  // Only spotlight features may send notifications (Rulebook 2.4).
+  const socialSpotlit = isSpotlight(profile?.feature_tiers, 'social')
+  const reminders = REMINDERS.filter(r => r.kind !== 'social' || socialSpotlit)
 
   useEffect(() => {
     if (native) notificationPermission().then(setPermission)
@@ -90,7 +95,7 @@ export default function NotificationsPage() {
         )}
 
         <div className="space-y-2">
-          {REMINDERS.map(r => {
+          {reminders.map(r => {
             const pref = prefs[r.kind]
             const on = !!pref?.on
             return (
@@ -126,6 +131,9 @@ export default function NotificationsPage() {
             )
           })}
         </div>
+        {!socialSpotlit && isOn(profile?.feature_tiers, 'social') && (
+          <p className="mt-2 text-xs text-muted">Want reminders to plan time with people? Put Social in the spotlight (Settings → Features).</p>
+        )}
 
         <section className="mt-6 rounded-xl bg-card p-4 shadow-sm">
           <h2 className="mb-1 font-medium text-text-primary">Not arriving?</h2>

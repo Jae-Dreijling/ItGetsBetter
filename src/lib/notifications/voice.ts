@@ -7,12 +7,15 @@ import type { ReminderKind } from './plan'
 // comes from its own reminder lines (or its personality group's), falling
 // back to these defaults. One companion speaks for a whole day.
 
-const CATEGORY: Record<ReminderKind, keyof CompanionMessages> = {
+// Social reminders name a person, so they have their own text (lib/social).
+export type CompanionReminderKind = Exclude<ReminderKind, 'social'>
+
+const CATEGORY: Record<CompanionReminderKind, keyof CompanionMessages> = {
   daily_check: 'reminder_daily_check',
   floor: 'reminder_floor',
 }
 
-export const DEFAULT_LINES: Record<ReminderKind, string[]> = {
+export const DEFAULT_LINES: Record<CompanionReminderKind, string[]> = {
   daily_check: [
     "{name}, today's little check is waiting for you. No rush.",
     "One quick question for you today, {name}, whenever you're ready.",
@@ -35,7 +38,7 @@ async function effectiveMessages(companion: Companion): Promise<Partial<Companio
   const group = await db.personalityGroups.get(companion.personality_group_id)
   if (!group) return companion.messages
   const merged: Partial<CompanionMessages> = { ...companion.messages }
-  for (const key of Object.keys(CATEGORY).map(k => CATEGORY[k as ReminderKind])) {
+  for (const key of Object.keys(CATEGORY).map(k => CATEGORY[k as CompanionReminderKind])) {
     merged[key] = [...(companion.messages[key] ?? []), ...(group.messages[key] ?? [])]
   }
   return merged
@@ -51,7 +54,7 @@ export async function speakerFor(date: string): Promise<Companion | undefined> {
   return pool[Math.floor(seededRandom(`speaker:${date}`) * pool.length)]
 }
 
-export async function voiceFor(kind: ReminderKind, date: string, userName: string): Promise<Voice> {
+export async function voiceFor(kind: CompanionReminderKind, date: string, userName: string): Promise<Voice> {
   const companion = await speakerFor(date)
   const own = companion ? (await effectiveMessages(companion))[CATEGORY[kind]] ?? [] : []
   const lines = own.length > 0 ? own : DEFAULT_LINES[kind]

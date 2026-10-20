@@ -7,7 +7,9 @@ import { getWeeklyDefaults, type DayConfig, type ScheduleProfile } from '../../h
 import { isTodayScheduled } from '../../hooks/useHabits'
 import { isTodaysCheckDone } from '../../hooks/useDailyCheck'
 import { planReminders, minutesOf, type DayWindow, type NotificationPrefs } from './plan'
-import { voiceFor } from './voice'
+import { voiceFor, speakerFor } from './voice'
+import { socialReminders } from '../social'
+import { isSpotlight } from '../features'
 
 // Connects the notification plan to Android (Capacitor LocalNotifications).
 // Everything is re-planned on every app open and after relevant changes, so
@@ -86,12 +88,19 @@ async function reschedule() {
   if (!anyOn || (await notificationPermission()) !== 'granted') return
 
   const today = getLogicalDate()
-  const plan = planReminders(new Date(), await dayWindows(today), prefs, await todayStatus(today))
+  const windows = await dayWindows(today)
+  // Social reminders only while Social is in the spotlight (Rulebook 2.4).
+  const social = prefs?.social?.on && isSpotlight(profile?.feature_tiers, 'social')
+    ? socialReminders(await db.people.toArray(), await db.socialContacts.toArray(), windows.map(w => w.date))
+    : new Map<string, string[]>()
+  const plan = planReminders(new Date(), windows, prefs, await todayStatus(today), new Set(social.keys()))
   if (plan.length === 0) return
 
   const userName = profile?.display_name ?? 'friend'
   const notifications = await Promise.all(plan.map(async p => {
-    const voice = await voiceFor(p.kind, p.date, userName)
+    const voice = p.kind === 'social'
+      ? { title: (await speakerFor(p.date))?.name ?? 'ItGetsBetter', body: social.get(p.date)!.join(' ') }
+      : await voiceFor(p.kind, p.date, userName)
     // Inexact on purpose: exact alarms would make Android open a settings
     // screen, and a reminder a few minutes late is fine.
     return { id: p.id, title: voice.title, body: voice.body, isExactNotification: false, schedule: { at: p.at, allowWhileIdle: true } }

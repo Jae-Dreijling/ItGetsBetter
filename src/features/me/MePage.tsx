@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin, Sprout, type LucideIcon } from 'lucide-react'
+import { Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin, Sprout, Users, type LucideIcon } from 'lucide-react'
 import { isPathOn } from '../../lib/features'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
@@ -26,6 +26,7 @@ const GROUPS: { title: string; items: MeLink[] }[] = [
     title: 'Progress',
     items: [
       { label: 'My Day', subtitle: 'Everything you logged, in order', icon: Clock, path: '/me/timeline' },
+      { label: 'Social', subtitle: 'People you want to see, at your rhythm', icon: Users, path: '/me/social' },
       { label: 'Abstinence', subtitle: "Free days from what you're stepping away from", icon: Sprout, path: '/me/abstinence' },
       { label: 'Health Insights', subtitle: 'Patterns in your data', icon: Lightbulb, path: '/me/insights' },
       { label: 'Graphs', subtitle: 'Charts and trends', icon: BarChart3, path: '/me/graphs' },

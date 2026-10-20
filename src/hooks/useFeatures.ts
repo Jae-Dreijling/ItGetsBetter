@@ -42,6 +42,7 @@ export async function getFeatureUsage(): Promise<Partial<Record<FeatureId, boole
     journey: !!game?.activated,
     meal_prep: await has('recipes'),
     abstinence: await has('abstinenceCounters'),
+    social: await has('people'),
   }
 }
 

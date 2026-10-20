@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 
 const DEFAULT_LABELS = [
@@ -48,6 +48,8 @@ export class ItGetsBetterDB extends Dexie {
   mealPlanItems!: EntityTable<MealPlanItem, 'id'>
   abstinenceCounters!: EntityTable<AbstinenceCounter, 'id'>
   abstinenceEvents!: EntityTable<AbstinenceEvent, 'id'>
+  people!: EntityTable<Person, 'id'>
+  socialContacts!: EntityTable<SocialContact, 'id'>
 
   // The name is only overridden in tests, to run upgrades on a separate database.
   constructor(name = 'ItGetsBetter') {
@@ -546,6 +548,12 @@ export class ItGetsBetterDB extends Dexie {
     this.version(19).stores({
       abstinenceCounters: '++id, created_at',
       abstinenceEvents: '++id, counter_id, at',
+    })
+
+    // The Social page: people and the times you saw or talked to them. New tables only.
+    this.version(20).stores({
+      people: '++id, name, created_at',
+      socialContacts: '++id, person_id, date',
     })
 
     this.on('populate', () => {
