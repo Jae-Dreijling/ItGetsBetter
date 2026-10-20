@@ -6,7 +6,7 @@ import { getRandomMessage } from '../lib/supportiveMessages'
 import { getSessionCompanionId, setSessionCompanionId, subscribeSessionCompanion, pickSessionCompanion } from '../lib/sessionCompanion'
 import type { Companion, CompanionMessages } from '../types'
 
-const EMPTY_MESSAGES: CompanionMessages = {
+export const EMPTY_MESSAGES: CompanionMessages = {
   general: [],
   morning_greeting: [],
   welcome_back: [],

@@ -32,3 +32,6 @@ DOCUMENTATION/7-eight-journeys/
 
 # Real exports from other apps, kept local (the repo is public)
 EXAMPLES/
+
+# Generated companion files to import into the app, kept local
+CHARACTERS/

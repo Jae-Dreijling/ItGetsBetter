@@ -9,6 +9,7 @@ import { setSessionCompanionId } from '../../lib/sessionCompanion'
 import { usePersonalityGroups } from '../../hooks/usePersonalityGroups'
 import { getCompanionHomeRegion, setCompanionHomeRegion, getCompanionAffinityRecord, updateLoverDialogue } from '../../lib/game'
 import { MessagePoolEditor } from './MessagePoolEditor'
+import CompanionTransfer from './CompanionTransfer'
 import type { Companion, CompanionMessages } from '../../types'
 
 const JOURNEY_REGIONS = [
@@ -53,6 +54,8 @@ export default function CompanionPage() {
             <p className="text-xs text-muted">Shared message pools multiple companions can draw from</p>
           </div>
         </button>
+
+        <CompanionTransfer />
 
         <button
           onClick={() => setShowCreate(!showCreate)}
