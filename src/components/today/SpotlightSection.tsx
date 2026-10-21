@@ -45,6 +45,7 @@ const CARDS: Partial<Record<FeatureId, { path: string; Body: () => React.ReactNo
   journey: { path: '/journey', Body: JourneyBody },
   social: { path: '/me/social', Body: SocialBody },
   goals: { path: '/me/goals', Body: GoalsBody },
+  cravings: { path: '/log/craving', Body: CravingBody },
 }
 
 export default function SpotlightSection({ tiers }: { tiers: FeatureTiers | undefined }) {
@@ -230,6 +231,16 @@ function TasksBody() {
 
   if (tasks.length === 0) return <p className={status}>Nothing for today. 🌿</p>
   return <CheckList items={tasks.map(t => ({ id: t.id!, label: t.title }))} onCheck={id => toggleTask(id)} />
+}
+
+// Always one tap from help, never a count of how often.
+function CravingBody() {
+  const navigate = useNavigate()
+  return (
+    <button onClick={() => navigate('/log/craving')} className={primaryButton}>
+      Having a craving? Let's ride it out
+    </button>
+  )
 }
 
 // The next step of each goal (up to three), tickable right here.

@@ -36,6 +36,7 @@ export const RESET_AREAS: ResetArea[] = [
   { id: 'abstinence', name: 'Abstinence', emoji: '🌿', removes: 'your counters and their history', tables: ['abstinenceCounters', 'abstinenceEvents'] },
   { id: 'social', name: 'Social', emoji: '🫂', removes: 'the people on your list and your times together', tables: ['people', 'socialContacts'] },
   { id: 'wins', name: 'Wins jar', emoji: '🏅', removes: 'every win you collected', tables: ['wins'] },
+  { id: 'cravings', name: 'Cravings', emoji: '🌊', removes: 'your craving check-ins (your own "instead" ideas are kept)', tables: ['cravingEvents'] },
   { id: 'non_scale', name: 'Beyond the scale', emoji: '🌟', removes: 'your monthly non-scale check-ins', tables: ['nonScaleChecks'] },
   { id: 'books', name: 'Books', emoji: '📚', removes: 'your books', tables: ['books'] },
   { id: 'grocery', name: 'Grocery lists', emoji: '🛒', removes: 'your lists and templates', tables: ['groceryLists', 'groceryItems'] },

@@ -4,6 +4,7 @@ import type { NotificationPrefs } from '../lib/notifications/plan'
 import type { WeightDisplay } from '../lib/weightTrend'
 import type { CompanionMovement } from '../lib/companionMotion'
 import type { NonScaleAnswer } from '../lib/nonScale'
+import type { CravingOutcome } from '../lib/craving'
 
 export interface UserProfile {
   id?: number
@@ -25,6 +26,8 @@ export interface UserProfile {
   // Weight safety valve: show every weigh-in, weekly averages, or only the
   // trend. Missing means every. See lib/weightTrend.
   weight_display?: WeightDisplay
+  // Your own items for the craving flow's "instead" list (step 9d).
+  craving_instead?: string[]
   // When the one-time 2.0 feature picker was completed or skipped.
   features_picked_at?: string
   // Phone notification settings (Android app). See lib/notifications.
@@ -364,7 +367,7 @@ export interface Win {
   id?: number
   date: string
   text: string
-  source: 'daily_check' | 'milestone' | 'non_scale'
+  source: 'daily_check' | 'milestone' | 'non_scale' | 'craving'
   logged_at: string
 }
 
@@ -493,6 +496,17 @@ export interface NonScaleCheck {
   date: string
   answers: Record<string, NonScaleAnswer>
   note: string | null
+  logged_at: string
+}
+
+// One run through the craving flow (step 9d). See lib/craving.
+export interface CravingEvent {
+  id?: number
+  date: string
+  hungry: boolean
+  trigger: string | null
+  instead: string | null
+  outcome: CravingOutcome
   logged_at: string
 }
 

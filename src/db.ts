@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone, NonScaleCheck } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone, NonScaleCheck, CravingEvent } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 import { autoFromText } from './lib/goals'
 
@@ -54,6 +54,7 @@ export class ItGetsBetterDB extends Dexie {
   goalTracks!: EntityTable<GoalTrack, 'id'>
   goalMilestones!: EntityTable<GoalMilestone, 'id'>
   nonScaleChecks!: EntityTable<NonScaleCheck, 'id'>
+  cravingEvents!: EntityTable<CravingEvent, 'id'>
 
   // The name is only overridden in tests, to run upgrades on a separate database.
   constructor(name = 'ItGetsBetter') {
@@ -588,6 +589,11 @@ export class ItGetsBetterDB extends Dexie {
     // Monthly non-scale check-ins (step 9c). New table only.
     this.version(23).stores({
       nonScaleChecks: '++id, date',
+    })
+
+    // The craving flow (step 9d). New table only.
+    this.version(24).stores({
+      cravingEvents: '++id, date',
     })
 
     this.on('populate', () => {

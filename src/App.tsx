@@ -73,6 +73,7 @@ const TimelinePage = lazy(() => import('./features/me/TimelinePage'))
 const PomodoroPage = lazy(() => import('./features/todo/PomodoroPage'))
 const GoalsPage = lazy(() => import('./features/goals/GoalsPage'))
 const GoalTrackPage = lazy(() => import('./features/goals/GoalTrackPage'))
+const CravingPage = lazy(() => import('./features/craving/CravingPage'))
 const SocialPage = lazy(() => import('./features/social/SocialPage'))
 const PersonPage = lazy(() => import('./features/social/PersonPage'))
 const AbstinencePage = lazy(() => import('./features/abstinence/AbstinencePage'))
@@ -138,6 +139,7 @@ function AppContent() {
         <Route path="log" element={<LogHubPage />} />
         <Route path="log/weight" element={<WeightPage />} />
         <Route path="log/meal" element={<MealsPage />} />
+        <Route path="log/craving" element={<CravingPage />} />
         <Route path="log/water" element={<WaterPage />} />
         <Route path="log/fasting" element={<FastingPage />} />
         <Route path="log/exercise" element={<ExercisePage />} />

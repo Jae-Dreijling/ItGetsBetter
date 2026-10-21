@@ -60,6 +60,7 @@ export async function getFeatureUsage(): Promise<Partial<Record<FeatureId, boole
     abstinence: await has('abstinenceCounters'),
     social: await has('people'),
     goals: await has('goalTracks'),
+    cravings: await has('cravingEvents'),
   }
 }
 

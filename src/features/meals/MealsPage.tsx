@@ -47,7 +47,9 @@ export default function MealsPage() {
   const [saving, setSaving] = useState(false)
   const [burnOffMeal, setBurnOffMeal] = useState<{ name: string | null; calories: number } | null>(null)
   const navigate = useNavigate()
-  const mealPrepOn = isOn(useFeatureTiers(), 'meal_prep')
+  const tiers = useFeatureTiers()
+  const mealPrepOn = isOn(tiers, 'meal_prep')
+  const cravingsOn = isOn(tiers, 'cravings')
 
   useEffect(() => {
     return () => {
@@ -104,6 +106,14 @@ export default function MealsPage() {
     <>
       <TopBar title="Meals" />
       <PageContainer>
+        {cravingsOn && (
+          <button
+            onClick={() => navigate('/log/craving')}
+            className="mb-2 w-full text-right text-sm font-medium text-accent-600"
+          >
+            🌊 A craving rather than hunger? Ride it out first →
+          </button>
+        )}
         {mealPrepOn && (
           <button
             onClick={() => navigate('/log/meal-prep')}

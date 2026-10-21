@@ -15,6 +15,7 @@ export const POINT_VALUES = {
   floor_complete: 5,
   milestone_reached: 15,
   non_scale_check: 10,
+  craving_checked: 5,
 } as const
 
 export type PointSource = keyof typeof POINT_VALUES
