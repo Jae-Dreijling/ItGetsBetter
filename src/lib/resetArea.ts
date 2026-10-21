@@ -1,5 +1,6 @@
 import { db } from '../db'
 import { SEEDED_KEY } from '../hooks/usePersonalityGroups'
+import type { Folder } from '../types'
 
 // Reset one part of the app (Settings → Reset parts of the app) instead of
 // everything (Start fresh). Each area lists exactly which tables and stored
@@ -16,12 +17,14 @@ export interface ResetArea {
   storage?: string[]
   // The app sets this area up again on start (e.g. the built-in companion).
   reloadAfter?: boolean
+  // This list's folders go too (the folders table is shared between lists).
+  folders?: Folder['area']
 }
 
 export const RESET_AREAS: ResetArea[] = [
   { id: 'weight', name: 'Weight', emoji: '⚖️', removes: 'every weigh-in (your trend starts over)', tables: ['weightEntries'] },
   { id: 'meals', name: 'Meals', emoji: '🍽️', removes: 'every logged meal', tables: ['mealEntries'] },
-  { id: 'meal_prep', name: 'Meal prep', emoji: '🥗', removes: 'your recipes and meal plans', tables: ['recipes', 'mealPlanItems'] },
+  { id: 'meal_prep', name: 'Meal prep', emoji: '🥗', removes: 'your recipes and meal plans', tables: ['recipes', 'mealPlanItems'], folders: 'recipes' },
   { id: 'water', name: 'Water', emoji: '💧', removes: 'every water entry', tables: ['waterEntries'] },
   { id: 'exercise', name: 'Exercise', emoji: '🏃', removes: 'every workout', tables: ['exerciseEntries'] },
   { id: 'mood', name: 'Mood', emoji: '🙂', removes: 'every mood entry and your mood tags', tables: ['moodEntries', 'moodTags'] },
@@ -54,6 +57,7 @@ export const RESET_AREAS: ResetArea[] = [
     id: 'companions', name: 'Companions', emoji: '💬',
     removes: 'every companion and personality group you made or changed; the built-in companion and the default groups come back',
     tables: ['companions', 'personalityGroups', 'gameCompanionAffinity'],
+    folders: 'companions',
     storage: [SEEDED_KEY, 'igb_session_companion_id'],
     reloadAfter: true,
   },
@@ -71,8 +75,9 @@ function storageKeysFor(patterns: string[]): string[] {
 export async function resetArea(id: string): Promise<ResetArea> {
   const area = RESET_AREAS.find(a => a.id === id)
   if (!area) throw new Error(`Unknown area: ${id}`)
-  await db.transaction('rw', area.tables.map(t => db.table(t)), async () => {
+  await db.transaction('rw', [...area.tables.map(t => db.table(t)), db.folders], async () => {
     for (const t of area.tables) await db.table(t).clear()
+    if (area.folders) await db.folders.where('area').equals(area.folders).delete()
   })
   try {
     for (const key of storageKeysFor(area.storage ?? [])) localStorage.removeItem(key)

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { db } from '../db'
 import { clearDb } from '../test/dbHelpers'
 import { EMPTY_MESSAGES } from '../hooks/useCompanion'
-import { buildCompanionExport, parseCompanionFile, planCompanionImport, applyCompanionImport } from './companionTransfer'
+import { buildCompanionExport, parseCompanionFile, planCompanionImport, applyCompanionImport, withFolder } from './companionTransfer'
 import type { Companion } from '../types'
 
 function companion(name: string, values: Partial<Companion> = {}): Companion {
@@ -75,6 +75,28 @@ describe('companion export and import', () => {
     const group = await db.personalityGroups.get(luna.personality_group_id!)
     expect(group?.messages.idle).toEqual(['Yay'])
     expect(await luna.avatar!.text()).toBe('png-bytes')
+  })
+
+  it("folders travel by name: reused when you have one, made when you don't", async () => {
+    const folderId = await db.folders.add({ area: 'companions', name: 'Obey Me', emoji: '😈', created_at: '' }) as number
+    await db.companions.add(companion('Lucifer', { folder_id: folderId }))
+    await db.companions.add(companion('Kyle'))
+    const text = await exportedText()
+
+    await clearDb()
+    await db.folders.add({ area: 'companions', name: 'obey me', emoji: '⭐', created_at: '' })
+    const parsed = parseCompanionFile(text)
+    if (!parsed.ok) throw new Error(parsed.error)
+    const folders = await db.folders.toArray()
+    // Kyle has no folder in the file; "put them in a folder" gives him one.
+    const plan = withFolder(planCompanionImport(parsed.file, [], [], folders), 'South Park', folders)
+    expect(plan.newFolders).toEqual([{ name: 'South Park', emoji: '📁' }])
+    await applyCompanionImport(plan)
+
+    const byName = new Map((await db.folders.toArray()).map(f => [f.name, f.id]))
+    const all = await db.companions.toArray()
+    expect(all.find(c => c.name === 'Lucifer')!.folder_id).toBe(byName.get('obey me'))
+    expect(all.find(c => c.name === 'Kyle')!.folder_id).toBe(byName.get('South Park'))
   })
 
   it('explains a wrong file', () => {

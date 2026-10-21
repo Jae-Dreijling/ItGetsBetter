@@ -5,14 +5,15 @@ import { db } from '../../db'
 import { saveFile } from '../../lib/saveFile'
 import { isNativeApp } from '../../lib/platform'
 import { getLogicalDate } from '../../lib/date'
+import type { Folder } from '../../types'
 import {
-  buildCompanionExport, parseCompanionFile, planCompanionImport, applyCompanionImport, type CompanionImportPlan,
+  buildCompanionExport, parseCompanionFile, planCompanionImport, applyCompanionImport, withFolder, type CompanionImportPlan,
 } from '../../lib/companionTransfer'
 
 type ImportState =
   | { step: 'pick' }
   | { step: 'error'; error: string }
-  | { step: 'preview'; plan: CompanionImportPlan }
+  | { step: 'preview'; plan: CompanionImportPlan; folders: Folder[] }
   | { step: 'done'; added: number }
 
 // Export the companions you made, or import a file of companions. Importing
@@ -59,6 +60,7 @@ export default function CompanionTransfer() {
 function ImportFlow({ onClose }: { onClose: () => void }) {
   const [state, setState] = useState<ImportState>({ step: 'pick' })
   const [working, setWorking] = useState(false)
+  const [intoFolder, setIntoFolder] = useState('')
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = e.target.files?.[0]
@@ -66,7 +68,8 @@ function ImportFlow({ onClose }: { onClose: () => void }) {
     if (!picked) return
     const parsed = parseCompanionFile(await picked.text())
     if (!parsed.ok) return setState({ step: 'error', error: parsed.error })
-    setState({ step: 'preview', plan: planCompanionImport(parsed.file, await db.companions.toArray(), await db.personalityGroups.toArray()) })
+    const folders = await db.folders.where('area').equals('companions').toArray()
+    setState({ step: 'preview', folders, plan: planCompanionImport(parsed.file, await db.companions.toArray(), await db.personalityGroups.toArray(), folders) })
   }
 
   async function confirm(plan: CompanionImportPlan) {
@@ -115,7 +118,8 @@ function ImportFlow({ onClose }: { onClose: () => void }) {
     )
   }
 
-  const { plan } = state
+  const plan = withFolder(state.plan, intoFolder, state.folders)
+  const loose = state.plan.add.filter(c => !c.folder).length
   return (
     <div className="space-y-4">
       {plan.add.length > 0 ? (
@@ -128,6 +132,22 @@ function ImportFlow({ onClose }: { onClose: () => void }) {
       )}
       {plan.newGroups.length > 0 && (
         <p className="text-sm text-muted">Also adds the personality group{plan.newGroups.length === 1 ? '' : 's'} {plan.newGroups.map(g => g.name).join(', ')}.</p>
+      )}
+      {loose > 0 && (
+        <label className="block text-sm text-text-primary">
+          Put {loose === plan.add.length ? 'them' : `the ${loose} without a folder`} in a folder (optional)
+          <input
+            value={intoFolder}
+            onChange={e => setIntoFolder(e.target.value)}
+            list="companion-folders"
+            placeholder="e.g. Obey Me"
+            className="mt-1 w-full rounded-lg border border-primary-100 bg-surface px-3 py-2 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none dark:border-primary-900"
+          />
+          <datalist id="companion-folders">{state.folders.map(f => <option key={f.id} value={f.name} />)}</datalist>
+        </label>
+      )}
+      {plan.newFolders.length > 0 && (
+        <p className="text-sm text-muted">Makes the folder{plan.newFolders.length === 1 ? '' : 's'} {plan.newFolders.map(f => `${f.emoji} ${f.name}`).join(', ')}.</p>
       )}
       {plan.skipped.length > 0 && (
         <p className="text-xs text-muted">Skipped (you already have one with this name): {plan.skipped.join(', ')}</p>

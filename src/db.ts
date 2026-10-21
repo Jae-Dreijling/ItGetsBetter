@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone, NonScaleCheck, CravingEvent, FutureLetter } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone, NonScaleCheck, CravingEvent, FutureLetter, Folder } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 import { autoFromText } from './lib/goals'
 
@@ -56,6 +56,7 @@ export class ItGetsBetterDB extends Dexie {
   nonScaleChecks!: EntityTable<NonScaleCheck, 'id'>
   cravingEvents!: EntityTable<CravingEvent, 'id'>
   futureLetters!: EntityTable<FutureLetter, 'id'>
+  folders!: EntityTable<Folder, 'id'>
 
   // The name is only overridden in tests, to run upgrades on a separate database.
   constructor(name = 'ItGetsBetter') {
@@ -600,6 +601,12 @@ export class ItGetsBetterDB extends Dexie {
     // Letters to your future self (step 10c). New table only.
     this.version(25).stores({
       futureLetters: '++id, created_at',
+    })
+
+    // Folders for long lists, starting with companions. New table only:
+    // items without a folder_id simply have no folder.
+    this.version(26).stores({
+      folders: '++id, area',
     })
 
     this.on('populate', () => {

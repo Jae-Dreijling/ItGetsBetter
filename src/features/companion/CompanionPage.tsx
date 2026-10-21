@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
 import { compressImage } from '../../lib/compressImage'
@@ -10,8 +10,10 @@ import { usePersonalityGroups } from '../../hooks/usePersonalityGroups'
 import { getCompanionHomeRegion, setCompanionHomeRegion, getCompanionAffinityRecord, updateLoverDialogue } from '../../lib/game'
 import { MessagePoolEditor } from './MessagePoolEditor'
 import CompanionTransfer from './CompanionTransfer'
+import { FolderBar, FolderSections, FolderSelect } from '../../components/Folders'
+import { useFolders, useFolderFilter } from '../../hooks/useFolders'
 import type { CompanionMovement } from '../../lib/companionMotion'
-import type { Companion, CompanionMessages } from '../../types'
+import type { Companion, CompanionMessages, Folder } from '../../types'
 
 const JOURNEY_REGIONS = [
   { id: 'traveler',        label: 'Traveler',        emoji: '🗺️', available: true  },
@@ -35,7 +37,35 @@ export default function CompanionPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
 
+  const folders = useFolders('companions')
+  const [filter, setFilter] = useFolderFilter('companions', folders)
   const activeCount = companions?.filter(c => c.is_active).length ?? 0
+  const counts = new Map<number, number>()
+  for (const c of companions ?? []) if (c.folder_id != null) counts.set(c.folder_id, (counts.get(c.folder_id) ?? 0) + 1)
+
+  const renderCompanion = (c: Companion) => {
+    if (editingId === c.id) {
+      return <CompanionForm key={c.id} initial={c} onSave={() => setEditingId(null)} />
+    }
+    return (
+      <CompanionCard
+        key={c.id}
+        companion={c}
+        folders={folders ?? []}
+        isCurrent={current?.id === c.id}
+        canDeactivate={activeCount > 1 || !c.is_active}
+        canDelete={(companions?.length ?? 0) > 1}
+        onMakeCurrent={() => setSessionCompanionId(c.id!)}
+        onToggleActive={next => {
+          setCompanionActive(c.id!, next)
+          // A switched-off companion shouldn't keep talking: pick another.
+          if (!next && current?.id === c.id) setSessionCompanionId(null)
+        }}
+        onEdit={() => setEditingId(c.id!)}
+        onDelete={() => deleteCompanion(c.id!)}
+      />
+    )
+  }
 
   return (
     <>
@@ -69,39 +99,27 @@ export default function CompanionPage() {
           <CompanionForm onSave={() => setShowCreate(false)} />
         )}
 
-        {companions && companions.length > 0 && (
-          <div className="space-y-3">
-            {companions.map(c => {
-              if (editingId === c.id) {
-                return <CompanionForm key={c.id} initial={c} onSave={() => setEditingId(null)} />
-              }
-              return (
-                <CompanionCard
-                  key={c.id}
-                  companion={c}
-                  isCurrent={current?.id === c.id}
-                  canDeactivate={activeCount > 1 || !c.is_active}
-                  canDelete={companions.length > 1}
-                  onMakeCurrent={() => setSessionCompanionId(c.id!)}
-                  onToggleActive={next => {
-                    setCompanionActive(c.id!, next)
-                    // A switched-off companion shouldn't keep talking: pick another.
-                    if (!next && current?.id === c.id) setSessionCompanionId(null)
-                  }}
-                  onEdit={() => setEditingId(c.id!)}
-                  onDelete={() => deleteCompanion(c.id!)}
-                />
-              )
-            })}
-          </div>
+        {companions && folders && companions.length > 0 && (
+          <>
+            <FolderBar area="companions" folders={folders} counts={counts} total={companions.length} filter={filter} onFilter={setFilter} />
+            {filter === 'all' ? (
+              <FolderSections area="companions" items={companions} folders={folders} render={renderCompanion} />
+            ) : (
+              <div className="space-y-3">
+                {companions.filter(c => c.folder_id === filter).map(renderCompanion)}
+                {!counts.get(filter) && <p className="py-4 text-center text-sm text-muted">This folder is empty. Use the 📁 on a companion to move it in.</p>}
+              </div>
+            )}
+          </>
         )}
       </PageContainer>
     </>
   )
 }
 
-function CompanionCard({ companion, isCurrent, canDeactivate, canDelete, onMakeCurrent, onToggleActive, onEdit, onDelete }: {
+function CompanionCard({ companion, folders, isCurrent, canDeactivate, canDelete, onMakeCurrent, onToggleActive, onEdit, onDelete }: {
   companion: Companion
+  folders: Folder[]
   isCurrent: boolean
   canDeactivate: boolean
   onMakeCurrent: () => void
@@ -110,15 +128,7 @@ function CompanionCard({ companion, isCurrent, canDeactivate, canDelete, onMakeC
   onEdit: () => void
   onDelete: () => void
 }) {
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (companion.avatar) {
-      const url = URL.createObjectURL(companion.avatar)
-      setAvatarUrl(url)
-      return () => URL.revokeObjectURL(url)
-    }
-  }, [companion.avatar])
+  const avatarUrl = useObjectUrl(companion.avatar)
 
   const totalMessages = Object.values(companion.messages).flat().length
 
@@ -162,6 +172,7 @@ function CompanionCard({ companion, isCurrent, canDeactivate, canDelete, onMakeC
       <div className="mt-2 flex items-center gap-2">
         <MovementPicker companion={companion} />
         <span className="flex-1" />
+        <FolderSelect area="companions" itemId={companion.id!} folderId={companion.folder_id} folders={folders} label={companion.name} />
         <button onClick={onEdit} className="p-1.5 text-muted hover:text-primary-500">
           <Pencil className="h-4 w-4" />
         </button>
@@ -198,7 +209,7 @@ function DeleteButton({ name, onDelete }: { name: string; onDelete: () => void }
 function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () => void }) {
   const [name, setName] = useState(initial?.name ?? '')
   const [avatar, setAvatar] = useState<Blob | null>(initial?.avatar ?? null)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const avatarPreview = useObjectUrl(avatar)
   const [homeRegion, setHomeRegion] = useState('ponyville')
   const [personalityGroupId, setPersonalityGroupId] = useState<number | null>(initial?.personality_group_id ?? null)
   const [isLover, setIsLover] = useState(false)
@@ -211,14 +222,6 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
     goodnight: [], first_milestone: [], idle: [],
   })
   const personalityGroups = usePersonalityGroups()
-
-  useEffect(() => {
-    if (initial?.avatar) {
-      const url = URL.createObjectURL(initial.avatar)
-      setAvatarPreview(url)
-      return () => URL.revokeObjectURL(url)
-    }
-  }, [initial?.avatar])
 
   useEffect(() => {
     if (initial?.id) {
@@ -237,8 +240,6 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
     if (!file) return
     const compressed = await compressImage(file, { maxSizeMB: 0.1, maxWidthOrHeight: 256, useWebWorker: true })
     setAvatar(compressed)
-    if (avatarPreview) URL.revokeObjectURL(avatarPreview)
-    setAvatarPreview(URL.createObjectURL(compressed))
   }
 
   async function handleSave() {
@@ -342,6 +343,13 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
       </button>
     </div>
   )
+}
+
+// A picture's URL for as long as it's shown, freed again afterwards.
+function useObjectUrl(blob: Blob | null): string | null {
+  const url = useMemo(() => (blob ? URL.createObjectURL(blob) : null), [blob])
+  useEffect(() => () => { if (url) URL.revokeObjectURL(url) }, [url])
+  return url
 }
 
 const MOVEMENTS: { value: CompanionMovement; label: string }[] = [

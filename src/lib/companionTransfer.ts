@@ -2,7 +2,7 @@ import { db } from '../db'
 import { nowISO } from './date'
 import { encodeBlob, decodeBlob, type EncodedBlob } from './backup'
 import { EMPTY_MESSAGES } from '../hooks/useCompanion'
-import type { Companion, CompanionMessages, PersonalityGroup } from '../types'
+import type { Companion, CompanionMessages, Folder, PersonalityGroup } from '../types'
 import type { CompanionMovement } from './companionMotion'
 
 // Share companions between installs (or bulk-add them): export the ones you
@@ -10,6 +10,7 @@ import type { CompanionMovement } from './companionMotion'
 // removed; a companion whose name you already have is skipped. Personality
 // groups travel along and are matched by name. Game progress (affinity) stays
 // personal; lover lines and home region are part of the character, so they go.
+// Folders go by name too: a folder you already have is reused.
 
 export const COMPANIONS_FORMAT = 'itgetsbetter-companions'
 
@@ -22,6 +23,8 @@ export interface CompanionFileEntry {
   home_region: string | null
   // Optional; files from before this was added mean calm.
   movement?: CompanionMovement
+  // The folder's name (lib/folders); optional, missing means none.
+  folder?: string | null
 }
 
 export interface CompanionFile {
@@ -29,6 +32,8 @@ export interface CompanionFile {
   version: 1
   exported_at: string
   personality_groups: { name: string; description: string; messages: CompanionMessages }[]
+  // The folders the companions are in, for their emoji. Optional.
+  folders?: { name: string; emoji: string }[]
   companions: CompanionFileEntry[]
 }
 
@@ -50,6 +55,8 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
   const groups = await db.personalityGroups.toArray()
   const affinities = await db.gameCompanionAffinity.toArray()
   const groupName = new Map(groups.map(g => [g.id!, g.name]))
+  const folders = await db.folders.where('area').equals('companions').toArray()
+  const folderOf = (id: number | null | undefined) => folders.find(f => f.id === id)
   const usedGroups = new Set(companions.map(c => c.personality_group_id).filter((id): id is number => id !== null))
 
   return {
@@ -59,6 +66,9 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
     personality_groups: groups
       .filter(g => usedGroups.has(g.id!))
       .map(g => ({ name: g.name, description: g.description, messages: g.messages })),
+    folders: folders
+      .filter(f => companions.some(c => c.folder_id === f.id))
+      .map(f => ({ name: f.name, emoji: f.emoji })),
     companions: await Promise.all(companions.map(async c => {
       const affinity = affinities.find(a => a.companion_id === c.id)
       return {
@@ -69,6 +79,7 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
         lover_dialogue: affinity?.lover_dialogue ?? [],
         home_region: affinity?.home_region ?? null,
         movement: c.movement ?? 'calm',
+        folder: folderOf(c.folder_id)?.name ?? null,
       }
     })),
   }
@@ -101,6 +112,7 @@ export function parseCompanionFile(raw: string): ParsedCompanions {
         lover_dialogue: strings(c.lover_dialogue),
         home_region: typeof c.home_region === 'string' ? c.home_region : null,
         movement: c.movement === 'still' || c.movement === 'lively' ? c.movement : 'calm',
+        folder: typeof c.folder === 'string' && c.folder.trim() ? c.folder.trim() : null,
       }
     })
   if (companions.length === 0) return { ok: false, error: 'This file has no companions in it.' }
@@ -110,7 +122,12 @@ export function parseCompanionFile(raw: string): ParsedCompanions {
     .filter(g => typeof g.name === 'string' && g.name.trim() !== '')
     .map(g => ({ name: String(g.name).trim(), description: typeof g.description === 'string' ? g.description : '', messages: cleanMessages(g.messages) }))
 
-  return { ok: true, file: { format: COMPANIONS_FORMAT, version: 1, exported_at: String(data.exported_at ?? ''), personality_groups, companions } }
+  const folders = (Array.isArray(data.folders) ? data.folders : [])
+    .filter(isObj)
+    .filter(f => typeof f.name === 'string' && f.name.trim() !== '')
+    .map(f => ({ name: String(f.name).trim(), emoji: typeof f.emoji === 'string' && f.emoji ? f.emoji : '📁' }))
+
+  return { ok: true, file: { format: COMPANIONS_FORMAT, version: 1, exported_at: String(data.exported_at ?? ''), personality_groups, folders, companions } }
 }
 
 export interface CompanionImportPlan {
@@ -119,9 +136,11 @@ export interface CompanionImportPlan {
   // appears twice in the file).
   skipped: string[]
   newGroups: CompanionFile['personality_groups']
+  // Folders the file uses that you don't have yet; made on import.
+  newFolders: { name: string; emoji: string }[]
 }
 
-export function planCompanionImport(file: CompanionFile, existing: Companion[], existingGroups: PersonalityGroup[]): CompanionImportPlan {
+export function planCompanionImport(file: CompanionFile, existing: Companion[], existingGroups: PersonalityGroup[], existingFolders: Folder[] = []): CompanionImportPlan {
   const taken = new Set(existing.map(c => key(c.name)))
   const add: CompanionFileEntry[] = []
   const skipped: string[] = []
@@ -135,13 +154,33 @@ export function planCompanionImport(file: CompanionFile, existing: Companion[], 
   const groupNames = new Set(existingGroups.map(g => key(g.name)))
   const needed = new Set(add.map(c => c.personality_group).filter((n): n is string => !!n).map(key))
   const newGroups = file.personality_groups.filter(g => needed.has(key(g.name)) && !groupNames.has(key(g.name)))
-  return { add, skipped, newGroups }
+  const folderNames = new Set(existingFolders.map(f => key(f.name)))
+  const newFolders: CompanionImportPlan['newFolders'] = []
+  for (const name of add.map(c => c.folder).filter((n): n is string => !!n)) {
+    if (folderNames.has(key(name))) continue
+    folderNames.add(key(name))
+    newFolders.push({ name, emoji: file.folders?.find(f => key(f.name) === key(name))?.emoji ?? '📁' })
+  }
+  return { add, skipped, newGroups, newFolders }
+}
+
+// "Put them all in a folder" on import: every companion without a folder of
+// its own goes into this one (made if it doesn't exist yet).
+export function withFolder(plan: CompanionImportPlan, name: string, existingFolders: Folder[]): CompanionImportPlan {
+  const folder = name.trim()
+  if (!folder) return plan
+  const add = plan.add.map(c => (c.folder ? c : { ...c, folder }))
+  const exists = existingFolders.some(f => key(f.name) === key(folder)) || plan.newFolders.some(f => key(f.name) === key(folder))
+  return { ...plan, add, newFolders: exists ? plan.newFolders : [...plan.newFolders, { name: folder, emoji: '📁' }] }
 }
 
 // Adds the planned companions (and groups they need) in one go. Imported
 // companions start switched on, like a newly made one.
 export async function applyCompanionImport(plan: CompanionImportPlan): Promise<number> {
-  await db.transaction('rw', db.companions, db.personalityGroups, db.gameCompanionAffinity, async () => {
+  await db.transaction('rw', [db.companions, db.personalityGroups, db.gameCompanionAffinity, db.folders], async () => {
+    for (const f of plan.newFolders) await db.folders.add({ area: 'companions', name: f.name, emoji: f.emoji, created_at: nowISO() })
+    const folderId = new Map((await db.folders.where('area').equals('companions').toArray()).map(f => [key(f.name), f.id!]))
+
     for (const g of plan.newGroups) {
       await db.personalityGroups.add({ name: g.name, description: g.description, messages: g.messages, created_at: nowISO() })
     }
@@ -157,6 +196,7 @@ export async function applyCompanionImport(plan: CompanionImportPlan): Promise<n
         personality_group_id: c.personality_group ? groupId.get(key(c.personality_group)) ?? null : null,
         messages: c.messages,
         movement: c.movement ?? 'calm',
+        folder_id: c.folder ? folderId.get(key(c.folder)) ?? null : null,
         created_at: nowISO(),
       }) as number
       if (c.lover_dialogue.length > 0 || c.home_region) {

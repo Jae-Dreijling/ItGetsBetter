@@ -337,6 +337,18 @@ export interface Companion {
   messages: CompanionMessages
   // How it wanders on screen when idle (see lib/companionMotion). Missing means calm.
   movement?: CompanionMovement
+  // The folder it's in (lib/folders). Missing or null means none.
+  folder_id?: number | null
+  created_at: string
+}
+
+// A folder you make to keep a long list tidy (companions, later recipes).
+// Each list has its own folders; see lib/folders.
+export interface Folder {
+  id?: number
+  area: 'companions' | 'recipes'
+  name: string
+  emoji: string
   created_at: string
 }
 
