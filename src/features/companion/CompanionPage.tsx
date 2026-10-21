@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db'
 import { closenessTier, TIER_LABELS } from '../../lib/closeness'
 import { MEMORY_TOPICS } from '../../lib/companionMemory'
+import { visitsOff, setVisitsOff } from '../../lib/companionVisits'
 import { TRAIT_INFO, LEVEL_LABELS, traitsOf, type CompanionTraits, type TraitLevel } from '../../lib/companionPersonality'
 import { useNavigate } from 'react-router'
 import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
@@ -101,6 +102,7 @@ export default function CompanionPage() {
         </button>
 
         <CompanionTransfer />
+        <VisitsSwitch />
 
         <button
           onClick={() => setShowCreate(!showCreate)}
@@ -415,6 +417,20 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
         {initial ? 'Save Changes' : 'Create Companion'}
       </button>
     </div>
+  )
+}
+
+// Other companions knocking to visit (11e) can be switched off.
+function VisitsSwitch() {
+  const [off, setOff] = useState(visitsOff)
+  return (
+    <label className="mb-4 flex cursor-pointer items-center gap-3 rounded-xl bg-card p-3.5 shadow-sm">
+      <span className="flex-1">
+        <span className="block text-sm font-semibold text-text-primary">🚪 Visits</span>
+        <span className="block text-xs text-muted">Now and then another companion knocks and asks to visit for a while.</span>
+      </span>
+      <input type="checkbox" checked={!off} onChange={e => { setVisitsOff(!e.target.checked); setOff(!e.target.checked) }} className="h-5 w-5 accent-primary-500" />
+    </label>
   )
 }
 

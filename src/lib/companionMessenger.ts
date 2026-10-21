@@ -12,11 +12,32 @@ export function registerCompanionMessageHandler(fn: Handler | null) {
   showMessageFn = fn
 }
 
+// Others on screen (a visiting companion, 11e) hear every moment too, so
+// they can join in on the big ones.
+const listeners = new Set<Handler>()
+
+export function onCompanionMoment(fn: Handler): () => void {
+  listeners.add(fn)
+  return () => { listeners.delete(fn) }
+}
+
 // values fill the trigger's placeholders, e.g. { person: 'Sam' } for {person}.
 export function triggerCompanionMessage(event: CompanionEvent, values?: TriggerValues) {
   // "Points earned" comes with almost everything, so it doesn't count.
   if (event !== 'points_earned') lastAt = Date.now()
   if (showMessageFn) showMessageFn(event, values)
+  for (const fn of listeners) fn(event, values)
+}
+
+// Only the main companion speaks (a visitor's banter partner answering):
+// not a moment, so nobody else hears it.
+export function askMainCompanion(event: CompanionEvent, values?: TriggerValues) {
+  if (showMessageFn) showMessageFn(event, values)
+}
+
+// How long since the main companion last had something to say.
+export function msSinceLastMoment(): number {
+  return Date.now() - lastAt
 }
 
 // For general moments that often come right after a more specific one (the

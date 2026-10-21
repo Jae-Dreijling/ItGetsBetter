@@ -6,6 +6,7 @@ import { fade } from '../../lib/animations'
 import BottomTabs from './BottomTabs'
 import SideMenu from './SideMenu'
 import FloatingCompanion from '../FloatingCompanion'
+import CompanionVisits from '../CompanionVisits'
 import { registerSideMenuOpener } from '../../lib/sideMenu'
 
 export default function AppShell() {
@@ -34,7 +35,12 @@ export default function AppShell() {
       {/* Lives in the app layout, so it never covers first-time setup or the
           feature picker, and stays mounted while navigating between pages.
           The progress walk has its own companion on the trail. */}
-      {location.pathname !== '/me/replay' && <FloatingCompanion />}
+      {location.pathname !== '/me/replay' && (
+        <>
+          <FloatingCompanion />
+          <CompanionVisits />
+        </>
+      )}
     </div>
   )
 }

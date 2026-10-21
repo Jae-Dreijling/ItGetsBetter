@@ -30,13 +30,15 @@ export const EXTRA_TRIGGERS = [
   'nickname_friend', 'nickname_close', 'nickname_lover',
   // Memory (11d)
   'memory_mention', 'on_this_day',
+  // Visits, banter, celebrations (11e)
+  'visit_knock', 'visit_accepted', 'visit_declined', 'visit_leaving', 'banter', 'banter_reply', 'cheer',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
 export type TriggerKey = keyof CompanionMessages
 
 export const TRIGGER_GROUPS = [
-  'Everyday', 'Handling', 'Nicknames for you', 'Memory', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
+  'Everyday', 'Handling', 'Nicknames for you', 'Memory', 'Visits', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
 ] as const
 
 export interface TriggerInfo {
@@ -169,6 +171,76 @@ export const TRIGGERS: TriggerInfo[] = [
   {
     key: 'on_this_day', label: 'On this day (a win from before)', group: 'Memory', placeholders: ['when', 'text'],
     defaults: ['{when} today you wrote this win: “{text}”', 'Remember this, {name}? {when}: “{text}”', 'On this day, {when}: “{text}”. Look how far you are now.'],
+  },
+
+  // Visits (11e): said by the companion who comes to visit.
+  {
+    key: 'visit_knock', label: 'Asks if it may visit', group: 'Visits',
+    defaults: ['Knock knock! Can I come hang out for a bit, {name}?', 'Hiii! Mind if I visit?', 'Got room for one more on your screen?'],
+    traitDefaults: {
+      proud: ['I have decided to grace you with a visit. If you will have me.'],
+      sassy: ["Open up, {name}. I'm visiting. ...Please?"],
+      shy: ['Um... would it be okay if I visited? Only if you want...'],
+      playful: ['Knock knock! (Who is there? Me! Let me in!)'],
+    },
+  },
+  {
+    key: 'visit_accepted', label: 'You let it in', group: 'Visits',
+    defaults: ["Yay! I'll stay a little while.", 'Thanks, {name}! Make some room!', "Hi hi! Don't mind me."],
+    traitDefaults: {
+      proud: ['A wise decision.'],
+      sassy: ['Obviously. Who would say no to me?'],
+      shy: ['R-really? Thank you...'],
+    },
+  },
+  {
+    key: 'visit_declined', label: 'You said not now', group: 'Visits',
+    defaults: ['Okay! Another time then.', 'No worries, see you around!', "That's fine, I'll come back later."],
+    traitDefaults: {
+      proud: ['Very well. I have other places to be anyway.', 'Your loss.'],
+      sassy: ['Wow. Okay. Rude.', "Fine. I didn't want to come anyway. (I did.)"],
+      shy: ['Oh... okay. Maybe another time.'],
+      playful: ['Aww! Next time then!', "I'll be back! Hehe."],
+    },
+  },
+  {
+    key: 'visit_leaving', label: 'Leaving after a visit', group: 'Visits',
+    defaults: ['That was nice! See you, {name}!', 'Time for me to go. Thanks for having me!', 'Bye bye! Visit me back sometime?'],
+    traitDefaults: {
+      proud: ['I must take my leave. It was... pleasant.'],
+      sassy: ["I'm off. Try not to miss me too much."],
+      shy: ['Th-thank you for having me... bye!'],
+    },
+  },
+  {
+    key: 'banter', label: 'Starts some banter with the other companion', group: 'Visits', placeholders: ['other'],
+    defaults: ['Hey {other}, are you looking after {name} properly?', '{other}! Fancy seeing you here.', 'So {other}, what have you two been up to?'],
+    traitDefaults: {
+      sassy: ["{other}, you call that encouragement? Watch and learn.", 'Move over, {other}. My turn.'],
+      proud: ['{other}. I trust you have been behaving.'],
+      playful: ['Tag, {other}! You are it!', '{other}, race you to the top of the screen!'],
+      shy: ['H-hi, {other}... nice to see you.'],
+    },
+  },
+  {
+    key: 'banter_reply', label: 'Answers the other companion', group: 'Visits', placeholders: ['other'],
+    defaults: ['Ha! Good to see you too, {other}.', "Of course I am, {other}. Who do you think I am?", 'We are doing great, thanks {other}!'],
+    traitDefaults: {
+      sassy: ['Keep dreaming, {other}.', 'Says you, {other}.'],
+      proud: ['Naturally, {other}.'],
+      playful: ["You're on, {other}!", 'Hehe, hi {other}!'],
+      shy: ['Oh! H-hello, {other}.'],
+    },
+  },
+  {
+    key: 'cheer', label: 'Joins in on a big moment', group: 'Visits',
+    defaults: ['Woohoo! 🎉', 'Yes, {name}! Amazing!', 'That deserves a celebration!'],
+    traitDefaults: {
+      sassy: ['Okay, okay, that was impressive.'],
+      proud: ['Splendid work.'],
+      shy: ['Y-yay! 🎉'],
+      playful: ['PARTY! 🎊', 'Confetti time!'],
+    },
   },
 
   // Logging
