@@ -11,6 +11,10 @@ export function useTracks() {
   return useLiveQuery(() => db.goalTracks.orderBy('created_at').filter(t => !t.archived).toArray())
 }
 
+export function useArchivedTracks() {
+  return useLiveQuery(() => db.goalTracks.orderBy('created_at').filter(t => t.archived).toArray())
+}
+
 // undefined while loading, null when it doesn't exist.
 export function useTrack(id: number) {
   return useLiveQuery(async () => (await db.goalTracks.get(id)) ?? null, [id])
@@ -45,6 +49,10 @@ export async function updateTrack(id: number, changes: Partial<Pick<GoalTrack, '
 // Putting a track away isn't failing it: it's hidden, and its history stays.
 export async function archiveTrack(id: number) {
   await db.goalTracks.update(id, { archived: true })
+}
+
+export async function bringBackTrack(id: number) {
+  await db.goalTracks.update(id, { archived: false })
 }
 
 export async function deleteTrack(id: number) {

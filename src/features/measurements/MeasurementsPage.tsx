@@ -5,6 +5,7 @@ import PageContainer from '../../components/layout/PageContainer'
 import { useLatestMeasurement, useMeasurements, addMeasurement } from '../../hooks/useMeasurements'
 import { getLogicalDate } from '../../lib/date'
 import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { RecentThenMonths } from '../../components/Folders'
 import { deleteEntry } from '../../lib/deleteEntry'
 
 const FIELDS = [
@@ -94,8 +95,7 @@ export default function MeasurementsPage() {
         <div>
           <h3 className="mb-3 text-sm font-semibold text-muted">History</h3>
           {history && history.length > 0 ? (
-            <div className="space-y-2">
-              {history.map((entry) => {
+            <RecentThenMonths storageKey="igb_fold_measurements" items={history} dateOf={entry => entry.date} keep={5} render={entry => {
                 const recorded = FIELDS.filter((f) => entry[f.key as FieldKey] !== null)
                 return (
                   <div key={entry.id} className="rounded-lg bg-card px-4 py-3 shadow-sm">
@@ -114,8 +114,7 @@ export default function MeasurementsPage() {
                     </div>
                   </div>
                 )
-              })}
-            </div>
+              }} />
           ) : (
             <p className="text-center text-sm text-muted">No measurements yet.</p>
           )}

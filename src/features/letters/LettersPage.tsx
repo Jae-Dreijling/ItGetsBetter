@@ -8,6 +8,7 @@ import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import Sheet from '../../components/Sheet'
 import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { RecentThenMonths } from '../../components/Folders'
 import { db } from '../../db'
 import { useLetters, writeLetter, openLetter, deleteLetter } from '../../hooks/useLetters'
 import { getLogicalDate } from '../../lib/date'
@@ -55,8 +56,7 @@ export default function LettersPage() {
         {opened.length > 0 && (
           <section className="mb-5">
             <h2 className="mb-2 text-sm font-semibold text-muted">Opened</h2>
-            <div className="space-y-2">
-              {opened.map(l => (
+            <RecentThenMonths storageKey="igb_fold_letters" items={opened} dateOf={l => l.opened_at!} keep={3} render={l => (
                 <div key={l.id} className="rounded-xl bg-card p-4 shadow-sm">
                   <div className="mb-1 flex items-center justify-between">
                     <p className="text-xs text-muted">Written {format(new Date(l.created_at), 'd MMMM yyyy')}</p>
@@ -64,8 +64,7 @@ export default function LettersPage() {
                   </div>
                   <p className="whitespace-pre-line text-sm text-text-primary">{l.text}</p>
                 </div>
-              ))}
-            </div>
+              )} />
           </section>
         )}
       </PageContainer>

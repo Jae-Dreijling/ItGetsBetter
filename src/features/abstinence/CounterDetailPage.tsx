@@ -5,7 +5,7 @@ import { Pencil, Wind, X } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import Sheet from '../../components/Sheet'
-import { useCounter, useCounterEvents, useNow, archiveCounter, deleteCounter, deleteEvent } from '../../hooks/useAbstinence'
+import { useCounter, useCounterEvents, useNow, archiveCounter, bringBackCounter, deleteCounter, deleteEvent } from '../../hooks/useAbstinence'
 import { abstinenceStats, formatDuration, wholeDays, contextCounts, MILESTONES } from '../../lib/abstinence'
 import { CounterForm, SlipForm, CravingHelper } from './parts'
 import type { AbstinenceCounter } from '../../types'
@@ -152,9 +152,15 @@ function CounterDetails({ counter, onGone }: { counter: AbstinenceCounter; onGon
         <button onClick={() => open('edit')} className="flex w-full items-center justify-center gap-1.5 py-2 text-sm text-muted hover:text-text-primary">
           <Pencil className="h-4 w-4" /> Edit
         </button>
-        <button onClick={() => act('archive')} className="w-full py-2 text-sm text-muted hover:text-text-primary">
-          {confirm === 'archive' ? 'Tap again to put it away (history is kept)' : 'Put away'}
-        </button>
+        {counter.archived ? (
+          <button onClick={() => bringBackCounter(counter.id!)} className="w-full py-2 text-sm font-medium text-primary-500">
+            Bring it back
+          </button>
+        ) : (
+          <button onClick={() => act('archive')} className="w-full py-2 text-sm text-muted hover:text-text-primary">
+            {confirm === 'archive' ? 'Tap again to put it away (history is kept)' : 'Put away'}
+          </button>
+        )}
         <button onClick={() => act('delete')} className="w-full py-2 text-sm text-muted hover:text-danger">
           {confirm === 'delete' ? 'Tap again to delete it and its history' : 'Delete'}
         </button>

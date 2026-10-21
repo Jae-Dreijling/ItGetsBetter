@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2, ShoppingCart, Check, RotateCcw, List } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
+import { RecentThenMonths } from '../../components/Folders'
 import { useGroceryLists, useGroceryItems, addGroceryList, deleteGroceryList, addGroceryItem, toggleGroceryItem, deleteGroceryItem, resetListChecks, createShoppingTrip } from '../../hooks/useGrocery'
 
 export default function GroceryPage() {
@@ -138,8 +139,8 @@ export default function GroceryPage() {
         {shoppingTrips.length > 0 && (
           <div>
             <h3 className="mb-2 text-sm font-semibold text-muted uppercase tracking-wide">Shopping Trips</h3>
-            <div className="space-y-2">
-              {shoppingTrips.map(list => (
+            {/* The latest trips in view; older ones fold away per month. */}
+            <RecentThenMonths storageKey="igb_fold_trips" items={shoppingTrips} dateOf={list => list.created_at} keep={5} render={list => (
                 <div key={list.id} className="flex items-center gap-3 rounded-xl bg-card px-4 py-3 shadow-sm">
                   <button onClick={() => setActiveListId(list.id!)} className="flex flex-1 items-center gap-3 text-left">
                     <ShoppingCart className="h-4 w-4 text-accent-500" />
@@ -149,8 +150,7 @@ export default function GroceryPage() {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-              ))}
-            </div>
+              )} />
           </div>
         )}
 

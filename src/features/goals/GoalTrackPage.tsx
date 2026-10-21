@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import {
-  useTrack, useMilestones, updateTrack, archiveTrack, deleteTrack, addMilestone, updateMilestone, deleteMilestone, moveMilestone,
+  useTrack, useMilestones, updateTrack, archiveTrack, bringBackTrack, deleteTrack, addMilestone, updateMilestone, deleteMilestone, moveMilestone,
 } from '../../hooks/useGoals'
 import { progress, sortMilestones, milestoneExtras } from '../../lib/goals'
 import { MilestoneCheck, AutoEditor } from './parts'
@@ -94,9 +94,15 @@ function TrackDetails({ track, onGone }: { track: GoalTrack; onGone: () => void 
       <p className="mt-2 text-xs text-muted">Tap a step to rename it, move it, or give it an aim-for date or a treat.</p>
 
       <div className="mt-6 space-y-1 border-t border-primary-100 pt-3 dark:border-primary-900">
-        <button onClick={() => act('archive')} className="w-full py-2 text-sm text-muted hover:text-text-primary">
-          {confirm === 'archive' ? 'Tap again to put it away (nothing is lost)' : 'Put this goal away'}
-        </button>
+        {track.archived ? (
+          <button onClick={() => bringBackTrack(track.id!)} className="w-full py-2 text-sm font-medium text-primary-500">
+            Bring this goal back
+          </button>
+        ) : (
+          <button onClick={() => act('archive')} className="w-full py-2 text-sm text-muted hover:text-text-primary">
+            {confirm === 'archive' ? 'Tap again to put it away (nothing is lost)' : 'Put this goal away'}
+          </button>
+        )}
         <button onClick={() => act('delete')} className="w-full py-2 text-sm text-muted hover:text-danger">
           {confirm === 'delete' ? 'Tap again to delete it and its steps' : 'Delete'}
         </button>

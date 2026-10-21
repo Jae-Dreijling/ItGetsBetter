@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router'
 import { Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin, Sprout, Users, Target, Heart, Mail, Footprints, type LucideIcon } from 'lucide-react'
+import { FoldableSection } from '../../components/Folders'
+import { useFoldState } from '../../hooks/useFolders'
 import { isPathOn } from '../../lib/features'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
@@ -68,6 +70,7 @@ export default function MePage() {
   const { trend } = useWeightTrend()
   const points = usePointsBalance()
   const navigate = useNavigate()
+  const fold = useFoldState('igb_fold_me')
 
   // The smoothed trend, not the last weigh-in (V2-PLAN §7).
   const bmi = trend !== null && profile
@@ -118,10 +121,10 @@ export default function MePage() {
           </button>
         )}
 
+        {/* Sections fold closed with a tap; the page remembers which. */}
         {groups.map(group => (
-          <div key={group.title} className="mb-6">
-            <h2 className="mb-2 text-xs font-semibold text-muted uppercase tracking-wide">{group.title}</h2>
-            <div className="space-y-2">
+          <div key={group.title} className="mb-5">
+            <FoldableSection title={group.title} count={group.items.length} open={fold.isOpen(group.title)} onToggle={() => fold.toggle(group.title)} gap="space-y-2">
               {group.items.map(item => {
                 const Icon = item.icon
                 return (
@@ -138,7 +141,7 @@ export default function MePage() {
                   </button>
                 )
               })}
-            </div>
+            </FoldableSection>
           </div>
         ))}
       </PageContainer>

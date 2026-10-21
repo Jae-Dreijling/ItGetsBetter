@@ -5,7 +5,7 @@ import { EMPTY_MESSAGES } from '../hooks/useCompanion'
 import { addFolder, deleteFolder, moveToFolder } from '../hooks/useFolders'
 import { saveRecipe } from '../hooks/useMealPlan'
 import { resetArea } from './resetArea'
-import { groupByFolder } from './folders'
+import { groupByFolder, recentThenMonths } from './folders'
 import type { Folder } from '../types'
 
 const folder = (id: number, name: string): Folder => ({ id, area: 'companions', name, emoji: '📁', created_at: '' })
@@ -20,6 +20,23 @@ describe('grouping by folder', () => {
       // A folder that no longer exists counts as no folder.
       [null, [2, 3, 4]],
     ])
+  })
+})
+
+describe('recent first, older by month', () => {
+  it('keeps the newest in view and groups the rest per month, newest month first', () => {
+    const dates = ['2026-08-03', '2026-10-20', '2026-09-30', '2026-10-01', '2026-09-02', '2026-10-15']
+    const { recent, months } = recentThenMonths(dates, d => d, 2)
+    expect(recent).toEqual(['2026-10-20', '2026-10-15'])
+    expect(months.map(m => [m.label, m.items])).toEqual([
+      ['October 2026', ['2026-10-01']],
+      ['September 2026', ['2026-09-30', '2026-09-02']],
+      ['August 2026', ['2026-08-03']],
+    ])
+  })
+
+  it('a short list stays as it is', () => {
+    expect(recentThenMonths(['2026-10-01'], d => d, 5)).toEqual({ recent: ['2026-10-01'], months: [] })
   })
 })
 

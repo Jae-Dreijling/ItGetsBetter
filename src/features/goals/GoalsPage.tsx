@@ -4,7 +4,8 @@ import { Plus } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import Sheet from '../../components/Sheet'
-import { useTracks, useMilestones } from '../../hooks/useGoals'
+import { useTracks, useMilestones, useArchivedTracks, bringBackTrack } from '../../hooks/useGoals'
+import { PutAwaySection } from '../../components/Folders'
 import { nextMilestone, progress, sortMilestones, milestoneExtras } from '../../lib/goals'
 import { MilestoneCheck, NewTrackForm } from './parts'
 import { useAutoLabel } from './useAutoLabel'
@@ -13,6 +14,7 @@ import type { GoalMilestone, GoalTrack } from '../../types'
 export default function GoalsPage() {
   const navigate = useNavigate()
   const tracks = useTracks()
+  const putAway = useArchivedTracks()
   const milestones = useMilestones()
   const [adding, setAdding] = useState(false)
 
@@ -45,6 +47,13 @@ export default function GoalsPage() {
         >
           <Plus className="h-4 w-4" /> New goal
         </button>
+
+        <PutAwaySection
+          storageKey="igb_fold_goals"
+          items={(putAway ?? []).map(t => ({ id: t.id!, emoji: t.emoji, name: t.name }))}
+          onOpen={id => navigate(`/me/goals/${id}`)}
+          onBringBack={bringBackTrack}
+        />
       </PageContainer>
 
       <Sheet open={adding} onClose={() => setAdding(false)} title="New goal">

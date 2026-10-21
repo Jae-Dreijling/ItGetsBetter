@@ -47,13 +47,14 @@ export function writeStored(key: string, value: unknown) {
   try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* not remembered, that's fine */ }
 }
 
-// Which foldable sections are closed, remembered per list.
-export function useFoldState(key: string) {
-  const [closed, setClosed] = useState<string[]>(() => readStored<string[]>(key, []))
-  const isOpen = (id: string) => !closed.includes(id)
+// Which foldable sections are open or closed, remembered per list. Sections
+// start open, or closed with startOpen false (then the opened ones are stored).
+export function useFoldState(key: string, startOpen = true) {
+  const [changed, setChanged] = useState<string[]>(() => readStored<string[]>(key, []))
+  const isOpen = (id: string) => changed.includes(id) !== startOpen
   const toggle = (id: string) => {
-    const next = closed.includes(id) ? closed.filter(c => c !== id) : [...closed, id]
-    setClosed(next)
+    const next = changed.includes(id) ? changed.filter(c => c !== id) : [...changed, id]
+    setChanged(next)
     writeStored(key, next)
   }
   return { isOpen, toggle }

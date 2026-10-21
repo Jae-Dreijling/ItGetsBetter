@@ -4,7 +4,8 @@ import { Plus, Wind } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import Sheet from '../../components/Sheet'
-import { useCounters, useCounterEvents, useNow } from '../../hooks/useAbstinence'
+import { useCounters, useCounterEvents, useNow, useArchivedCounters, bringBackCounter } from '../../hooks/useAbstinence'
+import { PutAwaySection } from '../../components/Folders'
 import { abstinenceStats, formatDuration } from '../../lib/abstinence'
 import { CounterForm, SlipForm, CravingHelper } from './parts'
 import type { AbstinenceCounter } from '../../types'
@@ -14,6 +15,7 @@ type SheetState = { kind: 'new' } | { kind: 'slip' | 'craving'; counter: Abstine
 export default function AbstinencePage() {
   const navigate = useNavigate()
   const counters = useCounters()
+  const putAway = useArchivedCounters()
   const events = useCounterEvents()
   const now = useNow()
   const [sheet, setSheet] = useState<SheetState>(null)
@@ -77,6 +79,13 @@ export default function AbstinencePage() {
         >
           <Plus className="h-4 w-4" /> New counter
         </button>
+
+        <PutAwaySection
+          storageKey="igb_fold_abstinence"
+          items={(putAway ?? []).map(c => ({ id: c.id!, emoji: c.emoji, name: c.name }))}
+          onOpen={id => navigate(`/me/abstinence/${id}`)}
+          onBringBack={bringBackCounter}
+        />
       </PageContainer>
 
       <Sheet open={sheet !== null} onClose={() => setSheet(null)} title={title}>

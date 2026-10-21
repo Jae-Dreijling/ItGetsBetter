@@ -1,3 +1,4 @@
+import { format, parseISO } from 'date-fns'
 import type { Folder } from '../types'
 
 // Folders keep a long list tidy (companions now, recipes later). They only
@@ -23,4 +24,25 @@ export function groupByFolder<T extends { folder_id?: number | null }>(items: T[
   const loose = items.filter(i => i.folder_id == null || !known.has(i.folder_id))
   if (loose.length) sections.push({ folder: null, items: loose })
   return sections
+}
+
+export interface MonthGroup<T> {
+  key: string
+  label: string
+  items: T[]
+}
+
+// For lists that only grow (shopping trips, measurements, opened letters):
+// the newest few stay in view, everything older is grouped per month.
+export function recentThenMonths<T>(items: T[], dateOf: (item: T) => string, keep: number): { recent: T[]; months: MonthGroup<T>[] } {
+  const sorted = [...items].sort((a, b) => dateOf(b).localeCompare(dateOf(a)))
+  const months: MonthGroup<T>[] = []
+  for (const item of sorted.slice(keep)) {
+    const date = parseISO(dateOf(item))
+    const key = format(date, 'yyyy-MM')
+    const group = months.find(m => m.key === key)
+    if (group) group.items.push(item)
+    else months.push({ key, label: format(date, 'MMMM yyyy'), items: [item] })
+  }
+  return { recent: sorted.slice(0, keep), months }
 }

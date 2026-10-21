@@ -10,6 +10,10 @@ export function useCounters() {
   return useLiveQuery(() => db.abstinenceCounters.orderBy('created_at').filter(c => !c.archived).toArray())
 }
 
+export function useArchivedCounters() {
+  return useLiveQuery(() => db.abstinenceCounters.orderBy('created_at').filter(c => c.archived).toArray())
+}
+
 // undefined while loading, null when it doesn't exist.
 export function useCounter(id: number) {
   return useLiveQuery(async () => (await db.abstinenceCounters.get(id)) ?? null, [id])
@@ -44,6 +48,10 @@ export async function saveCounter(data: CounterInput, id?: number): Promise<numb
 
 export async function archiveCounter(id: number) {
   await db.abstinenceCounters.update(id, { archived: true })
+}
+
+export async function bringBackCounter(id: number) {
+  await db.abstinenceCounters.update(id, { archived: false })
 }
 
 export async function deleteCounter(id: number) {

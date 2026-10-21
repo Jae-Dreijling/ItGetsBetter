@@ -5,6 +5,19 @@ import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useAchievements, checkAndUnlockAchievements } from '../../hooks/useAchievements'
 import { ACHIEVEMENT_LIBRARY } from '../../lib/achievements'
+import { FoldableSection } from '../../components/Folders'
+import { useFoldState } from '../../hooks/useFolders'
+
+// Achievements grouped by what they count, in this order; unknown kinds last.
+const KINDS: { type: string; title: string; emoji: string }[] = [
+  { type: 'app_open_days', title: 'Showing up', emoji: '📅' },
+  { type: 'weight_lost', title: 'Weight', emoji: '⚖️' },
+  { type: 'weights_logged', title: 'Weigh-ins', emoji: '📈' },
+  { type: 'meals_logged', title: 'Meals', emoji: '🍽️' },
+  { type: 'exercises_logged', title: 'Exercise', emoji: '🏃' },
+  { type: 'water_goals_met', title: 'Water', emoji: '💧' },
+  { type: 'total_points', title: 'Points', emoji: '⭐' },
+]
 
 export default function AchievementsPage() {
   const unlocked = useAchievements()
@@ -20,6 +33,8 @@ export default function AchievementsPage() {
     unlocked?.map(a => a.trigger_type + ':' + a.trigger_value) ?? []
   )
 
+  const fold = useFoldState('igb_fold_achievements')
+  const kinds = [...KINDS, ...[...new Set(ACHIEVEMENT_LIBRARY.map(d => d.trigger_type))].filter(t => !KINDS.some(k => k.type === t)).map(type => ({ type, title: 'Other', emoji: '🏅' }))]
   const unlockedCount = unlocked?.length ?? 0
   const totalCount = ACHIEVEMENT_LIBRARY.length
 
@@ -46,8 +61,14 @@ export default function AchievementsPage() {
           </div>
         )}
 
-        <div className="space-y-3">
-          {ACHIEVEMENT_LIBRARY.map(def => {
+        <div className="space-y-4">
+          {kinds.map(kind => {
+            const defs = ACHIEVEMENT_LIBRARY.filter(d => d.trigger_type === kind.type)
+            if (defs.length === 0) return null
+            const got = defs.filter(d => unlockedIds.has(d.trigger_type + ':' + d.trigger_value)).length
+            return (
+              <FoldableSection key={kind.type} emoji={kind.emoji} title={kind.title} count={`${got} of ${defs.length}`} open={fold.isOpen(kind.type)} onToggle={() => fold.toggle(kind.type)}>
+          {defs.map(def => {
             const key = def.trigger_type + ':' + def.trigger_value
             const isUnlocked = unlockedIds.has(key)
             const unlockedData = unlocked?.find(
@@ -76,6 +97,9 @@ export default function AchievementsPage() {
                   )}
                 </div>
               </div>
+            )
+          })}
+              </FoldableSection>
             )
           })}
         </div>

@@ -4,7 +4,7 @@ import { AnimatePresence, m } from 'motion/react'
 import Sheet from './Sheet'
 import { fade } from '../lib/animations'
 import { addFolder, updateFolder, deleteFolder, moveToFolder, useFoldState, type FolderFilter } from '../hooks/useFolders'
-import { FOLDER_EMOJIS, groupByFolder, type FolderArea } from '../lib/folders'
+import { FOLDER_EMOJIS, groupByFolder, recentThenMonths, type FolderArea } from '../lib/folders'
 import type { Folder } from '../types'
 
 // Shared folder pieces (lib/folders), so every list with folders works the
@@ -142,9 +142,10 @@ export function FolderSections<T extends { id?: number; folder_id?: number | nul
 
 // A section with a header you tap to fold it open or closed.
 export function FoldableSection({ emoji, title, count, open, onToggle, gap = 'space-y-3', children }: {
-  emoji: string
+  emoji?: string
   title: string
-  count: number
+  // Shown after the title, e.g. 3 or "2 of 5"; left out when missing.
+  count?: number | string
   open: boolean
   onToggle: () => void
   gap?: string
@@ -153,8 +154,8 @@ export function FoldableSection({ emoji, title, count, open, onToggle, gap = 'sp
   return (
     <section>
       <button onClick={onToggle} aria-expanded={open} className="mb-2 flex w-full items-center gap-2 text-left text-sm font-semibold text-muted">
-        <span aria-hidden>{emoji}</span>
-        <span className="flex-1">{title} · {count}</span>
+        {emoji && <span aria-hidden>{emoji}</span>}
+        <span className="flex-1">{title}{count !== undefined && ` · ${count}`}</span>
         <ChevronDown className={`h-4 w-4 transition-transform ${open ? '' : '-rotate-90'}`} />
       </button>
       <AnimatePresence initial={false}>
@@ -197,5 +198,58 @@ export function FolderSelect({ area, itemId, folderId, folders, label }: {
       {sorted.map(f => <option key={f.id} value={f.id}>{f.emoji} {f.name}</option>)}
       <option value="new">New folder…</option>
     </select>
+  )
+}
+
+// The newest few items, then older ones folded away per month (closed until
+// you open one). See recentThenMonths.
+export function RecentThenMonths<T>({ storageKey, items, dateOf, keep, render, gap = 'space-y-2' }: {
+  storageKey: string
+  items: T[]
+  dateOf: (item: T) => string
+  keep: number
+  render: (item: T) => ReactNode
+  gap?: string
+}) {
+  const fold = useFoldState(storageKey, false)
+  const { recent, months } = recentThenMonths(items, dateOf, keep)
+  return (
+    <div className="space-y-4">
+      <div className={gap}>{recent.map(render)}</div>
+      {months.map(month => (
+        <FoldableSection key={month.key} emoji="🗓️" title={month.label} count={month.items.length} open={fold.isOpen(month.key)} onToggle={() => fold.toggle(month.key)} gap={gap}>
+          {month.items.map(render)}
+        </FoldableSection>
+      ))}
+    </div>
+  )
+}
+
+// Things you put away (archived goals, counters): out of the way in a folded
+// section, still there to look at or bring back.
+export function PutAwaySection({ storageKey, items, onOpen, onBringBack }: {
+  storageKey: string
+  items: { id: number; emoji: string; name: string }[]
+  onOpen: (id: number) => void
+  onBringBack: (id: number) => void
+}) {
+  const fold = useFoldState(storageKey, false)
+  if (items.length === 0) return null
+  return (
+    <div className="mt-6">
+      <FoldableSection emoji="📦" title="Put away" count={items.length} open={fold.isOpen('put_away')} onToggle={() => fold.toggle('put_away')} gap="space-y-2">
+        {items.map(item => (
+          <div key={item.id} className="flex items-center gap-3 rounded-xl bg-card px-4 py-3 shadow-sm">
+            <button onClick={() => onOpen(item.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left text-text-primary">
+              <span aria-hidden>{item.emoji}</span>
+              <span className="truncate">{item.name}</span>
+            </button>
+            <button onClick={() => onBringBack(item.id)} className="shrink-0 rounded-lg bg-surface px-3 py-1.5 text-xs font-medium text-primary-500">
+              Bring back
+            </button>
+          </div>
+        ))}
+      </FoldableSection>
+    </div>
   )
 }
