@@ -26,11 +26,11 @@ export function useWeeklyReview(weeksAgo: number = 0) {
     const weekStart = format(ws, 'yyyy-MM-dd')
     const weekEnd = format(we, 'yyyy-MM-dd')
 
-    const [weightData, mealData, waterData, mealTimestamps, habitData, moodData, sleepData, exerciseData, pointsData, medData] = await Promise.all([
+    const [weightData, mealData, waterData, fastingData, habitData, moodData, sleepData, exerciseData, pointsData, medData] = await Promise.all([
       getWeightSummary(weekStart, weekEnd),
       getMealSummary(weekStart, weekEnd),
       getWaterSummary(weekStart, weekEnd),
-      getMealTimestamps(weekStart, weekEnd),
+      getFastingSummary(weekStart, weekEnd),
       getHabitSummary(weekStart, weekEnd),
       getMoodSummary(weekStart, weekEnd),
       getSleepSummary(weekStart, weekEnd),
@@ -38,8 +38,6 @@ export function useWeeklyReview(weeksAgo: number = 0) {
       getPointsSummary(weekStart, weekEnd),
       getMedicineSummary(weekStart, weekEnd),
     ])
-
-    const fastingData = computeFasting(mealTimestamps)
 
     return {
       weekStart,
@@ -86,32 +84,11 @@ async function getWaterSummary(from: string, to: string) {
   return { avgMl: Math.round(total / days), goalMetDays: goalMet }
 }
 
-async function getMealTimestamps(from: string, to: string) {
-  return db.mealEntries.where('date').between(from, to, true, true).sortBy('logged_at')
-}
-
-function computeFasting(meals: { date: string; logged_at: string }[]) {
-  if (meals.length < 2) return null
-  const byDate = new Map<string, { first: string; last: string }>()
-  for (const m of meals) {
-    const e = byDate.get(m.date)
-    if (!e) byDate.set(m.date, { first: m.logged_at, last: m.logged_at })
-    else {
-      if (m.logged_at < e.first) e.first = m.logged_at
-      if (m.logged_at > e.last) e.last = m.logged_at
-    }
-  }
-  const dates = Array.from(byDate.keys()).sort()
-  let totalHours = 0
-  let count = 0
-  for (let i = 1; i < dates.length; i++) {
-    const prev = byDate.get(dates[i - 1])!
-    const curr = byDate.get(dates[i])!
-    const h = (new Date(curr.first).getTime() - new Date(prev.last).getTime()) / 3600000
-    if (h > 0 && h < 48) { totalHours += h; count++ }
-  }
-  if (count === 0) return null
-  return { totalHours: Math.round(totalHours * 10) / 10, avgHours: Math.round((totalHours / count) * 10) / 10 }
+export async function getFastingSummary(from: string, to: string) {
+  const fasts = await db.fastingRecords.where('date').between(from, to, true, true).filter(r => r.end_time !== null).toArray()
+  if (fasts.length === 0) return null
+  const totalHours = fasts.reduce((sum, r) => sum + r.duration_hours, 0)
+  return { totalHours: Math.round(totalHours * 10) / 10, avgHours: Math.round((totalHours / fasts.length) * 10) / 10 }
 }
 
 async function getHabitSummary(from: string, to: string) {

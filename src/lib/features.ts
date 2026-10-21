@@ -50,7 +50,7 @@ export const FEATURES: Feature[] = [
   { id: 'weight', name: 'Weight', emoji: '⚖️', description: 'Weigh-ins and your trend', group: 'Tracking', paths: ['/log/weight'], canSpotlight: true, questObjectives: ['log_weight'] },
   { id: 'meals', name: 'Meals', emoji: '🍽️', description: 'What you eat', group: 'Tracking', paths: ['/log/meal'], canSpotlight: true, questObjectives: ['log_meals'] },
   { id: 'water', name: 'Water', emoji: '💧', description: 'How much you drink', group: 'Tracking', paths: ['/log/water'], canSpotlight: true, questObjectives: ['log_water'] },
-  { id: 'fasting', name: 'Fasting', emoji: '⏱️', description: 'Fasting timer', group: 'Tracking', paths: ['/log/fasting'], canSpotlight: true },
+  { id: 'fasting', name: 'Fasting', emoji: '⏱️', description: 'A timer you start and end yourself', group: 'Tracking', paths: ['/log/fasting'], canSpotlight: false },
   { id: 'exercise', name: 'Exercise', emoji: '🏃', description: 'Workouts and movement', group: 'Tracking', paths: ['/log/exercise'], canSpotlight: true, questObjectives: ['log_exercise'] },
   { id: 'mood', name: 'Mood', emoji: '🙂', description: 'How you feel', group: 'Tracking', paths: ['/log/mood'], canSpotlight: true, questObjectives: ['log_mood'] },
   { id: 'sleep', name: 'Sleep', emoji: '😴', description: "Last night's sleep", group: 'Tracking', paths: ['/log/sleep'], canSpotlight: true, questObjectives: ['log_sleep'] },

@@ -350,11 +350,13 @@ export interface PersonalityGroup {
   created_at: string
 }
 
+// A fast you start and end yourself (V2-PLAN §3). While it runs, end_time is
+// null and duration_hours is 0.
 export interface FastingRecord {
   id?: number
   date: string
   start_time: string
-  end_time: string
+  end_time: string | null
   duration_hours: number
   goal_hours: number
   goal_met: boolean

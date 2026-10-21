@@ -14,7 +14,7 @@ const groups = [
       { label: 'Craving', subtitle: 'Ride it out, step by step', icon: Waves, path: '/log/craving', bg: 'bg-accent-100', text: 'text-accent-700' },
       { label: 'Meal prep', subtitle: 'Plan your week with recipes', icon: CalendarRange, path: '/log/meal-prep', bg: 'bg-secondary-100', text: 'text-secondary-700' },
       { label: 'Water', subtitle: 'Track your intake', icon: Droplets, path: '/log/water', bg: 'bg-secondary-50', text: 'text-secondary-700' },
-      { label: 'Fasting', subtitle: 'Auto-tracked from meals', icon: Timer, path: '/log/fasting', bg: 'bg-accent-50', text: 'text-accent-700' },
+      { label: 'Fasting', subtitle: 'Start and end a fast', icon: Timer, path: '/log/fasting', bg: 'bg-accent-50', text: 'text-accent-700' },
     ],
   },
   {

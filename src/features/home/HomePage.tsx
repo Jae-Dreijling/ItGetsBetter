@@ -11,6 +11,7 @@ import FloorCard from '../../components/today/FloorCard'
 import SpotlightSection from '../../components/today/SpotlightSection'
 import WelcomeBackCard from '../../components/today/WelcomeBackCard'
 import ReadyLetterLine from '../../components/today/ReadyLetterLine'
+import RunningFastLine from '../../components/today/RunningFastLine'
 import { openSideMenu } from '../../lib/sideMenu'
 import { isOn } from '../../lib/features'
 import { wasStarterOffered } from '../../lib/starterHabits'
@@ -64,6 +65,7 @@ export default function HomePage() {
 
         <WelcomeBackCard />
         <ReadyLetterLine />
+        <RunningFastLine />
 
         {isPhoneFreeTime(scheduleProfile) && (
           <div className="mb-4 flex items-center justify-center gap-2 rounded-2xl bg-secondary-100 px-4 py-3 dark:bg-secondary-900/40">

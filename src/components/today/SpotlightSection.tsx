@@ -13,7 +13,6 @@ import { useTodaysMeals } from '../../hooks/useMealEntries'
 import { useActiveHabits, useTodaysCompletions, toggleHabitCompletion, isTodayScheduled } from '../../hooks/useHabits'
 import { useTasks, toggleTask } from '../../hooks/useTasks'
 import { useTodaysWaterTotal } from '../../hooks/useWater'
-import { useCurrentFast, formatFastingDuration } from '../../hooks/useFasting'
 import { useTodaysExercise } from '../../hooks/useExercise'
 import { useTodaysMood } from '../../hooks/useMood'
 import { useTodaysSleep } from '../../hooks/useSleep'
@@ -37,7 +36,6 @@ const CARDS: Partial<Record<FeatureId, { path: string; Body: () => React.ReactNo
   weight: { path: '/log/weight', Body: WeightBody },
   meals: { path: '/log/meal', Body: MealsBody },
   water: { path: '/log/water', Body: WaterBody },
-  fasting: { path: '/log/fasting', Body: FastingBody },
   exercise: { path: '/log/exercise', Body: ExerciseBody },
   mood: { path: '/log/mood', Body: MoodBody },
   sleep: { path: '/log/sleep', Body: SleepBody },
@@ -139,15 +137,6 @@ function WaterBody() {
 
 function formatMl(ml: number) {
   return ml < 1000 ? `${ml} ml` : `${(ml / 1000).toFixed(1).replace(/\.0$/, '')} L`
-}
-
-function FastingBody() {
-  const fast = useCurrentFast(16)
-  return (
-    <p className={status}>
-      {fast.status === 'fasting' ? `${formatFastingDuration(fast.fastingMinutes)} since your last meal` : 'No fast running'}
-    </p>
-  )
 }
 
 function ExerciseBody() {
