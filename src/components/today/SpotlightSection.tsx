@@ -8,7 +8,7 @@ import { getLogicalDate } from '../../lib/date'
 import { floorHabits } from '../../lib/floor'
 import { MOOD_LABELS } from '../../lib/mood'
 import { QuickMood, QuickSleep, QuickWater, QuickWeight, primaryButton } from '../quickLog'
-import { useLatestWeight } from '../../hooks/useWeightEntries'
+import { useWeightTrend } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
 import { useActiveHabits, useTodaysCompletions, toggleHabitCompletion, isTodayScheduled } from '../../hooks/useHabits'
 import { useTasks, toggleTask } from '../../hooks/useTasks'
@@ -84,14 +84,21 @@ function SpotlightCard({ id }: { id: FeatureId }) {
 const status = 'text-sm text-muted'
 const doneLine = 'flex items-center gap-1.5 text-sm font-medium text-secondary-600 dark:text-secondary-300'
 
+// The trend is the main number; the day's weigh-in only when it's shown.
 function WeightBody() {
-  const latest = useLatestWeight()
+  const { latest, trend, display } = useWeightTrend()
+  const trendText = trend !== null ? `trend ${trend.toFixed(1)} kg` : null
   if (latest?.date === getLogicalDate()) {
-    return <p className={doneLine}><Check className="h-4 w-4" />{latest.value_kg} kg today</p>
+    return (
+      <p className={doneLine}>
+        <Check className="h-4 w-4" />
+        {display === 'every' ? `${latest.weight} kg today · ${trendText}` : `Weighed in today · ${trendText}`}
+      </p>
+    )
   }
   return (
     <div className="space-y-2">
-      {latest && <p className={status}>Last: {latest.value_kg} kg</p>}
+      {trendText && <p className={status}>{display === 'every' && latest ? `Last: ${latest.weight} kg · ${trendText}` : `Your ${trendText}`}</p>}
       <QuickWeight />
     </div>
   )

@@ -1,6 +1,7 @@
 import type { MealSlot, HabitFrequency, TaskPriority, Weekday } from './enums'
 import type { FeatureTiers } from '../lib/features'
 import type { NotificationPrefs } from '../lib/notifications/plan'
+import type { WeightDisplay } from '../lib/weightTrend'
 
 export interface UserProfile {
   id?: number
@@ -19,6 +20,9 @@ export interface UserProfile {
   feature_tiers?: FeatureTiers
   // How many features may be in the spotlight (2-8). Missing means 3.
   spotlight_cap?: number
+  // Weight safety valve: show every weigh-in, weekly averages, or only the
+  // trend. Missing means every. See lib/weightTrend.
+  weight_display?: WeightDisplay
   // When the one-time 2.0 feature picker was completed or skipped.
   features_picked_at?: string
   // Phone notification settings (Android app). See lib/notifications.

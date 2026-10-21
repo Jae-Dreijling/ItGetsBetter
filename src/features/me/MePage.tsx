@@ -4,7 +4,7 @@ import { isPathOn } from '../../lib/features'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
-import { useLatestWeight } from '../../hooks/useWeightEntries'
+import { useWeightTrend } from '../../hooks/useWeightEntries'
 import { usePointsBalance } from '../../hooks/usePoints'
 
 interface MeLink {
@@ -62,12 +62,13 @@ export default function MePage() {
   const groups = GROUPS
     .map(group => ({ ...group, items: group.items.filter(item => isPathOn(tiers, item.path)) }))
     .filter(group => group.items.length > 0)
-  const latestWeight = useLatestWeight()
+  const { trend } = useWeightTrend()
   const points = usePointsBalance()
   const navigate = useNavigate()
 
-  const bmi = latestWeight && profile
-    ? (latestWeight.value_kg / ((profile.height_cm / 100) ** 2)).toFixed(1)
+  // The smoothed trend, not the last weigh-in (V2-PLAN §7).
+  const bmi = trend !== null && profile
+    ? (trend / ((profile.height_cm / 100) ** 2)).toFixed(1)
     : null
 
   return (
@@ -79,7 +80,7 @@ export default function MePage() {
             <p className="text-xl font-bold text-text-primary mb-1">{profile.display_name}</p>
             <div className="flex justify-center gap-4 text-sm text-muted">
               <span>{profile.height_cm} cm</span>
-              {latestWeight && <span>{latestWeight.value_kg} kg</span>}
+              {trend !== null && <span>{trend.toFixed(1)} kg</span>}
               {bmi && <span>BMI {bmi}</span>}
             </div>
           </div>

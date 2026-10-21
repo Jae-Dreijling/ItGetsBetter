@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { m } from 'motion/react'
 import { fadeUp } from '../lib/animations'
 import { MOOD_COLORS, MOOD_LABELS } from '../lib/mood'
-import { useLatestWeight, addWeightEntry } from '../hooks/useWeightEntries'
+import { useWeightTrend, addWeightEntry } from '../hooks/useWeightEntries'
 import { addSleepEntry } from '../hooks/useSleep'
 import { addMoodEntry } from '../hooks/useMood'
 import { addWaterEntry } from '../hooks/useWater'
@@ -17,7 +17,7 @@ export const chipIdle = 'bg-surface text-text-primary'
 export const primaryButton = 'rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white transition-transform duration-100 active:scale-95 disabled:opacity-40'
 
 export function QuickWeight({ onLogged }: { onLogged?: () => Promise<void> }) {
-  const latest = useLatestWeight()
+  const { latest, display } = useWeightTrend()
   const [value, setValue] = useState('')
   const kg = parseFloat(value.replace(',', '.'))
   const valid = kg >= 30 && kg <= 300
@@ -37,7 +37,8 @@ export function QuickWeight({ onLogged }: { onLogged?: () => Promise<void> }) {
         inputMode="decimal"
         value={value}
         onChange={e => setValue(e.target.value)}
-        placeholder={latest ? `${latest.value_kg}` : 'kg'}
+        // The last weigh-in as a hint, unless daily numbers are hidden.
+        placeholder={latest && display === 'every' ? `${latest.weight}` : 'kg'}
         aria-label="Weight in kg"
         className="min-w-0 flex-1 rounded-xl border border-primary-100 dark:border-primary-900 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none"
       />
