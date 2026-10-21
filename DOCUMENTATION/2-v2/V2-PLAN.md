@@ -160,7 +160,7 @@ Mostly from [EIGHT-JOURNEYS-LESSONS](EIGHT-JOURNEYS-LESSONS.md):
 - **Recipe library** linked to the menu and grocery list
 - **Craving flow** (am I hungry → name it → 10-min timer → portioned version still counts), guided by the companion
 - **Weigh-in safety valve** (daily / weekly / trend only)
-- **Fasting becomes a standalone manual timer** (decided 2026-10-05). See review point 4: restriction is a known binge trigger, so keep it points-free, off the Today screen and away from the abstinence page. Today it's derived from the last logged meal (`useCurrentFast` in [useFasting.ts](../../src/hooks/useFasting.ts)), so every meal silently starts a fast and the card is always on the home screen. In 2.0: you press **Start** and **End** yourself, it has no link to meal logging, and it only appears when you open it or a fast is running.
+- **Fasting becomes a standalone manual timer** (decided 2026-10-05). See review point 4: restriction is a known binge trigger, so keep it off the Today screen and away from the abstinence page. **Done (2026-10-21):** you press **Start** and **End** yourself ([useFasting.ts](../../src/hooks/useFasting.ts)), it has no link to meal logging, it can't be in the Spotlight, and Today only shows a small line while a fast is running. Reaching the goal keeps its points (see open question 3).
 - **Burn-off suggestions and meal scores stay as they are** (decided 2026-10-05).
 
 ---
@@ -352,5 +352,5 @@ A step is finished, and can be merged to `main`, when:
 ### Still open
 
 2. **AI:** OK with bringing your own API key and paying per use, or should AI wait/skip? (Decide before step 12.)
-3. **Fasting points:** keep the "fasting goal met" points and companion trigger with the manual timer, or make fasting points-free? *Review recommends points-free* (restriction is a known binge trigger).
+3. **Fasting points:** keep the "fasting goal met" points and companion trigger with the manual timer, or make fasting points-free? *Review recommends points-free* (restriction is a known binge trigger). *Answer (2026-10-21):* keep the points.
 4. **To-do redesign:** what overwhelms you most right now? (Input for the mockups in step 5.) *Answer (2026-10-20):* too many taps to get anywhere ("Add habit" first opens the Habits page instead of adding one), and rows take too much space; it should be smaller and easier to overview. Wanted: a switch at the top for habits / tasks / both, habits and tasks as their own pages, and meal prep moved out of Plan (to Log, Today or Me). Visual examples of the ideal look follow.
