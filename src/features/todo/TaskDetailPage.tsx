@@ -4,7 +4,8 @@ import { CalendarDays, Check, Flag, Folder, NotebookText, Plus, Sun, Trash2, X }
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import LabelPicker from '../../components/LabelPicker'
-import { useTask, useSubTasks, useProjects, addTask, updateTask, toggleTask, deleteTask, addProject } from '../../hooks/useTasks'
+import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { useTask, useSubTasks, useProjects, addTask, updateTask, toggleTask, deleteTask, addProject, deleteProject } from '../../hooks/useTasks'
 import { useLabels } from '../../hooks/useLabels'
 import DetailRow from './DetailRow'
 import type { Task, TaskPriority } from '../../types'
@@ -168,6 +169,8 @@ function TaskDetails({ task, onDeleted }: { task: Task; onDeleted: () => void })
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             <option value="new">New project…</option>
           </select>
+          {/* Deleting a project keeps its tasks; they just lose the project. */}
+          {task.project_id != null && <DeleteEntryButton label="project" onDelete={() => deleteProject(task.project_id!)} />}
         </DetailRow>
 
         <DetailRow icon={Sun} label="Show on Today">

@@ -56,9 +56,10 @@ export default function WeeklyReviewPage() {
               title="Weight"
             >
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-text-primary">{review.weight.end} kg</span>
+                <span className="text-lg font-bold text-text-primary">{review.weight.end.toFixed(1)} kg</span>
+                <span className="text-xs text-muted">trend</span>
                 {review.weight.delta !== null && review.weight.delta !== 0 && (
-                  <span className={`flex items-center gap-0.5 text-sm font-medium ${review.weight.delta < 0 ? 'text-success' : 'text-danger'}`}>
+                  <span className={`flex items-center gap-0.5 text-sm font-medium ${review.weight.delta < 0 ? 'text-success' : 'text-muted'}`}>
                     {review.weight.delta < 0 ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
                     {review.weight.delta > 0 ? '+' : ''}{review.weight.delta} kg
                   </span>

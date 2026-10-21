@@ -1,11 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
-import { format, startOfWeek, endOfWeek, subWeeks } from 'date-fns'
+import { format, startOfWeek, endOfWeek, subWeeks, parseISO, subDays } from 'date-fns'
+import { trendSeries, trendOn } from '../lib/weightTrend'
 
 export interface WeeklyReviewData {
   weekStart: string
   weekEnd: string
-  weight: { start: number | null; end: number | null; delta: number | null } | null
+  weight: { start: number; end: number; delta: number } | null
   meals: { count: number; avgScore: number } | null
   water: { avgMl: number; goalMetDays: number } | null
   fasting: { totalHours: number; avgHours: number } | null
@@ -57,11 +58,13 @@ export function useWeeklyReview(weeksAgo: number = 0) {
   }, [weeksAgo])
 }
 
-async function getWeightSummary(from: string, to: string) {
-  const entries = await db.weightEntries.where('date').between(from, to, true, true).sortBy('date')
-  if (entries.length === 0) return null
-  const start = entries[0].value_kg
-  const end = entries[entries.length - 1].value_kg
+// The smoothed trend at the start and end of the week, not two single
+// weigh-ins (those are mostly water; see lib/weightTrend).
+export async function getWeightSummary(from: string, to: string) {
+  const series = trendSeries(await db.weightEntries.where('date').belowOrEqual(to).toArray())
+  const end = trendOn(series, to)
+  if (end === null || !series.some(p => p.date >= from)) return null
+  const start = trendOn(series, format(subDays(parseISO(from), 1), 'yyyy-MM-dd')) ?? series.find(p => p.date >= from)!.trend
   return { start, end, delta: Math.round((end - start) * 10) / 10 }
 }
 
