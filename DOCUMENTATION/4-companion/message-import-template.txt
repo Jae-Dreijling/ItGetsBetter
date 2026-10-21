@@ -1,280 +1,366 @@
-HOW TO USE THIS TEMPLATE
-========================
-
-This file is a template for the "Import All Categories" button, which
-appears in two places:
-  - Companions page (Me > Companions > New Companion / edit a companion)
-  - Personality Groups page (Me > Companions > Personality Groups)
-
-Personality Groups are a shared message pool multiple companions can draw
-from alongside their own custom lines — editing a group's messages updates
-every companion using it immediately. A companion's final message pool for
-any category is its own lines PLUS its group's lines (if it belongs to one).
+// ItGetsBetter: lines for one companion (or a personality group).
+// Paste this into "Import all categories" in the companion editor.
+// Lines starting with // are skipped. Under each [header], write one line
+// per message. {name} is always you; other placeholders are listed per
+// moment. A line that uses a placeholder the moment does not have is
+// never said. Moments without lines of their own use built-in ones.
+// [lover] (companions only) fills the Journey lover lines.
+// Nickname categories take nicknames, one per line, not sentences.
 
-12 personality groups come built in (Me > Companions > Personality Groups),
-seeded automatically the first time the app opens: The Scholar, The
-Daredevil, The Gentle Soul, The Diva, The Party Starter, The Steadfast, and
-The Regal Guide (personality archetypes, not likenesses, inspired by the
-classic "one of each type" friend-group dynamic), plus five originals —
-The Coach, The Zen Guide, The Sidekick, The Cheerleader, and The Sage.
-Delete any you don't want; they won't be re-seeded. See
-src/lib/defaultPersonalityGroups.ts for the full source of truth.
-
-Rules the importer understands:
+// ===== Everyday =====
 
-1. A header line starts a new category. Any of these formats work:
-     [Achievement Unlocked]
-     Achievement Unlocked:
-     # Achievement Unlocked
-   Matching is case-insensitive and ignores spaces/punctuation, so
-   "achievement_unlocked", "Achievement Unlocked", and
-   "[ACHIEVEMENT-UNLOCKED]" all match the same category.
+[general]
+// General / default.
 
-2. Every line under a header becomes one message in that category,
-   one message per line. Blank lines are ignored.
+[morning_greeting]
+// Morning greeting.
 
-3. Any lines BEFORE the first header go into "General".
+[welcome_back]
+// Welcome back.
 
-4. Wrapping quotes are stripped automatically, so it's fine to write
-   lines either as  Hello there  or  "Hello there".
-
-5. Use {name} anywhere you want the user's own name inserted.
-
-6. [Lover] is a special extra category — only available when importing
-   into a companion (not a Personality Group), and only takes effect if
-   that companion is marked as a Lover. It fills the "Lover Messages" pool,
-   not a normal event category.
-
-7. Importing ADDS to whatever messages are already there, it does not
-   replace them. Safe to re-run with more lines later.
-
-WHAT EACH CATEGORY IS ACTUALLY USED FOR
-========================================
-
-General / Default
-  Said when you tap the companion bubble directly. Also the fallback
-  used for any category below that has no messages of its own.
-
-Morning Greeting
-  On app open, between 03:00–11:30, with a high (~70%) chance.
-
-Welcome Back
-  On app open outside the morning window, and every time you open
-  the Journey.
-
-Achievement Unlocked
-  When you unlock an achievement (checked when visiting the
-  Achievements page), or when you successfully claim a finished quest
-  or defeat a boss in the Journey.
-
-Habit Completed
-  When you check off a habit on the To-Do page.
-
-Task Completed
-  When you check off a task on the To-Do page. Separate pool from
-  Habit Completed so you can give tasks and habits different tones.
-
-Low Mood Support
-  During idle moments, if your most recently logged mood score was 3
-  or below — high (~70%) chance of showing instead of a plain idle
-  message.
-
-Fasting Goal Met
-  When you break a fast that reached its goal length.
-
-Streak Milestone
-  Not wired to an automatic trigger yet — reserved for a future streak
-  milestone feature. Messages here currently only show if something
-  else calls this category directly.
-
-Phone-Free Reminder
-  Repeats continuously (not just once) during your phone-free window:
-  from 1 hour before your set sleep time through 1 hour after your
-  wake time.
-
-Points Earned
-  Any time you earn points from any logged action.
-
-Weight Loss
-  When a new (non-backfilled) weight entry is lower than your
-  previous one.
-
-Weight Gain / Plateau
-  When a new (non-backfilled) weight entry is higher than your
-  previous one. Kept gentle, not guilt-driven.
-
-Exercise Logged
-  Any time you log an exercise session.
-
-Water Goal Met
-  The moment your water total for the day crosses the 2L goal.
-
-Sleep Logged
-  Any time you log last night's sleep.
-
-Personal Best
-  When you set a new all-time record — currently tracked for longest
-  fast and most weight lost to date. Meant to feel rare and special.
-
-Level Up
-  Checked once per app open — fires if your Character level went up,
-  or your character class changed, since the last time you opened
-  the app. See Me > Character.
-
-Boss Defeated
-  When you claim victory over a Journey boss.
-
-Goodnight
-  A one-time wind-down nudge in the 30 minutes right before your
-  Phone-Free window starts (90–60 minutes before your set sleep time).
-
-First-Time Milestone
-  The very first time you ever log a meal, exercise session, weight
-  entry, habit completion, task completion, or finish a book.
-
-Idle / AFK
-  Fallback shown after ~2 minutes of no interaction, when none of
-  the higher-priority conditions above (phone-free, goodnight, mood,
-  affinity) apply. Sometimes replaced by a data-aware nudge (e.g.
-  overdue tasks, low water) or, for a Lover companion with high
-  affinity, one of their Lover Messages instead.
-
-Daily Check Reminder
-  Phone notification (Android app) at the time set in Settings ->
-  Notifications, only while today's check is still open. The
-  companion's name is the notification title.
-
-Floor Reminder
-  Phone notification (Android app) in the evening, only while your
-  daily floor isn't done yet. Keep it gentle: even one counts.
-
-The 24 real category names (must match one of these, spelling doesn't
-matter as long as the words are the same):
-
-  General / Default
-  Morning Greeting
-  Welcome Back
-  Achievement Unlocked
-  Habit Completed
-  Task Completed
-  Low Mood Support
-  Fasting Goal Met
-  Streak Milestone
-  Phone-Free Reminder
-  Points Earned
-  Weight Loss
-  Weight Gain / Plateau
-  Exercise Logged
-  Water Goal Met
-  Sleep Logged
-  Personal Best
-  Level Up
-  Boss Defeated
-  Goodnight
-  First-Time Milestone
-  Idle / AFK
-  Daily Check Reminder
-  Floor Reminder
-
---- COPY EVERYTHING BELOW THIS LINE INTO THE IMPORT BOX ---
-
-[General / Default]
-Good to see you, {name}. You're doing great.
-Welcome back, {name}. I'm proud of you for showing up.
-{name}, you're building something beautiful — one day at a time.
-
-[Morning Greeting]
-Good morning, {name}. Today is a fresh start.
-Rise and shine, {name}. Whatever today brings, you can handle it.
-
-[Welcome Back]
-Welcome back, {name}. I missed you. No questions, no guilt — just glad you're here.
-Hey {name}. You came back, and that takes courage.
-
-[Achievement Unlocked]
-Look at you, {name}! You earned that!
-{name}, you just unlocked something awesome!
-
-[Habit Completed]
-Nice one, {name}! Keep that momentum going.
-Checked off! {name}, consistency is your superpower.
-
-[Task Completed]
-One more thing off your plate, {name}!
-Task done! {name}, look at you getting things sorted.
-
-[Low Mood Support]
-It's okay, {name}. Log when you're ready. Even imperfect is progress.
-{name}, bad days happen. You're not alone in this.
-
-[Fasting Goal Met]
-Fasting goal hit! {name}, your discipline is showing.
-{name}, you made it through. That takes real strength.
-
-[Streak Milestone]
-{name}, look at that streak! You're unstoppable.
-Streak milestone! {name}, consistency is everything.
-
-[Phone-Free Reminder]
-Hey {name}, this is your phone-free time. Take a break!
-{name}, put the phone down. You earned this rest.
-
-[Points Earned]
-Points earned, {name}! Every action counts.
-Cha-ching! {name}, you're building up rewards.
-
-[Weight Loss]
-{name}, you're making progress! The trend is going the right way.
-Weight coming down, {name}! Your body thanks you.
-
-[Weight Gain / Plateau]
-Numbers move both ways, {name}. This doesn't undo your progress.
-{name}, one entry isn't the whole story. Keep going.
-
-[Exercise Logged]
-Nice work moving today, {name}!
-Logged and done, {name}. Your body thanks you.
-
-[Water Goal Met]
-Water goal hit, {name}! Nicely hydrated.
-{name}, that's your water goal for today. Well done.
-
-[Sleep Logged]
-Rest logged, {name}. Taking care of yourself counts too.
-{name}, thanks for tracking that. Sleep matters.
-
-[Personal Best]
-{name}, that's a new personal best! Incredible.
-New record, {name}! You just outdid yourself.
-
-[Level Up]
-Level up, {name}! Look how far you've come.
-{name}, you've grown. That's not nothing.
-
-[Boss Defeated]
-Victory, {name}! That boss didn't stand a chance.
-{name}, you did it! On to the next chapter.
-
-[Goodnight]
-Getting close to bedtime, {name}. Start winding down.
-{name}, good night's coming up. Take it easy from here.
-
-[First-Time Milestone]
-{name}, that's your first one! Here's to many more.
-First time's always special, {name}. Nicely done.
-
-[Idle / AFK]
-Still here, {name}? Need anything?
-Take your time, {name}. I'm not going anywhere.
-
-[Daily Check Reminder]
-{name}, today's little check is waiting for you. No rush.
-One quick question for you today, {name}, whenever you're ready.
-
-[Floor Reminder]
-Your floor is still open, {name}. Even one counts.
-{name}, a tiny bit of your floor before bed? Only if it feels okay.
-
-[Lover]
-I'm really glad you're here, {name}.
-Hey, good to see you.
+[idle]
+// Idle moments.
+
+[goodnight]
+// Goodnight.
+
+[mood_low]
+// Low mood support.
+
+[phone_free]
+// Phone-free time.
+
+[quiet_today_on]
+// "Quiet today" switched on.
+
+[body_double_start]
+// Focus session started (working with you).
+
+[body_double]
+// Keeping you company while you focus.
+
+[late_night]
+// Still up very late.
+
+[rare]
+// Rare lines (now and then).
+
+// ===== Calendar =====
+
+[monday_morning]
+// Monday morning.
+
+[friday_evening]
+// Friday evening.
+
+[weekend_morning]
+// Weekend morning.
+
+[holiday]
+// A holiday.  Placeholders: {holiday}
+
+[together_anniversary]
+// A year together (and more).  Placeholders: {years}
+
+[companion_birthday]
+// Its own birthday (it stays with you all day).
+
+[shiny_day]
+// A rare shiny day ✨.
+
+// ===== Handling =====
+
+[pickup_refused]
+// Refuses to be picked up (walks back).
+
+[put_down]
+// Put down somewhere new.
+
+[thrown]
+// Thrown hard (dizzy).
+
+[tapped_a_lot]
+// Tapped many times in a row.
+
+[tapped_sleepy]
+// Tapped at night (sleepy).
+
+[tapped_shy]
+// Tapped (shy flinch).
+
+[jumped_in]
+// Jumped at your finger.
+
+[prank_revealed]
+// Prank found (a hidden button).
+
+[rolled_in]
+// Rolled onto the screen.
+
+// ===== Nicknames for you =====
+
+[nickname_friend]
+// Nicknames once you are friends.
+
+[nickname_close]
+// Nicknames once you are close.
+
+[nickname_lover]
+// Nicknames as lovers (Journey).
+
+// ===== Memory =====
+
+[memory_mention]
+// Mentions something it remembers about you.  Placeholders: {food} {drink} {colour} {animal} {hobby} {song} {place} {comfort} {season} {movie} {snack} {dream}
+
+[on_this_day]
+// On this day (a win from before).  Placeholders: {when} {text}
+
+// ===== Visits =====
+
+[visit_knock]
+// Asks if it may visit.
+
+[visit_accepted]
+// You let it in.
+
+[visit_declined]
+// You said not now.
+
+[visit_leaving]
+// Leaving after a visit.
+
+[banter]
+// Starts some banter with the other companion.  Placeholders: {other}
+
+[banter_reply]
+// Answers the other companion.  Placeholders: {other}
+
+[cheer]
+// Joins in on a big moment.
+
+// ===== Gifts =====
+
+[gift_received]
+// You gave it a gift.  Placeholders: {gift}
+
+[gift_for_you]
+// It gives you a gift.  Placeholders: {gift}
+
+[request_done]
+// You did its small request.
+
+// ===== Logging =====
+
+[meal_logged]
+// Meal logged.
+
+[healthy_meal]
+// Healthy meal logged.
+
+[planned_meal_eaten]
+// Planned meal eaten.  Placeholders: {meal}
+
+[water_logged]
+// Water logged.
+
+[water_goal_met]
+// Water goal met.
+
+[weigh_in_logged]
+// Weigh-in logged (no number talk).
+
+[weight_loss]
+// Weight down.
+
+[weight_gain]
+// Weight up / plateau.
+
+[measurement_logged]
+// Measurements logged.
+
+[photo_taken]
+// Progress photo taken.
+
+[mood_good]
+// Good mood logged.
+
+[sleep_logged]
+// Sleep logged.
+
+[good_sleep]
+// Good night of sleep.  Placeholders: {hours}
+
+[medicine_all_taken]
+// All of today's medicine taken.
+
+[exercise_logged]
+// Exercise logged.
+
+[fast_started]
+// Fast started.  Placeholders: {hours}
+
+[fasting_goal]
+// Fast reached its goal.
+
+[fast_ended_short]
+// Fast ended before the goal.  Placeholders: {hours}
+
+// ===== Habits & tasks =====
+
+[habit_completed]
+// Habit done.
+
+[cant_fail_used]
+// Small version of a habit done.  Placeholders: {habit}
+
+[habits_all_done]
+// All of today's habits done.
+
+[floor_done]
+// Daily floor done.
+
+[task_completed]
+// Task done.
+
+[tasks_all_done]
+// Every open task done.
+
+[project_done]
+// Project finished.  Placeholders: {project}
+
+[habit_settled]
+// Habit settled: take on another?.  Placeholders: {habit} {done} {total}
+
+[habit_built]
+// Habit built: stop tracking it?.  Placeholders: {habit} {done} {total}
+
+[daily_check_answered]
+// Daily Check answered.
+
+// ===== Goals & progress =====
+
+[first_milestone]
+// First-time milestone.
+
+[personal_best]
+// Personal best.
+
+[achievement_unlocked]
+// Achievement unlocked.
+
+[streak_milestone]
+// Days you showed up (a total, never a streak).  Placeholders: {days}
+
+[points_earned]
+// Points earned.
+
+[goal_created]
+// New goal made.  Placeholders: {goal}
+
+[goal_step_reached]
+// Goal step reached.  Placeholders: {goal} {step}
+
+[goal_completed]
+// Every step of a goal done.  Placeholders: {goal}
+
+// ===== Abstinence & cravings =====
+
+[abstinence_milestone]
+// Abstinence milestone.  Placeholders: {thing} {days}
+
+[slip_logged]
+// A slip logged (kind).  Placeholders: {thing}
+
+[craving_passed]
+// Craving rode out.
+
+[craving_portion]
+// Craving: had a portion.
+
+[craving_had_it]
+// Craving: had it (kind).
+
+// ===== People =====
+
+[saw_someone]
+// Saw someone.  Placeholders: {person}
+
+[talked_to_someone]
+// Talked to someone.  Placeholders: {person}
+
+[birthday_today]
+// Someone's birthday today.  Placeholders: {person}
+
+[person_added]
+// Person added.  Placeholders: {person}
+
+// ===== Motivation =====
+
+[win_added]
+// Win added to the jar.
+
+[letter_sealed]
+// Letter to future you sealed.
+
+[letter_opened]
+// Letter from past you opened.
+
+[reason_added]
+// Reason added to the vault.
+
+[walk_finished]
+// Progress walk finished.  Placeholders: {count}
+
+[non_scale_better]
+// Something got easier (beyond the scale).
+
+// ===== App & tools =====
+
+[theme_changed]
+// Theme changed.
+
+[backup_made]
+// Backup made.
+
+[companion_chosen]
+// Picked as the one talking now.
+
+[meditation_done]
+// Meditation finished.  Placeholders: {minutes}
+
+[focus_session_done]
+// Focus session done.
+
+[book_finished]
+// Book finished.  Placeholders: {book}
+
+[grocery_trip_done]
+// Shopping trip done.
+
+[recipe_added]
+// Recipe added.  Placeholders: {recipe}
+
+[reward_claimed]
+// Reward claimed.  Placeholders: {reward}
+
+// ===== Game =====
+
+[level_up]
+// Level up.
+
+[boss_defeated]
+// Boss defeated.
+
+// ===== Reminders =====
+
+[reminder_daily_check]
+// Daily Check reminder.
+
+[reminder_floor]
+// Floor reminder.
+
+// ===== Journey =====
+
+[lover]
+// Lines it says when it visits as your Lover in the Journey.

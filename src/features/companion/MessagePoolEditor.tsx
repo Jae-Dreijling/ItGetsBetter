@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { Trash2, ChevronDown, ChevronRight, Upload, FileText } from 'lucide-react'
 import type { CompanionEvent } from '../../hooks/useCompanion'
 import { TRIGGERS } from '../../lib/companionTriggers'
+import { buildLineTemplate } from '../../lib/lineTemplate'
+import { saveFile } from '../../lib/saveFile'
 import type { CompanionMessages } from '../../types'
 
 // Every trigger, grouped (lib/companionTriggers).
-const EVENT_LABELS = TRIGGERS.map(t => ({ key: t.key as CompanionEvent, label: t.placeholders?.length ? `${t.label} ({${t.placeholders.join('} {')}})` : t.label, group: t.group }))
+const EVENT_LABELS = TRIGGERS.map(t => ({ key: t.key as CompanionEvent, label: t.placeholders?.length ? `${t.label} ({${t.placeholders.join('} {')}})` : t.label, plain: t.label, group: t.group }))
 
 const WRAPPING_QUOTE_CHARS = ['"', "'", '“', '”', '‘', '’']
 
@@ -113,8 +115,8 @@ function normalizeHeader(s: string): string {
 function matchEventKey(headerText: string): CompanionEvent | 'lover' | null {
   const norm = normalizeHeader(headerText)
   if (norm === 'lover' || norm === 'lovermessages' || norm === 'loverdialogue') return 'lover'
-  for (const { key, label } of EVENT_LABELS) {
-    if (normalizeHeader(key) === norm || normalizeHeader(label) === norm) return key
+  for (const { key, label, plain } of EVENT_LABELS) {
+    if (normalizeHeader(key) === norm || normalizeHeader(label) === norm || normalizeHeader(plain) === norm) return key
   }
   return null
 }
@@ -129,7 +131,8 @@ function parseAllCategoriesImport(raw: string): {
 
   for (const rawLine of raw.split(/\r?\n/)) {
     const line = rawLine.trim()
-    if (!line) continue
+    // Empty lines and // comments (the template has them) are skipped.
+    if (!line || line.startsWith('//')) continue
 
     let headerText: string | null = null
     for (const pattern of HEADER_PATTERNS) {
@@ -294,6 +297,19 @@ export function MessagePoolEditor({ messages, onChange, showLoverImport = false,
   }
 
   const totalMessages = EVENT_LABELS.reduce((sum, { key }) => sum + (messages[key]?.length ?? 0), 0)
+  const [onlyMissing, setOnlyMissing] = useState(false)
+  const [templateNote, setTemplateNote] = useState<string | null>(null)
+  const covered = EVENT_LABELS.filter(({ key }) => (messages[key]?.length ?? 0) > 0).length
+  const shownLabels = onlyMissing ? EVENT_LABELS.filter(({ key }) => !(messages[key]?.length)) : EVENT_LABELS
+
+  async function downloadTemplate() {
+    try {
+      const where = await saveFile(new Blob([buildLineTemplate()], { type: 'text/plain' }), 'itgetsbetter-lines-template.txt')
+      setTemplateNote(`Template saved to ${where}.`)
+    } catch (err) {
+      setTemplateNote(`Couldn't save the template: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
 
   function clearAll() {
     if (totalMessages === 0) return
@@ -321,10 +337,20 @@ export function MessagePoolEditor({ messages, onChange, showLoverImport = false,
 
       <ImportAllPanel onImport={importAll} showLoverHint={showLoverImport} />
 
+      {/* Coverage (11i): which moments have lines of its own. */}
+      <div className="mb-2 flex flex-wrap items-center gap-2 px-1 text-xs">
+        <span className="text-muted">Own lines for <span className="font-semibold text-text-primary">{covered} of {EVENT_LABELS.length}</span> moments</span>
+        <button type="button" onClick={() => setOnlyMissing(!onlyMissing)} className={`rounded-full px-2.5 py-1 ${onlyMissing ? 'bg-primary-500 text-white' : 'bg-surface text-text-primary'}`}>
+          {onlyMissing ? 'Showing moments without own lines' : 'Show only moments without own lines'}
+        </button>
+        <button type="button" onClick={downloadTemplate} className="rounded-full bg-surface px-2.5 py-1 text-text-primary">⬇ Template</button>
+      </div>
+      {templateNote && <p className="mb-2 px-1 text-xs text-muted">{templateNote}</p>}
+
       <div className="space-y-1 mb-4">
-        {EVENT_LABELS.map(({ key, label, group }, i) => (
+        {shownLabels.map(({ key, label, group }, i) => (
           <div key={key}>
-            {group !== EVENT_LABELS[i - 1]?.group && (
+            {group !== shownLabels[i - 1]?.group && (
               <p className="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">{group}</p>
             )}
             <button
