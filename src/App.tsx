@@ -25,6 +25,7 @@ import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
 import FeaturePicker from './features/setup/FeaturePicker'
 import HomePage from './features/home/HomePage'
+import { checkAutoMilestones } from './hooks/useGoals'
 
 const loadLogHubPage = () => import('./features/log/LogHubPage')
 const LogHubPage = lazy(loadLogHubPage)
@@ -249,6 +250,7 @@ export default function App() {
         runPhotoLifecycle().then(() => markLifecycleRun())
       }
       checkProgressionAdvancements()
+      checkAutoMilestones()
       ensureDefaultCompanion()
       ensureDefaultPersonalityGroups()
       checkLevelUpAndClassChange()

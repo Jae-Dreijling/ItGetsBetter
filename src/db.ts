@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
+import { autoFromText } from './lib/goals'
 
 const DEFAULT_LABELS = [
   { name: 'Health', color: '#5cb176' },
@@ -571,6 +572,15 @@ export class ItGetsBetterDB extends Dexie {
       const trackId = await tx.table('goalTracks').add({ name: 'Weight', emoji: '⚖️', archived: false, created_at: now })
       await tx.table('goalMilestones').add({
         track_id: trackId, text: `Reach ${goal} kg`, order: 0, done_at: null, aim_for: null, treat: null, points_given: false, created_at: now,
+      })
+    })
+
+    // Weight goal steps tick themselves from the trend (step 9b): steps
+    // written like "−2 kg from where I started" or "Reach 83 kg" get their
+    // automatic check. No index changes.
+    this.version(22).stores({}).upgrade(async tx => {
+      await tx.table('goalMilestones').toCollection().modify((m: GoalMilestone) => {
+        if (m.auto === undefined) m.auto = autoFromText(m.text)
       })
     })
 

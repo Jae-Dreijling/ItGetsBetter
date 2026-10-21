@@ -7,7 +7,8 @@ import {
   useTrack, useMilestones, updateTrack, archiveTrack, deleteTrack, addMilestone, updateMilestone, deleteMilestone, moveMilestone,
 } from '../../hooks/useGoals'
 import { progress, sortMilestones, milestoneExtras } from '../../lib/goals'
-import { MilestoneCheck } from './parts'
+import { MilestoneCheck, AutoEditor } from './parts'
+import { useAutoLabel } from './useAutoLabel'
 import type { GoalMilestone, GoalTrack } from '../../types'
 
 export default function GoalTrackPage() {
@@ -114,6 +115,7 @@ function MilestoneRow({ milestone, open, onToggleOpen, canMoveUp, canMoveDown }:
   const [text, setText] = useState(milestone.text)
   const [treat, setTreat] = useState(milestone.treat ?? '')
   const extras = milestoneExtras(milestone)
+  const autoText = useAutoLabel()(milestone)
 
   return (
     <div className={`rounded-xl bg-card shadow-sm ${milestone.done_at ? 'opacity-70' : ''}`}>
@@ -122,6 +124,7 @@ function MilestoneRow({ milestone, open, onToggleOpen, canMoveUp, canMoveDown }:
         <div className="min-w-0 flex-1">
           <p className={`text-[15px] text-text-primary ${milestone.done_at ? 'line-through' : ''}`}>{milestone.text}</p>
           {extras && <p className="text-xs text-muted">{extras}</p>}
+          {autoText && <p className="text-xs text-secondary-600 dark:text-secondary-300">⚖️ {autoText}</p>}
         </div>
       </div>
 
@@ -143,6 +146,7 @@ function MilestoneRow({ milestone, open, onToggleOpen, canMoveUp, canMoveDown }:
               className="rounded-md bg-surface px-2 py-1 text-text-primary"
             />
           </label>
+          <AutoEditor milestone={milestone} />
           <input
             value={treat}
             onChange={e => setTreat(e.target.value)}

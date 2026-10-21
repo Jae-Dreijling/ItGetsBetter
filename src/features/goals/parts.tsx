@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { AnimatePresence, m } from 'motion/react'
 import { Check } from 'lucide-react'
 import { pop } from '../../lib/animations'
-import { createTrack, toggleMilestone } from '../../hooks/useGoals'
+import { createTrack, toggleMilestone, setMilestoneAuto } from '../../hooks/useGoals'
 import { TEMPLATES, weightTemplate, type GoalTemplate } from '../../lib/goals'
-import type { GoalMilestone } from '../../types'
+import type { GoalMilestone, MilestoneAuto } from '../../types'
 
 const EMOJIS = ['🎯', '🎸', '😴', '💪', '📚', '💃', '⚖️', '🎨', '🧘', '🌱']
 const inputClass = 'w-full rounded-lg border border-primary-100 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none dark:border-primary-900'
@@ -84,5 +84,50 @@ export function NewTrackForm({ onCreated }: { onCreated: (id: number) => void })
         Start this goal
       </button>
     </form>
+  )
+}
+
+// "Ticks itself when…": by hand, or from the weight trend.
+export function AutoEditor({ milestone }: { milestone: GoalMilestone }) {
+  const auto = milestone.auto ?? null
+  const [kind, setKind] = useState<MilestoneAuto['kind'] | 'manual'>(auto?.kind ?? 'manual')
+  const [value, setValue] = useState(auto ? String(auto.value) : '')
+
+  function save(nextKind: typeof kind, nextValue: string) {
+    const kg = Number(nextValue.replace(',', '.'))
+    if (nextKind === 'manual') return setMilestoneAuto(milestone.id!, null)
+    if (nextValue.trim() && Number.isFinite(kg) && kg > 0) return setMilestoneAuto(milestone.id!, { kind: nextKind, value: kg })
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <label className="flex items-center gap-2 text-xs text-muted">
+        Ticks itself
+        <select
+          value={kind}
+          onChange={e => { const k = e.target.value as typeof kind; setKind(k); void save(k, value) }}
+          className="min-w-0 flex-1 rounded-md bg-surface px-2 py-1 text-text-primary"
+        >
+          <option value="manual">No, I tick it myself</option>
+          <option value="weight_down_kg">when my trend is … kg below where I started</option>
+          <option value="weight_at_most_kg">when my trend reaches … kg</option>
+        </select>
+      </label>
+      {kind !== 'manual' && (
+        <label className="flex items-center gap-2 text-xs text-muted">
+          {kind === 'weight_down_kg' ? 'Kilos below the start' : 'Trend at or below'}
+          <input
+            value={value}
+            onChange={e => setValue(e.target.value)}
+            onBlur={() => void save(kind, value)}
+            inputMode="decimal"
+            placeholder="kg"
+            aria-label="Kilos"
+            className="w-20 rounded-md bg-surface px-2 py-1 text-center text-text-primary"
+          />
+          kg
+        </label>
+      )}
+    </div>
   )
 }

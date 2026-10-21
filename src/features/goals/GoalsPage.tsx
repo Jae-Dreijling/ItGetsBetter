@@ -7,6 +7,7 @@ import Sheet from '../../components/Sheet'
 import { useTracks, useMilestones } from '../../hooks/useGoals'
 import { nextMilestone, progress, sortMilestones, milestoneExtras } from '../../lib/goals'
 import { MilestoneCheck, NewTrackForm } from './parts'
+import { useAutoLabel } from './useAutoLabel'
 import type { GoalMilestone, GoalTrack } from '../../types'
 
 export default function GoalsPage() {
@@ -59,6 +60,7 @@ function TrackCard({ track, milestones, onOpen }: { track: GoalTrack; milestones
   const { done, total } = progress(milestones)
   const later = sortMilestones(milestones).filter(m => !m.done_at && m.id !== next?.id).slice(0, 2)
   const lastReached = sortMilestones(milestones).filter(m => m.done_at).at(-1)
+  const autoText = useAutoLabel()
 
   return (
     <div onClick={onOpen} className="cursor-pointer rounded-xl bg-card p-4 shadow-sm">
@@ -77,6 +79,7 @@ function TrackCard({ track, milestones, onOpen }: { track: GoalTrack; milestones
             <p className="text-xs font-medium text-muted">Next</p>
             <p className="text-lg font-semibold leading-snug text-text-primary">{next.text}</p>
             {milestoneExtras(next) && <p className="text-xs text-muted">{milestoneExtras(next)}</p>}
+            {autoText(next) && <p className="text-xs text-secondary-600 dark:text-secondary-300">⚖️ {autoText(next)}</p>}
             {later.length > 0 && <p className="mt-1.5 truncate text-xs text-muted">Then: {later.map(m => m.text).join(' · ')}</p>}
           </div>
         </div>

@@ -5,6 +5,7 @@ import { awardPoints } from './usePoints'
 import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { trendSeries, trendChange, type WeightDisplay } from '../lib/weightTrend'
 import { useProfile } from './useProfile'
+import { checkAutoMilestones } from './useGoals'
 
 export function useWeightEntries(dateRange?: { from: string; to: string }) {
   return useLiveQuery(() => {
@@ -59,6 +60,9 @@ export async function addWeightEntry(
     logged_at: nowISO(),
     is_backfill,
   })
+
+  // Weight steps in Goals may have been reached now (backfills move the trend too).
+  await checkAutoMilestones()
 
   if (!is_backfill) {
     await awardPoints('weight_logged')

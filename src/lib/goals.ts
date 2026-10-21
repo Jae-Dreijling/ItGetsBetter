@@ -1,9 +1,11 @@
 import { format, parseISO } from 'date-fns'
-import type { GoalMilestone } from '../types'
+import type { GoalMilestone, MilestoneAuto } from '../types'
 
 // Mini-goals (V2-PLAN §14, step 8): your own tracks of milestones, ticked off
 // by hand. Only the next step is shown big. No deadlines by default; an "aim
 // for" date is a hint, and passing it changes nothing (Rulebook 5.2).
+// Weight steps can tick themselves from the trend (step 9b); once reached, a
+// step stays reached even if the trend goes back up.
 
 export interface GoalTemplate {
   name: string
@@ -52,4 +54,33 @@ export function milestoneExtras(milestone: GoalMilestone): string {
     milestone.done_at ? `Reached ${format(new Date(milestone.done_at), 'd MMM')}` : milestone.aim_for ? `Aim for ${format(parseISO(milestone.aim_for), 'd MMM')}` : null,
     milestone.treat ? `Treat: ${milestone.treat}` : null,
   ].filter(Boolean).join(' · ')
+}
+
+// "−2 kg from where I started" / "Reach 83 kg" become automatic steps,
+// whether typed, from the example or from the old profile goal.
+export function autoFromText(text: string): MilestoneAuto | null {
+  const t = text.trim().replace(',', '.')
+  const down = t.match(/^[−-]\s*(\d+(?:\.\d+)?)\s*kg\s+(?:from|below)\s+where\s+I\s+started$/i)
+  if (down) return { kind: 'weight_down_kg', value: Number(down[1]) }
+  const reach = t.match(/^reach\s+(\d+(?:\.\d+)?)\s*kg$/i)
+  if (reach) return { kind: 'weight_at_most_kg', value: Number(reach[1]) }
+  return null
+}
+
+// The trend this step ticks at, or null without a starting weight.
+export function autoTarget(auto: MilestoneAuto, startKg: number | null | undefined): number | null {
+  if (auto.kind === 'weight_at_most_kg') return auto.value
+  return startKg ? Math.round((startKg - auto.value) * 10) / 10 : null
+}
+
+export function autoReached(auto: MilestoneAuto, trendKg: number | null, startKg: number | null | undefined): boolean {
+  const target = autoTarget(auto, startKg)
+  return trendKg !== null && target !== null && trendKg <= target
+}
+
+// "Ticks itself at 83.0 kg · trend 84.3 kg"
+export function autoLabel(auto: MilestoneAuto, trendKg: number | null, startKg: number | null | undefined): string {
+  const target = autoTarget(auto, startKg)
+  if (target === null) return 'Ticks itself once a starting weight is set'
+  return `Ticks itself at ${target.toFixed(1)} kg${trendKg !== null ? ` · trend ${trendKg.toFixed(1)} kg` : ''}`
 }

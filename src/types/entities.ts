@@ -476,8 +476,15 @@ export interface GoalMilestone {
   treat: string | null
   // Points are paid once, so un-ticking and ticking again doesn't pay twice.
   points_given: boolean
+  // Ticks itself when the weight trend gets there (step 9b). Missing or null
+  // means it's ticked by hand. See lib/goals.
+  auto?: MilestoneAuto | null
   created_at: string
 }
+
+export type MilestoneAuto =
+  | { kind: 'weight_down_kg'; value: number }
+  | { kind: 'weight_at_most_kg'; value: number }
 
 export interface ProgressPhoto {
   id?: number
