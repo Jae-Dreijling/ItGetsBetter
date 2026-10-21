@@ -2,7 +2,8 @@ import type { GameQuestObjective } from '../types'
 
 // The feature system (Rulebook 2.4): lots of features, all optional, few
 // asking for attention. Every optional feature has a tier:
-//   spotlight: on the Today screen, may remind or nudge (max SPOTLIGHT_CAP)
+//   spotlight: on the Today screen, may remind or nudge (max: the user's
+//              spotlight cap, 2-8, default 3)
 //   available: reachable in the tabs and menus, but quiet
 //   off:       hidden everywhere (menus, reminders, quests); data is kept
 // The core (Today, Daily Check, companion, settings) is not in this list and
@@ -34,7 +35,15 @@ export interface Feature {
 
 export type FeatureTiers = Partial<Record<FeatureId, FeatureTier>>
 
-export const SPOTLIGHT_CAP = 3
+export const DEFAULT_SPOTLIGHT_CAP = 3
+export const MIN_SPOTLIGHT_CAP = 2
+export const MAX_SPOTLIGHT_CAP = 8
+
+// The user's chosen spotlight size, kept within 2-8; missing means the default.
+export function spotlightCap(chosen: number | null | undefined): number {
+  if (!chosen || !Number.isFinite(chosen)) return DEFAULT_SPOTLIGHT_CAP
+  return Math.min(MAX_SPOTLIGHT_CAP, Math.max(MIN_SPOTLIGHT_CAP, Math.round(chosen)))
+}
 export const FEATURE_GROUPS: FeatureGroup[] = ['Tracking', 'Planning', 'Progress', 'Tools', 'Fun']
 
 export const FEATURES: Feature[] = [
@@ -93,10 +102,10 @@ export function spotlightCount(tiers: FeatureTiers | undefined): number {
 }
 
 // Returns the new tiers, or null when the spotlight is already full.
-export function withTier(tiers: FeatureTiers | undefined, id: FeatureId, tier: FeatureTier): FeatureTiers | null {
+export function withTier(tiers: FeatureTiers | undefined, id: FeatureId, tier: FeatureTier, cap = DEFAULT_SPOTLIGHT_CAP): FeatureTiers | null {
   if (tier === 'spotlight') {
     if (!getFeature(id).canSpotlight) return null
-    if (!isSpotlight(tiers, id) && spotlightCount(tiers) >= SPOTLIGHT_CAP) return null
+    if (!isSpotlight(tiers, id) && spotlightCount(tiers) >= cap) return null
   }
   return { ...tiers, [id]: tier }
 }

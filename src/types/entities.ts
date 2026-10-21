@@ -17,6 +17,8 @@ export interface UserProfile {
   // Per-feature attention tier (spotlight / available / off). Missing means
   // available. See lib/features.
   feature_tiers?: FeatureTiers
+  // How many features may be in the spotlight (2-8). Missing means 3.
+  spotlight_cap?: number
   // When the one-time 2.0 feature picker was completed or skipped.
   features_picked_at?: string
   // Phone notification settings (Android app). See lib/notifications.

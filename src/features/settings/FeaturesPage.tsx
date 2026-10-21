@@ -1,18 +1,24 @@
 import { useState } from 'react'
-import { Star } from 'lucide-react'
+import { Minus, Plus, Star } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
-import { useFeatureTiers, setFeatureTier } from '../../hooks/useFeatures'
-import { FEATURES, FEATURE_GROUPS, SPOTLIGHT_CAP, spotlightCount, tierOf, type Feature, type FeatureTier, type FeatureTiers } from '../../lib/features'
+import { useFeatureTiers, useSpotlightCap, setFeatureTier, setSpotlightCap } from '../../hooks/useFeatures'
+import { FEATURES, FEATURE_GROUPS, MIN_SPOTLIGHT_CAP, MAX_SPOTLIGHT_CAP, spotlightCount, tierOf, type Feature, type FeatureTier, type FeatureTiers } from '../../lib/features'
 
 export default function FeaturesPage() {
   const tiers = useFeatureTiers()
   const [hint, setHint] = useState<string | null>(null)
   const used = spotlightCount(tiers)
+  const cap = useSpotlightCap()
 
   async function choose(feature: Feature, tier: FeatureTier) {
     const ok = await setFeatureTier(feature.id, tier)
-    setHint(ok ? null : `Your spotlight is full (${SPOTLIGHT_CAP}). Set something else to On first.`)
+    setHint(ok ? null : `Your spotlight is full (${cap}). Set something else to On first, or make the spotlight bigger.`)
+  }
+
+  async function resize(next: number) {
+    const ok = await setSpotlightCap(next)
+    setHint(ok ? null : `${used} features are in your spotlight. Set some to On first to make it smaller.`)
   }
 
   return (
@@ -21,7 +27,7 @@ export default function FeaturesPage() {
       <PageContainer>
         <div className="mb-4 space-y-1.5 rounded-xl bg-card p-4 text-sm shadow-sm">
           <p className="text-text-primary">Everything here is optional. Pick how much each feature asks of you:</p>
-          <p className="text-muted"><strong className="text-text-primary">⭐ Spotlight</strong>: on your Today screen and allowed to remind you. Up to {SPOTLIGHT_CAP}.</p>
+          <p className="text-muted"><strong className="text-text-primary">⭐ Spotlight</strong>: on your Today screen and allowed to remind you. Up to {cap}; fewer is calmer.</p>
           <p className="text-muted"><strong className="text-text-primary">On</strong>: there when you want it, quiet otherwise.</p>
           <p className="text-muted"><strong className="text-text-primary">Off</strong>: hidden everywhere. Your data is kept.</p>
         </div>
@@ -31,7 +37,25 @@ export default function FeaturesPage() {
             <Star className="h-4 w-4 text-accent-500" />
             Spotlight
           </span>
-          <span className="font-semibold text-text-primary">{used} / {SPOTLIGHT_CAP}</span>
+          <span className="flex items-center gap-2">
+            <span className="font-semibold text-text-primary">{used} / {cap}</span>
+            <button
+              onClick={() => resize(cap - 1)}
+              disabled={cap <= MIN_SPOTLIGHT_CAP}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-card text-text-primary shadow-sm disabled:opacity-40"
+              aria-label="Smaller spotlight"
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => resize(cap + 1)}
+              disabled={cap >= MAX_SPOTLIGHT_CAP}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-card text-text-primary shadow-sm disabled:opacity-40"
+              aria-label="Bigger spotlight"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </span>
         </div>
 
         {hint && (

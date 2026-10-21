@@ -1,10 +1,26 @@
 import { db } from '../db'
 import { useProfile, updateProfile } from './useProfile'
-import { withTier, type FeatureId, type FeatureTier, type FeatureTiers } from '../lib/features'
+import { withTier, spotlightCap, spotlightCount, type FeatureId, type FeatureTier, type FeatureTiers } from '../lib/features'
 
 export function useFeatureTiers(): FeatureTiers | undefined {
   const { profile } = useProfile()
   return profile?.feature_tiers
+}
+
+export function useSpotlightCap(): number {
+  const { profile } = useProfile()
+  return spotlightCap(profile?.spotlight_cap)
+}
+
+// Changes how many features may be in the spotlight. Never below what's in
+// it right now, so nothing is taken out without you choosing; returns false then.
+export async function setSpotlightCap(cap: number): Promise<boolean> {
+  const profile = await db.userProfile.toCollection().first()
+  if (!profile?.id) return false
+  const next = spotlightCap(cap)
+  if (next < spotlightCount(profile.feature_tiers)) return false
+  await updateProfile(profile.id, { spotlight_cap: next })
+  return true
 }
 
 // For code outside React (reminders, companion nudges, quest generation).
@@ -18,7 +34,7 @@ export async function getFeatureTiers(): Promise<FeatureTiers | undefined> {
 export async function setFeatureTier(id: FeatureId, tier: FeatureTier): Promise<boolean> {
   const profile = await db.userProfile.toCollection().first()
   if (!profile?.id) return false
-  const next = withTier(profile.feature_tiers, id, tier)
+  const next = withTier(profile.feature_tiers, id, tier, spotlightCap(profile.spotlight_cap))
   if (!next) return false
   await updateProfile(profile.id, { feature_tiers: next })
   return true

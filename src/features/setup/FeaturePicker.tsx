@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { AnimatePresence, m } from 'motion/react'
 import { Check, Star } from 'lucide-react'
 import { fadeUp } from '../../lib/animations'
-import { FEATURES, FEATURE_GROUPS, SPOTLIGHT_CAP, type FeatureId } from '../../lib/features'
+import { FEATURES, FEATURE_GROUPS, DEFAULT_SPOTLIGHT_CAP as SPOTLIGHT_CAP, type FeatureId } from '../../lib/features'
 import { initialSelection, picksToTiers } from '../../lib/featurePicker'
 import { getFeatureUsage, saveFeaturePicks } from '../../hooks/useFeatures'
 
