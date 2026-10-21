@@ -13,6 +13,8 @@ import { useFeatureTiers } from '../../hooks/useFeatures'
 import { isOn } from '../../lib/features'
 import { getLogicalDate } from '../../lib/date'
 import type { MealSlot } from '../../types'
+import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { deleteEntry } from '../../lib/deleteEntry'
 
 const MEAL_SLOTS: { label: string; value: MealSlot }[] = [
   { label: 'Breakfast', value: 'breakfast' },
@@ -45,7 +47,9 @@ export default function MealsPage() {
   const [saving, setSaving] = useState(false)
   const [burnOffMeal, setBurnOffMeal] = useState<{ name: string | null; calories: number } | null>(null)
   const navigate = useNavigate()
-  const mealPrepOn = isOn(useFeatureTiers(), 'meal_prep')
+  const tiers = useFeatureTiers()
+  const mealPrepOn = isOn(tiers, 'meal_prep')
+  const cravingsOn = isOn(tiers, 'cravings')
 
   useEffect(() => {
     return () => {
@@ -102,9 +106,17 @@ export default function MealsPage() {
     <>
       <TopBar title="Meals" />
       <PageContainer>
+        {cravingsOn && (
+          <button
+            onClick={() => navigate('/log/craving')}
+            className="mb-2 w-full text-right text-sm font-medium text-accent-600"
+          >
+            🌊 A craving rather than hunger? Ride it out first →
+          </button>
+        )}
         {mealPrepOn && (
           <button
-            onClick={() => navigate('/todo/meal-prep')}
+            onClick={() => navigate('/log/meal-prep')}
             className="mb-3 w-full text-right text-sm font-medium text-primary-500"
           >
             🥗 Eating something you planned? Tick it off in Meal prep →
@@ -217,6 +229,7 @@ export default function MealsPage() {
                   key={meal.id}
                   meal={meal}
                   onBurnOff={meal.calories ? () => setBurnOffMeal({ name: meal.name, calories: meal.calories! }) : undefined}
+                  onDelete={() => deleteEntry('mealEntries', meal.id!)}
                 />
               ))}
             </div>
@@ -240,9 +253,11 @@ export default function MealsPage() {
 function MealCard({
   meal,
   onBurnOff,
+  onDelete,
 }: {
   meal: { id?: number; meal_slot: MealSlot; name: string | null; photo: Blob | null; health_score: number; calories: number | null; logged_at: string }
   onBurnOff?: () => void
+  onDelete: () => void
 }) {
   const [thumbUrl, setThumbUrl] = useState<string | null>(null)
 
@@ -280,6 +295,7 @@ function MealCard({
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">
         {meal.health_score}
       </div>
+      <DeleteEntryButton label={meal.name ?? 'meal'} onDelete={onDelete} />
     </div>
   )
 }

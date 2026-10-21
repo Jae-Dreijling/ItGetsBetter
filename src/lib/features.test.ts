@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { tierOf, isOn, withTier, spotlightCount, isPathOn, isQuestObjectiveOn, SPOTLIGHT_CAP, FEATURES } from './features'
+import { tierOf, isOn, withTier, spotlightCount, spotlightCap, isPathOn, isQuestObjectiveOn, DEFAULT_SPOTLIGHT_CAP, FEATURES } from './features'
 
 describe('feature tiers', () => {
   it('defaults every feature to available', () => {
@@ -11,13 +11,24 @@ describe('feature tiers', () => {
     let tiers = withTier({}, 'water', 'spotlight')!
     tiers = withTier(tiers, 'habits', 'spotlight')!
     tiers = withTier(tiers, 'medicine', 'spotlight')!
-    expect(spotlightCount(tiers)).toBe(SPOTLIGHT_CAP)
+    expect(spotlightCount(tiers)).toBe(DEFAULT_SPOTLIGHT_CAP)
     expect(withTier(tiers, 'sleep', 'spotlight')).toBeNull()
     // Re-selecting something already in the spotlight is fine.
     expect(withTier(tiers, 'water', 'spotlight')).not.toBeNull()
     // Freeing a slot makes room again.
     const freed = withTier(tiers, 'water', 'available')!
     expect(withTier(freed, 'sleep', 'spotlight')).not.toBeNull()
+  })
+
+  it('uses your own spotlight size, kept between 2 and 8', () => {
+    expect(spotlightCap(undefined)).toBe(3)
+    expect(spotlightCap(1)).toBe(2)
+    expect(spotlightCap(12)).toBe(8)
+    let tiers = withTier({}, 'water', 'spotlight', 4)!
+    tiers = withTier(tiers, 'habits', 'spotlight', 4)!
+    tiers = withTier(tiers, 'medicine', 'spotlight', 4)!
+    expect(withTier(tiers, 'sleep', 'spotlight', 4)).not.toBeNull()
+    expect(withTier(tiers, 'sleep', 'spotlight', 3)).toBeNull()
   })
 
   it("won't spotlight features with nothing to show on Today", () => {

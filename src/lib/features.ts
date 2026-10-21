@@ -2,7 +2,8 @@ import type { GameQuestObjective } from '../types'
 
 // The feature system (Rulebook 2.4): lots of features, all optional, few
 // asking for attention. Every optional feature has a tier:
-//   spotlight: on the Today screen, may remind or nudge (max SPOTLIGHT_CAP)
+//   spotlight: on the Today screen, may remind or nudge (max: the user's
+//              spotlight cap, 2-8, default 3)
 //   available: reachable in the tabs and menus, but quiet
 //   off:       hidden everywhere (menus, reminders, quests); data is kept
 // The core (Today, Daily Check, companion, settings) is not in this list and
@@ -11,8 +12,8 @@ import type { GameQuestObjective } from '../types'
 export type FeatureTier = 'spotlight' | 'available' | 'off'
 
 export type FeatureId =
-  | 'weight' | 'meals' | 'water' | 'fasting' | 'exercise' | 'mood' | 'sleep' | 'medicine' | 'measurements' | 'photos'
-  | 'habits' | 'tasks' | 'focus_timer' | 'meal_prep'
+  | 'weight' | 'meals' | 'cravings' | 'abstinence' | 'water' | 'fasting' | 'exercise' | 'mood' | 'sleep' | 'medicine' | 'measurements' | 'photos'
+  | 'habits' | 'tasks' | 'focus_timer' | 'meal_prep' | 'social' | 'goals' | 'wins_jar' | 'letters'
   | 'timeline' | 'insights' | 'graphs' | 'weekly_review' | 'achievements'
   | 'meditation' | 'grocery' | 'books' | 'motivation_vault'
   | 'journey' | 'rewards'
@@ -34,25 +35,39 @@ export interface Feature {
 
 export type FeatureTiers = Partial<Record<FeatureId, FeatureTier>>
 
-export const SPOTLIGHT_CAP = 3
+export const DEFAULT_SPOTLIGHT_CAP = 3
+export const MIN_SPOTLIGHT_CAP = 2
+export const MAX_SPOTLIGHT_CAP = 8
+
+// The user's chosen spotlight size, kept within 2-8; missing means the default.
+export function spotlightCap(chosen: number | null | undefined): number {
+  if (!chosen || !Number.isFinite(chosen)) return DEFAULT_SPOTLIGHT_CAP
+  return Math.min(MAX_SPOTLIGHT_CAP, Math.max(MIN_SPOTLIGHT_CAP, Math.round(chosen)))
+}
 export const FEATURE_GROUPS: FeatureGroup[] = ['Tracking', 'Planning', 'Progress', 'Tools', 'Fun']
 
 export const FEATURES: Feature[] = [
   { id: 'weight', name: 'Weight', emoji: '⚖️', description: 'Weigh-ins and your trend', group: 'Tracking', paths: ['/log/weight'], canSpotlight: true, questObjectives: ['log_weight'] },
   { id: 'meals', name: 'Meals', emoji: '🍽️', description: 'What you eat', group: 'Tracking', paths: ['/log/meal'], canSpotlight: true, questObjectives: ['log_meals'] },
   { id: 'water', name: 'Water', emoji: '💧', description: 'How much you drink', group: 'Tracking', paths: ['/log/water'], canSpotlight: true, questObjectives: ['log_water'] },
-  { id: 'fasting', name: 'Fasting', emoji: '⏱️', description: 'Fasting timer', group: 'Tracking', paths: ['/log/fasting'], canSpotlight: true },
+  { id: 'fasting', name: 'Fasting', emoji: '⏱️', description: 'A timer you start and end yourself', group: 'Tracking', paths: ['/log/fasting'], canSpotlight: false },
   { id: 'exercise', name: 'Exercise', emoji: '🏃', description: 'Workouts and movement', group: 'Tracking', paths: ['/log/exercise'], canSpotlight: true, questObjectives: ['log_exercise'] },
   { id: 'mood', name: 'Mood', emoji: '🙂', description: 'How you feel', group: 'Tracking', paths: ['/log/mood'], canSpotlight: true, questObjectives: ['log_mood'] },
   { id: 'sleep', name: 'Sleep', emoji: '😴', description: "Last night's sleep", group: 'Tracking', paths: ['/log/sleep'], canSpotlight: true, questObjectives: ['log_sleep'] },
   { id: 'medicine', name: 'Medicine', emoji: '💊', description: 'Medication and reminders', group: 'Tracking', paths: ['/log/medicine'], canSpotlight: true, questObjectives: ['log_medicine'] },
+  { id: 'cravings', name: 'Craving help', emoji: '🌊', description: 'Ride out a craving: hungry? name it, ten minutes, then decide', group: 'Tracking', paths: ['/log/craving'], canSpotlight: true },
+  { id: 'abstinence', name: 'Abstinence', emoji: '🌿', description: "Days free from something you're stepping away from", group: 'Tracking', paths: ['/me/abstinence'], canSpotlight: false },
   { id: 'measurements', name: 'Body measurements', emoji: '📏', description: 'Waist, chest and more', group: 'Tracking', paths: ['/me/measurements'], canSpotlight: false },
   { id: 'photos', name: 'Progress photos', emoji: '📸', description: 'Before and after', group: 'Tracking', paths: ['/me/photos'], canSpotlight: false },
   { id: 'habits', name: 'Habits', emoji: '✅', description: 'Small daily routines', group: 'Planning', paths: ['/todo/habits'], canSpotlight: true, questObjectives: ['complete_habits'] },
   { id: 'tasks', name: 'Tasks', emoji: '📝', description: 'One-off to-dos', group: 'Planning', paths: ['/todo/tasks'], canSpotlight: true },
-  { id: 'meal_prep', name: 'Meal prep', emoji: '🥗', description: 'Plan your week with recipes', group: 'Planning', paths: ['/todo/meal-prep'], canSpotlight: false },
+  { id: 'meal_prep', name: 'Meal prep', emoji: '🥗', description: 'Plan your week with recipes', group: 'Tracking', paths: ['/log/meal-prep'], canSpotlight: false },
+  { id: 'goals', name: 'Goals', emoji: '🎯', description: 'Your own milestones, one step at a time', group: 'Planning', paths: ['/me/goals'], canSpotlight: true },
+  { id: 'social', name: 'Social', emoji: '🫂', description: 'People you want to see, at your own rhythm', group: 'Planning', paths: ['/me/social'], canSpotlight: true },
   { id: 'focus_timer', name: 'Focus timer', emoji: '🍅', description: 'Pomodoro sessions', group: 'Planning', paths: ['/todo/pomodoro'], canSpotlight: false },
   { id: 'timeline', name: 'My Day', emoji: '🕒', description: 'Everything you logged, in order', group: 'Progress', paths: ['/me/timeline'], canSpotlight: false },
+  { id: 'wins_jar', name: 'Wins jar', emoji: '🫙', description: 'Every win you collected, for the hard days', group: 'Progress', paths: ['/me/wins'], canSpotlight: true },
+  { id: 'letters', name: 'Letters to future you', emoji: '💌', description: 'Write now, open at a date or a goal step', group: 'Progress', paths: ['/me/letters'], canSpotlight: false },
   { id: 'insights', name: 'Health insights', emoji: '💡', description: 'Patterns in your data', group: 'Progress', paths: ['/me/insights'], canSpotlight: false },
   { id: 'graphs', name: 'Graphs', emoji: '📈', description: 'Charts and trends', group: 'Progress', paths: ['/me/graphs'], canSpotlight: false },
   { id: 'weekly_review', name: 'Weekly review', emoji: '🗓️', description: 'Your week at a glance', group: 'Progress', paths: ['/me/review'], canSpotlight: false },
@@ -90,10 +105,10 @@ export function spotlightCount(tiers: FeatureTiers | undefined): number {
 }
 
 // Returns the new tiers, or null when the spotlight is already full.
-export function withTier(tiers: FeatureTiers | undefined, id: FeatureId, tier: FeatureTier): FeatureTiers | null {
+export function withTier(tiers: FeatureTiers | undefined, id: FeatureId, tier: FeatureTier, cap = DEFAULT_SPOTLIGHT_CAP): FeatureTiers | null {
   if (tier === 'spotlight') {
     if (!getFeature(id).canSpotlight) return null
-    if (!isSpotlight(tiers, id) && spotlightCount(tiers) >= SPOTLIGHT_CAP) return null
+    if (!isSpotlight(tiers, id) && spotlightCount(tiers) >= cap) return null
   }
   return { ...tiers, [id]: tier }
 }

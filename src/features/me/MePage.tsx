@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router'
-import { Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin, type LucideIcon } from 'lucide-react'
+import { Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin, Sprout, Users, Target, Heart, Mail, type LucideIcon } from 'lucide-react'
 import { isPathOn } from '../../lib/features'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile } from '../../hooks/useProfile'
-import { useLatestWeight } from '../../hooks/useWeightEntries'
+import { useWeightTrend } from '../../hooks/useWeightEntries'
 import { usePointsBalance } from '../../hooks/usePoints'
 
 interface MeLink {
@@ -26,6 +26,11 @@ const GROUPS: { title: string; items: MeLink[] }[] = [
     title: 'Progress',
     items: [
       { label: 'My Day', subtitle: 'Everything you logged, in order', icon: Clock, path: '/me/timeline' },
+      { label: 'Wins jar', subtitle: 'Every win you collected', icon: Heart, path: '/me/wins' },
+      { label: 'Letters to future you', subtitle: 'Write now, open later', icon: Mail, path: '/me/letters' },
+      { label: 'Goals', subtitle: 'Your own milestones, step by step', icon: Target, path: '/me/goals' },
+      { label: 'Social', subtitle: 'People you want to see, at your rhythm', icon: Users, path: '/me/social' },
+      { label: 'Abstinence', subtitle: "Free days from what you're stepping away from", icon: Sprout, path: '/me/abstinence' },
       { label: 'Health Insights', subtitle: 'Patterns in your data', icon: Lightbulb, path: '/me/insights' },
       { label: 'Graphs', subtitle: 'Charts and trends', icon: BarChart3, path: '/me/graphs' },
       { label: 'Weekly Review', subtitle: 'Your week at a glance', icon: CalendarCheck, path: '/me/review' },
@@ -59,12 +64,13 @@ export default function MePage() {
   const groups = GROUPS
     .map(group => ({ ...group, items: group.items.filter(item => isPathOn(tiers, item.path)) }))
     .filter(group => group.items.length > 0)
-  const latestWeight = useLatestWeight()
+  const { trend } = useWeightTrend()
   const points = usePointsBalance()
   const navigate = useNavigate()
 
-  const bmi = latestWeight && profile
-    ? (latestWeight.value_kg / ((profile.height_cm / 100) ** 2)).toFixed(1)
+  // The smoothed trend, not the last weigh-in (V2-PLAN §7).
+  const bmi = trend !== null && profile
+    ? (trend / ((profile.height_cm / 100) ** 2)).toFixed(1)
     : null
 
   return (
@@ -76,7 +82,7 @@ export default function MePage() {
             <p className="text-xl font-bold text-text-primary mb-1">{profile.display_name}</p>
             <div className="flex justify-center gap-4 text-sm text-muted">
               <span>{profile.height_cm} cm</span>
-              {latestWeight && <span>{latestWeight.value_kg} kg</span>}
+              {trend !== null && <span>{trend.toFixed(1)} kg</span>}
               {bmi && <span>BMI {bmi}</span>}
             </div>
           </div>

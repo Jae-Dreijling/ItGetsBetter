@@ -1,137 +1,79 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState, useEffect, useCallback } from 'react'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
-import { format, subDays } from 'date-fns'
 import { awardPoints } from './usePoints'
 import { triggerCompanionMessage } from '../lib/companionMessenger'
+import type { FastingRecord } from '../types'
 
-export interface FastingState {
-  status: 'fasting' | 'dismissed' | 'no_data'
-  lastMealAt: Date | null
-  lastMealLoggedAt: string | null
-  fastingMinutes: number
-  goalHours: number
-  goalMet: boolean
+// Fasting is a timer you start and end yourself (V2-PLAN §3): it has no link
+// to meal logging, so eating never silently starts or ends anything.
+
+export const GOAL_OPTIONS = [12, 14, 16, 18, 20]
+const DEFAULT_GOAL = 16
+
+export function useRunningFast() {
+  return useLiveQuery(async () => (await db.fastingRecords.filter(r => r.end_time === null).first()) ?? null)
 }
 
-const DISMISSED_KEY = 'igb_dismissed_fast'
+export function useFastingHistory(limit = 14) {
+  return useLiveQuery(async () =>
+    (await db.fastingRecords.filter(r => r.end_time !== null).toArray())
+      .sort((a, b) => b.start_time.localeCompare(a.start_time))
+      .slice(0, limit), [limit])
+}
 
-export function useCurrentFast(goalHours: number = 16) {
-  const [now, setNow] = useState(new Date())
-  const [dismissedAt, setDismissedAt] = useState(() => localStorage.getItem(DISMISSED_KEY))
-
-  useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 60_000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const lastMeal = useLiveQuery(async () => {
-    const entry = await db.mealEntries.orderBy('logged_at').last()
-    return entry ?? null
+// The goal you used last time, so starting is one tap.
+export function useLastGoal() {
+  return useLiveQuery(async () => {
+    const all = await db.fastingRecords.toArray()
+    return all.sort((a, b) => b.start_time.localeCompare(a.start_time))[0]?.goal_hours ?? DEFAULT_GOAL
   })
-
-  const dismiss = useCallback(() => {
-    if (lastMeal) {
-      localStorage.setItem(DISMISSED_KEY, lastMeal.logged_at)
-      setDismissedAt(lastMeal.logged_at)
-    }
-  }, [lastMeal])
-
-  if (lastMeal === undefined || lastMeal === null) {
-    const state: FastingState = { status: 'no_data', lastMealAt: null, lastMealLoggedAt: null, fastingMinutes: 0, goalHours, goalMet: false }
-    return { ...state, dismiss }
-  }
-
-  const lastMealTime = new Date(lastMeal.logged_at)
-
-  if (dismissedAt === lastMeal.logged_at) {
-    const state: FastingState = { status: 'dismissed', lastMealAt: lastMealTime, lastMealLoggedAt: lastMeal.logged_at, fastingMinutes: 0, goalHours, goalMet: false }
-    return { ...state, dismiss }
-  }
-
-  if (dismissedAt && dismissedAt !== lastMeal.logged_at) {
-    localStorage.removeItem(DISMISSED_KEY)
-  }
-
-  const diffMs = now.getTime() - lastMealTime.getTime()
-  const fastingMinutes = Math.max(0, Math.floor(diffMs / 60_000))
-  const goalMet = fastingMinutes >= goalHours * 60
-
-  const state: FastingState = {
-    status: 'fasting',
-    lastMealAt: lastMealTime,
-    lastMealLoggedAt: lastMeal.logged_at,
-    fastingMinutes,
-    goalHours,
-    goalMet,
-  }
-  return { ...state, dismiss }
 }
 
-export async function breakFast(lastMealAt: Date, fastingMinutes: number, goalHours: number) {
-  const durationHours = Math.round((fastingMinutes / 60) * 10) / 10
-
-  const previousBest = await db.fastingRecords.orderBy('duration_hours').last()
-
+export async function startFast(goalHours: number, startedAt: Date = new Date()) {
+  if (await db.fastingRecords.filter(r => r.end_time === null).count()) return
   await db.fastingRecords.add({
-    date: getLogicalDate(),
-    start_time: lastMealAt.toISOString(),
-    end_time: nowISO(),
-    duration_hours: durationHours,
+    date: getLogicalDate(startedAt),
+    start_time: startedAt.toISOString(),
+    end_time: null,
+    duration_hours: 0,
     goal_hours: goalHours,
-    goal_met: fastingMinutes >= goalHours * 60,
+    goal_met: false,
     was_broken_early: false,
   })
+}
 
-  if (fastingMinutes >= goalHours * 60) {
+export async function updateRunningFast(id: number, changes: Pick<Partial<FastingRecord>, 'goal_hours' | 'start_time'>) {
+  await db.fastingRecords.update(id, changes)
+}
+
+export function fastingMinutes(fast: FastingRecord, now: Date): number {
+  const end = fast.end_time ? new Date(fast.end_time) : now
+  return Math.max(0, Math.floor((end.getTime() - new Date(fast.start_time).getTime()) / 60_000))
+}
+
+// Ends the running fast. Reaching the goal earns points; ending sooner is
+// just a shorter fast, never a "broken" one.
+export async function endFast(fast: FastingRecord) {
+  const end = new Date()
+  const minutes = fastingMinutes(fast, end)
+  const durationHours = Math.round((minutes / 60) * 10) / 10
+  const goalMet = minutes >= fast.goal_hours * 60
+  const previousBest = (await db.fastingRecords.filter(r => r.end_time !== null).toArray())
+    .reduce((best, r) => Math.max(best, r.duration_hours), 0)
+
+  await db.fastingRecords.update(fast.id!, { end_time: nowISO(), duration_hours: durationHours, goal_met: goalMet })
+
+  if (goalMet) {
     await awardPoints('fasting_goal_met')
     triggerCompanionMessage('fasting_goal')
   }
-
-  if (previousBest && durationHours > previousBest.duration_hours) {
-    triggerCompanionMessage('personal_best')
-  }
+  if (previousBest > 0 && durationHours > previousBest) triggerCompanionMessage('personal_best')
+  return { durationHours, goalMet }
 }
 
-export function useFastingHistory(days: number = 14) {
-  return useLiveQuery(async () => {
-    const today = getLogicalDate()
-    const from = format(subDays(new Date(today + 'T12:00:00'), days), 'yyyy-MM-dd')
-
-    const meals = await db.mealEntries
-      .where('date')
-      .between(from, today, true, true)
-      .sortBy('logged_at')
-
-    const byDate = new Map<string, { first: string; last: string }>()
-    for (const meal of meals) {
-      const existing = byDate.get(meal.date)
-      if (!existing) {
-        byDate.set(meal.date, { first: meal.logged_at, last: meal.logged_at })
-      } else {
-        if (meal.logged_at < existing.first) existing.first = meal.logged_at
-        if (meal.logged_at > existing.last) existing.last = meal.logged_at
-      }
-    }
-
-    const records: { date: string; durationHours: number }[] = []
-    const dates = Array.from(byDate.keys()).sort()
-
-    for (let i = 1; i < dates.length; i++) {
-      const prevDay = byDate.get(dates[i - 1])!
-      const currDay = byDate.get(dates[i])!
-      const lastMealPrev = new Date(prevDay.last)
-      const firstMealCurr = new Date(currDay.first)
-      const diffHours = (firstMealCurr.getTime() - lastMealPrev.getTime()) / (1000 * 60 * 60)
-
-      if (diffHours > 0 && diffHours < 36) {
-        records.push({ date: dates[i], durationHours: Math.round(diffHours * 10) / 10 })
-      }
-    }
-
-    return records
-  }, [days])
+export async function deleteFast(id: number) {
+  await db.fastingRecords.delete(id)
 }
 
 export function formatFastingDuration(totalMinutes: number): string {

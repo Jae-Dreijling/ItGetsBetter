@@ -4,6 +4,7 @@ import { getLogicalDate } from '../lib/date'
 import { useTodaySchedule } from './useSchedule'
 import { getFeatureTiers } from './useFeatures'
 import { isOn, isSpotlight } from '../lib/features'
+import { needsReminderToday } from './useMedicine'
 
 export interface AppNotification {
   id: string
@@ -89,14 +90,15 @@ export function useNotifications() {
         }
       }
 
-      const activeMeds = isOn(tiers, 'medicine') ? await db.medicines.filter(m => m.is_active === true).toArray() : []
-      if (activeMeds.length > 0) {
+      // Only medicines due today by their schedule; never "as needed" ones.
+      const dueMeds = isOn(tiers, 'medicine') ? await db.medicines.filter(needsReminderToday).toArray() : []
+      if (dueMeds.length > 0) {
         const todaysLogs = await db.medicineLogs.where('date').equals(today).toArray()
-        const untaken = activeMeds.filter(m => !todaysLogs.some(l => l.medicine_id === m.id))
+        const untaken = dueMeds.filter(m => !todaysLogs.some(l => l.medicine_id === m.id && l.taken))
         if (untaken.length > 0 && hour >= 12 && getDismissCount('medicine_reminder', today) < 2) {
           setNotification({
             id: 'med_' + today,
-            message: `Don't forget: ${untaken[0].name} hasn't been taken today.`,
+            message: `Have you taken your ${untaken[0].name} today? Tick it off when you have.`,
             type: 'medicine_reminder',
           })
           return

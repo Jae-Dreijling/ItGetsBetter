@@ -8,17 +8,25 @@ import { getLogicalDate } from '../../lib/date'
 import { floorHabits } from '../../lib/floor'
 import { MOOD_LABELS } from '../../lib/mood'
 import { QuickMood, QuickSleep, QuickWater, QuickWeight, primaryButton } from '../quickLog'
-import { useLatestWeight } from '../../hooks/useWeightEntries'
+import { useWeightTrend } from '../../hooks/useWeightEntries'
 import { useTodaysMeals } from '../../hooks/useMealEntries'
 import { useActiveHabits, useTodaysCompletions, toggleHabitCompletion, isTodayScheduled } from '../../hooks/useHabits'
 import { useTasks, toggleTask } from '../../hooks/useTasks'
 import { useTodaysWaterTotal } from '../../hooks/useWater'
-import { useCurrentFast, formatFastingDuration } from '../../hooks/useFasting'
 import { useTodaysExercise } from '../../hooks/useExercise'
 import { useTodaysMood } from '../../hooks/useMood'
 import { useTodaysSleep } from '../../hooks/useSleep'
-import { useTodaysMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
+import { useTodaysMedicines, useTodaysMedicineLogs, toggleMedicineLog, needsReminderToday } from '../../hooks/useMedicine'
 import { useGameState, useActiveQuests, useQuestProgress } from '../../hooks/useGame'
+import { usePeople, useContacts } from '../../hooks/useSocial'
+import { dueSoon, dueLine, upcomingBirthdays, birthdayLine } from '../../lib/social'
+import { ContactButtons, THANKS } from '../../features/social/parts'
+import { useTracks, useMilestones } from '../../hooks/useGoals'
+import { nextMilestone } from '../../lib/goals'
+import { MilestoneCheck } from '../../features/goals/parts'
+import { useWins } from '../../hooks/useWins'
+import { winOfTheDay, SOURCE_EMOJI } from '../../lib/winsJar'
+import { useThanks } from '../../features/social/useThanks'
 import type { GameQuest } from '../../types'
 
 // The Today screen's spotlight: a one-tap card for each starred feature
@@ -28,7 +36,6 @@ const CARDS: Partial<Record<FeatureId, { path: string; Body: () => React.ReactNo
   weight: { path: '/log/weight', Body: WeightBody },
   meals: { path: '/log/meal', Body: MealsBody },
   water: { path: '/log/water', Body: WaterBody },
-  fasting: { path: '/log/fasting', Body: FastingBody },
   exercise: { path: '/log/exercise', Body: ExerciseBody },
   mood: { path: '/log/mood', Body: MoodBody },
   sleep: { path: '/log/sleep', Body: SleepBody },
@@ -36,6 +43,10 @@ const CARDS: Partial<Record<FeatureId, { path: string; Body: () => React.ReactNo
   habits: { path: '/todo', Body: HabitsBody },
   tasks: { path: '/todo/tasks', Body: TasksBody },
   journey: { path: '/journey', Body: JourneyBody },
+  social: { path: '/me/social', Body: SocialBody },
+  goals: { path: '/me/goals', Body: GoalsBody },
+  cravings: { path: '/log/craving', Body: CravingBody },
+  wins_jar: { path: '/me/wins', Body: WinsBody },
 }
 
 export default function SpotlightSection({ tiers }: { tiers: FeatureTiers | undefined }) {
@@ -75,14 +86,21 @@ function SpotlightCard({ id }: { id: FeatureId }) {
 const status = 'text-sm text-muted'
 const doneLine = 'flex items-center gap-1.5 text-sm font-medium text-secondary-600 dark:text-secondary-300'
 
+// The trend is the main number; the day's weigh-in only when it's shown.
 function WeightBody() {
-  const latest = useLatestWeight()
+  const { latest, trend, display } = useWeightTrend()
+  const trendText = trend !== null ? `trend ${trend.toFixed(1)} kg` : null
   if (latest?.date === getLogicalDate()) {
-    return <p className={doneLine}><Check className="h-4 w-4" />{latest.value_kg} kg today</p>
+    return (
+      <p className={doneLine}>
+        <Check className="h-4 w-4" />
+        {display === 'every' ? `${latest.weight} kg today · ${trendText}` : `Weighed in today · ${trendText}`}
+      </p>
+    )
   }
   return (
     <div className="space-y-2">
-      {latest && <p className={status}>Last: {latest.value_kg} kg</p>}
+      {trendText && <p className={status}>{display === 'every' && latest ? `Last: ${latest.weight} kg · ${trendText}` : `Your ${trendText}`}</p>}
       <QuickWeight />
     </div>
   )
@@ -119,15 +137,6 @@ function WaterBody() {
 
 function formatMl(ml: number) {
   return ml < 1000 ? `${ml} ml` : `${(ml / 1000).toFixed(1).replace(/\.0$/, '')} L`
-}
-
-function FastingBody() {
-  const fast = useCurrentFast(16)
-  return (
-    <p className={status}>
-      {fast.status === 'fasting' ? `${formatFastingDuration(fast.fastingMinutes)} since your last meal` : 'No fast running'}
-    </p>
-  )
 }
 
 function ExerciseBody() {
@@ -216,6 +225,78 @@ function TasksBody() {
   return <CheckList items={tasks.map(t => ({ id: t.id!, label: t.title }))} onCheck={id => toggleTask(id)} />
 }
 
+// One win from the jar, the same all day.
+function WinsBody() {
+  const wins = useWins()
+  const win = winOfTheDay(wins ?? [], getLogicalDate())
+  if (!win) return <p className={status}>Your jar fills up as you go. 🫙</p>
+  return (
+    <p className="text-sm text-text-primary">
+      {SOURCE_EMOJI[win.source]} {win.text}
+      <span className="block text-xs text-muted">{format(parseISO(win.date), 'd MMM')}</span>
+    </p>
+  )
+}
+
+// Always one tap from help, never a count of how often.
+function CravingBody() {
+  const navigate = useNavigate()
+  return (
+    <button onClick={() => navigate('/log/craving')} className={primaryButton}>
+      Having a craving? Let's ride it out
+    </button>
+  )
+}
+
+// The next step of each goal (up to three), tickable right here.
+function GoalsBody() {
+  const tracks = useTracks()
+  const milestones = useMilestones()
+  const steps = (tracks ?? [])
+    .map(t => ({ track: t, next: nextMilestone(milestones.filter(m => m.track_id === t.id)) }))
+    .filter(s => s.next)
+    .slice(0, 3)
+
+  if (steps.length === 0) return <p className={status}>No next step right now. Add a goal whenever you like. 🎯</p>
+  return (
+    <ul className="space-y-1.5">
+      {steps.map(({ track, next }) => (
+        <li key={track.id} className="flex items-center gap-3">
+          <MilestoneCheck milestone={next!} />
+          <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
+            <span aria-hidden>{track.emoji}</span> {next!.text}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// The person it's been longest since, with one-tap logging; birthdays today
+// or tomorrow come first.
+function SocialBody() {
+  const people = usePeople()
+  const contacts = useContacts()
+  const today = getLogicalDate()
+  const birthday = upcomingBirthdays(people ?? [], today, 1)[0]
+  const due = dueSoon(people ?? [], contacts, today).find(d => d.daysUntil <= 0)
+  const [thanks, showThanks] = useThanks()
+
+  if (thanks && !due) return <p className="text-sm font-medium text-success">{THANKS}</p>
+  if (!birthday && !due) return <p className={status}>Everyone's caught up for now. 🌿</p>
+  return (
+    <div className="space-y-2">
+      {birthday && <p className="text-sm text-text-primary">{birthdayLine(birthday)}</p>}
+      {due && (
+        <>
+          <p className="text-sm text-text-primary">{dueLine(due)}</p>
+          <ContactButtons person={due.person} compact onLogged={showThanks} />
+        </>
+      )}
+    </div>
+  )
+}
+
 // Tap the circle (or the row) to complete; the row then fades away.
 function CheckList({ items, onCheck }: { items: { id: number; label: string }[]; onCheck: (id: number) => void }) {
   return (
@@ -278,7 +359,8 @@ function MedicineReminderLine() {
   const navigate = useNavigate()
   const meds = useTodaysMedicines()
   const logs = useTodaysMedicineLogs()
-  const untaken = meds?.filter(m => !logs?.some(l => l.medicine_id === m.id)).length ?? 0
+  // "As needed" medicines are never "not taken yet".
+  const untaken = meds?.filter(m => needsReminderToday(m) && !logs?.some(l => l.medicine_id === m.id)).length ?? 0
   if (untaken === 0) return null
   return (
     <button

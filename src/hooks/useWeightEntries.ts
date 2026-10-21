@@ -3,6 +3,9 @@ import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
 import { triggerCompanionMessage } from '../lib/companionMessenger'
+import { trendSeries, trendChange, type WeightDisplay } from '../lib/weightTrend'
+import { useProfile } from './useProfile'
+import { checkAutoMilestones } from './useGoals'
 
 export function useWeightEntries(dateRange?: { from: string; to: string }) {
   return useLiveQuery(() => {
@@ -16,11 +19,22 @@ export function useWeightEntries(dateRange?: { from: string; to: string }) {
   }, [dateRange?.from, dateRange?.to])
 }
 
-export function useLatestWeight() {
-  return useLiveQuery(() =>
-    db.weightEntries.orderBy('logged_at').last()
-  )
+// The smoothed trend (the main weight number) and how to show weigh-ins.
+export function useWeightTrend() {
+  const entries = useWeightEntries()
+  const { profile } = useProfile()
+  const series = trendSeries(entries ?? [])
+  const latest = series.at(-1)
+  return {
+    loaded: entries !== undefined,
+    series,
+    latest,
+    trend: latest?.trend ?? null,
+    change: trendChange(series, getLogicalDate()),
+    display: (profile?.weight_display ?? 'every') as WeightDisplay,
+  }
 }
+
 
 export async function addWeightEntry(
   value_kg: number,
@@ -42,15 +56,21 @@ export async function addWeightEntry(
     is_backfill,
   })
 
+  // Weight steps in Goals may have been reached now (backfills move the trend too).
+  await checkAutoMilestones()
+
   if (!is_backfill) {
     await awardPoints('weight_logged')
-    if (previous) {
+    // With daily numbers hidden, reacting to up or down would give them away.
+    const profile = await db.userProfile.toCollection().first()
+    const showsWeighIns = (profile?.weight_display ?? 'every') === 'every'
+    if (!previous) {
+      triggerCompanionMessage('first_milestone')
+    } else if (showsWeighIns) {
       if (value_kg < previous.value_kg) triggerCompanionMessage('weight_loss')
       else if (value_kg > previous.value_kg) triggerCompanionMessage('weight_gain')
-    } else {
-      triggerCompanionMessage('first_milestone')
     }
-    if (historicalLowest && value_kg < historicalLowest.value_kg) {
+    if (showsWeighIns && historicalLowest && value_kg < historicalLowest.value_kg) {
       triggerCompanionMessage('personal_best')
     }
   }

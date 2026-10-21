@@ -50,7 +50,7 @@ async function daysSinceLast(kind: CheckKind, today: string): Promise<number | n
 }
 
 // Today's check, picked once per (logical) day and then kept as-is.
-export async function getTodaysCheck(): Promise<StoredCheck> {
+async function getTodaysCheck(): Promise<StoredCheck> {
   const today = getLogicalDate()
   const stored = readStored()
   if (stored?.date === today) return stored

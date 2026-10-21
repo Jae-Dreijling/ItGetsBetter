@@ -27,7 +27,7 @@ export function useScheduleProfiles() {
   )
 }
 
-export function useTodayConfig() {
+function useTodayConfig() {
   const today = getLogicalDate()
   return useLiveQuery(
     () => db.table('dayConfigs').get(today) as Promise<DayConfig | undefined>,
@@ -112,7 +112,7 @@ export function useIsPhoneFreeTime(): boolean {
 // Goodnight window: the 30 minutes right before the phone-free window starts
 // (i.e. 90–60 minutes before target sleep time) — a one-time wind-down nudge
 // distinct from phone-free's repeating "put the phone down" reminder.
-export function isGoodnightTime(profile: ScheduleProfile | null): boolean {
+function isGoodnightTime(profile: ScheduleProfile | null): boolean {
   if (!profile) return false
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()

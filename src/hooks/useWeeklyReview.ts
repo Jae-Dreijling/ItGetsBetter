@@ -1,11 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
-import { format, startOfWeek, endOfWeek, subWeeks } from 'date-fns'
+import { format, startOfWeek, endOfWeek, subWeeks, parseISO, subDays } from 'date-fns'
+import { trendSeries, trendOn } from '../lib/weightTrend'
 
 export interface WeeklyReviewData {
   weekStart: string
   weekEnd: string
-  weight: { start: number | null; end: number | null; delta: number | null } | null
+  weight: { start: number; end: number; delta: number } | null
   meals: { count: number; avgScore: number } | null
   water: { avgMl: number; goalMetDays: number } | null
   fasting: { totalHours: number; avgHours: number } | null
@@ -25,11 +26,11 @@ export function useWeeklyReview(weeksAgo: number = 0) {
     const weekStart = format(ws, 'yyyy-MM-dd')
     const weekEnd = format(we, 'yyyy-MM-dd')
 
-    const [weightData, mealData, waterData, mealTimestamps, habitData, moodData, sleepData, exerciseData, pointsData, medData] = await Promise.all([
+    const [weightData, mealData, waterData, fastingData, habitData, moodData, sleepData, exerciseData, pointsData, medData] = await Promise.all([
       getWeightSummary(weekStart, weekEnd),
       getMealSummary(weekStart, weekEnd),
       getWaterSummary(weekStart, weekEnd),
-      getMealTimestamps(weekStart, weekEnd),
+      getFastingSummary(weekStart, weekEnd),
       getHabitSummary(weekStart, weekEnd),
       getMoodSummary(weekStart, weekEnd),
       getSleepSummary(weekStart, weekEnd),
@@ -37,8 +38,6 @@ export function useWeeklyReview(weeksAgo: number = 0) {
       getPointsSummary(weekStart, weekEnd),
       getMedicineSummary(weekStart, weekEnd),
     ])
-
-    const fastingData = computeFasting(mealTimestamps)
 
     return {
       weekStart,
@@ -57,11 +56,13 @@ export function useWeeklyReview(weeksAgo: number = 0) {
   }, [weeksAgo])
 }
 
-async function getWeightSummary(from: string, to: string) {
-  const entries = await db.weightEntries.where('date').between(from, to, true, true).sortBy('date')
-  if (entries.length === 0) return null
-  const start = entries[0].value_kg
-  const end = entries[entries.length - 1].value_kg
+// The smoothed trend at the start and end of the week, not two single
+// weigh-ins (those are mostly water; see lib/weightTrend).
+export async function getWeightSummary(from: string, to: string) {
+  const series = trendSeries(await db.weightEntries.where('date').belowOrEqual(to).toArray())
+  const end = trendOn(series, to)
+  if (end === null || !series.some(p => p.date >= from)) return null
+  const start = trendOn(series, format(subDays(parseISO(from), 1), 'yyyy-MM-dd')) ?? series.find(p => p.date >= from)!.trend
   return { start, end, delta: Math.round((end - start) * 10) / 10 }
 }
 
@@ -83,32 +84,11 @@ async function getWaterSummary(from: string, to: string) {
   return { avgMl: Math.round(total / days), goalMetDays: goalMet }
 }
 
-async function getMealTimestamps(from: string, to: string) {
-  return db.mealEntries.where('date').between(from, to, true, true).sortBy('logged_at')
-}
-
-function computeFasting(meals: { date: string; logged_at: string }[]) {
-  if (meals.length < 2) return null
-  const byDate = new Map<string, { first: string; last: string }>()
-  for (const m of meals) {
-    const e = byDate.get(m.date)
-    if (!e) byDate.set(m.date, { first: m.logged_at, last: m.logged_at })
-    else {
-      if (m.logged_at < e.first) e.first = m.logged_at
-      if (m.logged_at > e.last) e.last = m.logged_at
-    }
-  }
-  const dates = Array.from(byDate.keys()).sort()
-  let totalHours = 0
-  let count = 0
-  for (let i = 1; i < dates.length; i++) {
-    const prev = byDate.get(dates[i - 1])!
-    const curr = byDate.get(dates[i])!
-    const h = (new Date(curr.first).getTime() - new Date(prev.last).getTime()) / 3600000
-    if (h > 0 && h < 48) { totalHours += h; count++ }
-  }
-  if (count === 0) return null
-  return { totalHours: Math.round(totalHours * 10) / 10, avgHours: Math.round((totalHours / count) * 10) / 10 }
+export async function getFastingSummary(from: string, to: string) {
+  const fasts = await db.fastingRecords.where('date').between(from, to, true, true).filter(r => r.end_time !== null).toArray()
+  if (fasts.length === 0) return null
+  const totalHours = fasts.reduce((sum, r) => sum + r.duration_hours, 0)
+  return { totalHours: Math.round(totalHours * 10) / 10, avgHours: Math.round((totalHours / fasts.length) * 10) / 10 }
 }
 
 async function getHabitSummary(from: string, to: string) {

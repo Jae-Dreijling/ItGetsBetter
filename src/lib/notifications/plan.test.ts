@@ -58,6 +58,14 @@ describe('planReminders', () => {
     ])
   })
 
+  it('plans social reminders only on days with a reason', () => {
+    const social: NotificationPrefs = { social: { on: true, time: '17:00' } }
+    const plan = planReminders(morning, days(7), social, fresh, new Set(['2026-10-08', '2026-10-30']))
+    expect(plan.map(p => [p.kind, p.date])).toEqual([['social', '2026-10-08']])
+    expect(plan[0].at.getHours()).toBe(17)
+    expect(planReminders(morning, days(7), undefined, fresh, new Set(['2026-10-08']))).toEqual([])
+  })
+
   it('uses stable ids per day and kind', () => {
     expect(reminderId(0, 'daily_check')).not.toBe(reminderId(0, 'floor'))
     expect(reminderId(1, 'daily_check')).not.toBe(reminderId(0, 'daily_check'))

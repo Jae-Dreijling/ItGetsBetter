@@ -13,17 +13,6 @@ export function useTodaysMeals() {
   )
 }
 
-export function useMealEntries(dateRange?: { from: string; to: string }) {
-  return useLiveQuery(() => {
-    if (dateRange) {
-      return db.mealEntries
-        .where('date')
-        .between(dateRange.from, dateRange.to, true, true)
-        .sortBy('date')
-    }
-    return db.mealEntries.orderBy('date').toArray()
-  }, [dateRange?.from, dateRange?.to])
-}
 
 export async function addMealEntry(data: {
   meal_slot: MealSlot

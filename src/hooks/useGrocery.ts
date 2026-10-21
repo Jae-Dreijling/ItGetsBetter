@@ -6,11 +6,6 @@ export function useGroceryLists() {
   return useLiveQuery(() => db.groceryLists.toArray())
 }
 
-export function useTemplateLists() {
-  return useLiveQuery(() =>
-    db.groceryLists.filter(l => l.is_template === true).toArray()
-  )
-}
 
 export function useGroceryItems(listId: number) {
   return useLiveQuery(

@@ -13,11 +13,6 @@ export function useActiveQuests() {
   )
 }
 
-export function useRecentlyClaimedQuests(limit = 5) {
-  return useLiveQuery(() =>
-    db.gameQuests.where('status').equals('claimed').reverse().limit(limit).toArray()
-  )
-}
 
 export function useCustomQuestions() {
   return useLiveQuery(() => db.gameCustomQuestions.toArray())

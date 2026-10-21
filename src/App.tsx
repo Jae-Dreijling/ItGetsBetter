@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { db, ensureDefaults } from './db'
 import { checkProgressionAdvancements } from './hooks/useHabits'
 import { ensureDefaultCompanion } from './hooks/useCompanion'
@@ -25,6 +25,7 @@ import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
 import FeaturePicker from './features/setup/FeaturePicker'
 import HomePage from './features/home/HomePage'
+import { checkAutoMilestones } from './hooks/useGoals'
 
 const loadLogHubPage = () => import('./features/log/LogHubPage')
 const LogHubPage = lazy(loadLogHubPage)
@@ -45,10 +46,12 @@ const MePage = lazy(loadMePage)
 const loadTodoPage = () => import('./features/todo/TodoPage')
 const TodoPage = lazy(loadTodoPage)
 const HabitsPage = lazy(() => import('./features/todo/HabitsPage'))
-const TasksPage = lazy(() => import('./features/todo/TasksPage'))
+const TaskDetailPage = lazy(() => import('./features/todo/TaskDetailPage'))
+const HabitDetailPage = lazy(() => import('./features/todo/HabitDetailPage'))
 const ExportPage = lazy(() => import('./features/settings/ExportPage'))
 const DevToolsPage = lazy(() => import('./features/settings/DevToolsPage'))
 const StartFreshPage = lazy(() => import('./features/settings/StartFreshPage'))
+const ResetPage = lazy(() => import('./features/settings/ResetPage'))
 const ThemePage = lazy(() => import('./features/settings/ThemePage'))
 const FeaturesPage = lazy(() => import('./features/settings/FeaturesPage'))
 const NotificationsPage = lazy(() => import('./features/settings/NotificationsPage'))
@@ -68,6 +71,15 @@ const InsightsPage = lazy(() => import('./features/insights/InsightsPage'))
 const MotivationVaultPage = lazy(() => import('./features/me/MotivationVaultPage'))
 const TimelinePage = lazy(() => import('./features/me/TimelinePage'))
 const PomodoroPage = lazy(() => import('./features/todo/PomodoroPage'))
+const WinsJarPage = lazy(() => import('./features/wins/WinsJarPage'))
+const LettersPage = lazy(() => import('./features/letters/LettersPage'))
+const GoalsPage = lazy(() => import('./features/goals/GoalsPage'))
+const GoalTrackPage = lazy(() => import('./features/goals/GoalTrackPage'))
+const CravingPage = lazy(() => import('./features/craving/CravingPage'))
+const SocialPage = lazy(() => import('./features/social/SocialPage'))
+const PersonPage = lazy(() => import('./features/social/PersonPage'))
+const AbstinencePage = lazy(() => import('./features/abstinence/AbstinencePage'))
+const CounterDetailPage = lazy(() => import('./features/abstinence/CounterDetailPage'))
 const MealPrepPage = lazy(() => import('./features/mealprep/MealPrepPage'))
 const RecipesPage = lazy(() => import('./features/mealprep/RecipesPage'))
 const MeditationPage = lazy(() => import('./features/me/MeditationPage'))
@@ -129,6 +141,7 @@ function AppContent() {
         <Route path="log" element={<LogHubPage />} />
         <Route path="log/weight" element={<WeightPage />} />
         <Route path="log/meal" element={<MealsPage />} />
+        <Route path="log/craving" element={<CravingPage />} />
         <Route path="log/water" element={<WaterPage />} />
         <Route path="log/fasting" element={<FastingPage />} />
         <Route path="log/exercise" element={<ExercisePage />} />
@@ -136,11 +149,15 @@ function AppContent() {
         <Route path="log/sleep" element={<SleepPage />} />
         <Route path="log/medicine" element={<MedicinePage />} />
         <Route path="todo" element={<TodoPage />} />
-        <Route path="todo/habits" element={<HabitsPage />} />
-        <Route path="todo/tasks" element={<TasksPage />} />
+        {/* Habits and tasks live on the Plan tab; old links open the matching view. */}
+        <Route path="todo/habits" element={<Navigate to="/todo?view=habits" replace />} />
+        <Route path="todo/habits/manage" element={<HabitsPage />} />
+        <Route path="todo/habits/:id" element={<HabitDetailPage />} />
+        <Route path="todo/tasks" element={<Navigate to="/todo?view=tasks" replace />} />
+        <Route path="todo/tasks/:id" element={<TaskDetailPage />} />
         <Route path="todo/pomodoro" element={<PomodoroPage />} />
-        <Route path="todo/meal-prep" element={<MealPrepPage />} />
-        <Route path="todo/meal-prep/recipes" element={<RecipesPage />} />
+        <Route path="log/meal-prep" element={<MealPrepPage />} />
+        <Route path="log/meal-prep/recipes" element={<RecipesPage />} />
         <Route path="me" element={<MePage />} />
         <Route path="me/measurements" element={<MeasurementsPage />} />
         <Route path="me/rewards" element={<RewardShopPage />} />
@@ -154,6 +171,7 @@ function AppContent() {
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
         <Route path="settings/start-fresh" element={<StartFreshPage />} />
+        <Route path="settings/reset" element={<ResetPage />} />
         <Route path="settings/theme" element={<ThemePage />} />
         <Route path="settings/features" element={<FeaturesPage />} />
         <Route path="settings/notifications" element={<NotificationsPage />} />
@@ -166,6 +184,14 @@ function AppContent() {
         <Route path="me/companion" element={<CompanionPage />} />
         <Route path="me/companion/personalities" element={<PersonalityGroupsPage />} />
         <Route path="me/vault" element={<MotivationVaultPage />} />
+        <Route path="me/wins" element={<WinsJarPage />} />
+        <Route path="me/letters" element={<LettersPage />} />
+        <Route path="me/goals" element={<GoalsPage />} />
+        <Route path="me/goals/:id" element={<GoalTrackPage />} />
+        <Route path="me/social" element={<SocialPage />} />
+        <Route path="me/social/:id" element={<PersonPage />} />
+        <Route path="me/abstinence" element={<AbstinencePage />} />
+        <Route path="me/abstinence/:id" element={<CounterDetailPage />} />
         <Route path="me/timeline" element={<TimelinePage />} />
         <Route path="me/meditation" element={<MeditationPage />} />
         <Route path="me/character" element={<CharacterPage />} />
@@ -230,6 +256,9 @@ export default function App() {
         runPhotoLifecycle().then(() => markLifecycleRun())
       }
       checkProgressionAdvancements()
+      checkAutoMilestones()
+      // Left over from v1's "current focus" card, which 2.0's spotlight replaced.
+      localStorage.removeItem('igb_current_focus')
       ensureDefaultCompanion()
       ensureDefaultPersonalityGroups()
       checkLevelUpAndClassChange()

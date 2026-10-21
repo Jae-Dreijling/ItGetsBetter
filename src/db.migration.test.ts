@@ -49,4 +49,52 @@ describe('database upgrades', () => {
     expect(companion.messages.general).toEqual(['Hi'])
     db.close()
   })
+
+  it('v21 turns the profile goal weight into a Weight goal track', async () => {
+    const name = `migration-${crypto.randomUUID()}`
+    const old = new Dexie(name)
+    old.version(20).stores({ userProfile: '++id' })
+    await old.open()
+    await old.table('userProfile').add({ display_name: 'Jae', starting_weight_kg: 90, goal_weight_milestone_kg: 85 })
+    old.close()
+
+    const db = new ItGetsBetterDB(name)
+    await db.open()
+    const [track] = await db.goalTracks.toArray()
+    expect(track).toMatchObject({ name: 'Weight', emoji: '⚖️', archived: false })
+    const milestones = await db.goalMilestones.toArray()
+    expect(milestones).toHaveLength(1)
+    expect(milestones[0]).toMatchObject({ track_id: track.id, text: 'Reach 85 kg', done_at: null })
+    db.close()
+  })
+
+  it('v21 adds no track for a fresh install without a profile', async () => {
+    const db = new ItGetsBetterDB(`migration-${crypto.randomUUID()}`)
+    await db.open()
+    expect(await db.goalTracks.count()).toBe(0)
+    db.close()
+  })
+
+  it('v22 makes weight steps written as targets tick themselves', async () => {
+    const name = `migration-${crypto.randomUUID()}`
+    const old = new Dexie(name)
+    old.version(21).stores({ goalMilestones: '++id, track_id' })
+    await old.open()
+    await old.table('goalMilestones').bulkAdd([
+      { track_id: 1, text: 'Reach 85 kg', order: 0 },
+      { track_id: 1, text: '−2 kg from where I started', order: 1 },
+      { track_id: 1, text: 'Play a song', order: 2 },
+    ])
+    old.close()
+
+    const db = new ItGetsBetterDB(name)
+    await db.open()
+    const autos = (await db.goalMilestones.orderBy('id').toArray()).map(m => m.auto)
+    expect(autos).toEqual([
+      { kind: 'weight_at_most_kg', value: 85 },
+      { kind: 'weight_down_kg', value: 2 },
+      null,
+    ])
+    db.close()
+  })
 })

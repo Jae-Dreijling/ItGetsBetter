@@ -118,7 +118,7 @@ Things that make opening the app fun even on a day you log nothing:
 - **Companion life:** expressions, idle animations, reactions to time of day/weather/season, outfits or accessories (unlockable).
 - **Collections:** cosmetic unlocks (themes, companion accessories, map decorations). Collecting without pressure.
 - **Seasonal events:** a few small themed weeks per year (autumn, winter holidays, birthday).
-- **Adventures** (section 6): short stories you progress by doing your daily floor.
+- **Adventures** (section 6): short pre-written stories you progress by doing your daily floor.
 
 Rule from the Rulebook that stays: **nothing is lost by being away.** No decaying pets, no "your companion is sad you left".
 
@@ -134,20 +134,11 @@ Rule from the Rulebook that stays: **nothing is lost by being away.** No decayin
 
 ---
 
-## 6. AI integration (optional, opt-in)
+## 6. ~~AI integration~~ → pre-generated content (decided 2026-10-21)
 
-**What:** real conversations with companions (in their personality, remembering your history) and AI-generated adventures.
+**Dropped: no live AI.** The app stays free, offline and private. Live AI would mean a paid API (~€2–7/month), a free tier that may use your chats for training, or always-on hardware that costs about as much in electricity as the API and gives weaker answers.
 
-**Tension with the app's principles:** v1 is offline-first and privacy-focused. AI means sending data to an outside service and paying per use. So:
-- **Opt-in and off by default.** The app works fully without it.
-- **Bring your own API key** stored on the device: no server to build or pay for, and no one else can run up your bill.
-- **You choose what the AI sees:** companion persona + chat only, or also a summary of your week. Health numbers are **never** sent unless you switch that on.
-- **Adventures are generated in batches and saved**, so they work offline afterwards and don't cost anything per view.
-- Falls back to the existing pattern-matching chat when offline or without a key.
-
-**Cost estimate** (per chat message, ~2,000 tokens in, ~200 out): Claude Opus 5.5 ≈ $0.012 (≈ $7/month at 20 messages a day), Claude Haiku 4.5 ≈ $0.003 (≈ $2/month). Caching the fixed persona lowers this, and adventures can be generated through the Batch API at half price. Direct calls from the app are supported for bring-your-own-key use.
-
-**Effort:** large. **Do last**, once the core is used daily. The model gets chosen when we build it.
+**Instead:** large content packs written in advance (with an AI, outside the app) and imported, like the character files: many voice lines per companion and trigger, memory templates, and adventures with choices. Chat stays the existing pattern matching, fed by far more lines. Nothing leaves the phone and nothing costs money to run.
 
 ---
 
@@ -160,7 +151,7 @@ Mostly from [EIGHT-JOURNEYS-LESSONS](EIGHT-JOURNEYS-LESSONS.md):
 - **Recipe library** linked to the menu and grocery list
 - **Craving flow** (am I hungry → name it → 10-min timer → portioned version still counts), guided by the companion
 - **Weigh-in safety valve** (daily / weekly / trend only)
-- **Fasting becomes a standalone manual timer** (decided 2026-10-05). See review point 4: restriction is a known binge trigger, so keep it points-free, off the Today screen and away from the abstinence page. Today it's derived from the last logged meal (`useCurrentFast` in [useFasting.ts](../../src/hooks/useFasting.ts)), so every meal silently starts a fast and the card is always on the home screen. In 2.0: you press **Start** and **End** yourself, it has no link to meal logging, and it only appears when you open it or a fast is running.
+- **Fasting becomes a standalone manual timer** (decided 2026-10-05). See review point 4: restriction is a known binge trigger, so keep it off the Today screen and away from the abstinence page. **Done (2026-10-21):** you press **Start** and **End** yourself ([useFasting.ts](../../src/hooks/useFasting.ts)), it has no link to meal logging, it can't be in the Spotlight, and Today only shows a small line while a fast is running. Reaching the goal keeps its points (see open question 3).
 - **Burn-off suggestions and meal scores stay as they are** (decided 2026-10-05).
 
 ---
@@ -304,14 +295,15 @@ One feature at a time, each tested on your phone before the next one starts. Sma
 | 4 ✅ | **APK + notifications (Capacitor)**. Done (2026-10-20): APK, companion-voiced reminders (tested on the phone, also with the app closed), weekly encrypted automatic backups to Documents/ItGetsBetter, PWA data moved into the app. Skipped: a "new version" check (needs published builds) | Real phone app early, so the next features can use notifications |
 | 4b ✅ | **Meal prep** (pulled forward from step 9 on request): recipes, week planner, "eaten" → meal log. Next, one at a time: **import a meal plan from a file** (JSON exported by another meal-planning web app; format in [MEAL-PLAN-IMPORT](MEAL-PLAN-IMPORT.md)), grocery list from the plan, a "today's plan" card on Today, starter recipes | Asked for directly; self-contained, lands as Available |
 | ✅ | **2.0 release** (steps 0–4 and 4b), 2026-10-20, tag `v2.0.0`. Later steps ship as 2.1, 2.2, … | |
-| 5 | **To-do redesign** (habits + tasks) | Design with mockups first; uses the animations and fits with the Today screen |
-| 6 | **Abstinence page** | Self-contained, high personal value |
-| 7 | **Social page** | Self-contained, uses notifications |
-| 8 | **Mini-goals** | General milestone system; the weight stages in step 9 are built on it |
-| 9 | **Weight content:** trend, stages, non-scale wins, craving flow, meal menu | Builds on Today, abstinence (craving flow is shared) and mini-goals |
-| 10 | **Motivation:** why, future letter, wins jar, replay | Uses data from 6–9 |
+| 5 ✅ | **To-do redesign** (habits + tasks). Done 2026-10-20, tested on the phone: Habits / Tasks / Both switch, label chips, compact rows, a + button that adds in place, a detail page per task and habit, done items folded away. Meal prep moved to Log | Design with mockups first; uses the animations and fits with the Today screen |
+| 6 ✅ | **Abstinence page**. Done 2026-10-20 (Me → Abstinence), tested on the phone: "27 of 30" as the main number, live current run, longest run, total free days, milestones that stay, "it happened" with optional context, a simple craving helper (why + 10-minute timer, "it passed" counts), optional money saved | Self-contained, high personal value |
+| 7 ✅ | **Social page**. Done 2026-10-20 (Me → Social), tested on the phone: people with a rhythm and optional birthday, one-tap "saw them" / "talked", a warm "coming up" list, a Today card when spotlit, and a reminder to plan 3 days ahead plus birthdays (spotlight only, never repeated). Companion tie-in and game domain later (step 11) | Self-contained, uses notifications |
+| 8 ✅ | **Mini-goals**. Done 2026-10-21 (Me → Goals), tested on the phone: your own tracks of milestones, the next step big, tick by hand (points once, a win in the wins jar, companion reaction), optional aim-for date and treat, reorder, examples, Today card when spotlit; the profile's goal weight became a Weight track. Auto-check comes with step 9 | General milestone system; the weight stages in step 9 are built on it |
+| 9 ✅ | **Weight content**, done 2026-10-21 and tested on the phone, in parts: **9a** trend + safety valve (done 2026-10-21: smoothed trend as the main number everywhere, jump notes, show weigh-ins every time / weekly / trend only); **9b** weight milestones that tick themselves (done 2026-10-21: "−2 kg from where I started" / "Reach 83 kg" steps tick from the trend, never un-tick, with the usual celebration); **9c** non-scale wins (done 2026-10-21: a monthly "Beyond the scale" check-in on the Weight page, better / about the same per item, every "better" a win); **9d** craving flow (done 2026-10-21: Log → Craving: hungry? → name it → ten minutes with an "instead" list → passed / a portion / having it, with patterns; a Today card when spotlit). The meal menu is covered by Meal prep (4b) | Builds on Today, abstinence (craving flow is shared) and mini-goals |
+| 10 🔄 | **Motivation**, in parts: **10a** wins jar (done 2026-10-21: Me → Wins jar, every collected win by month, "pick one for me", your own wins, a Today card when spotlit); **10b** your "why" at the right moments (done 2026-10-21: a reason from the Motivation Vault in the craving flows, on a low-mood day and on Today after 3+ days away); **10c** letters to your future self (done 2026-10-21, tested on the phone: Me → Letters, sealed until a date or a goal step, a quiet Today line when one is ready, opening early with a second tap); **10d** progress replay | Uses data from 6–9 |
+| ✅ | **2.1 release** (steps 5–10c, plus a clean-up: v1 leftovers removed, the weekly review uses the weight trend, project deleting is back, fasting became a manual start/end timer), 2026-10-21, tag `v2.1.0` | |
 | 11 | **Companion content + entertainment:** new triggers, memory, daily surprise, unlockables | Needs the new features to react to |
-| 12 | **AI (opt-in):** chat, then adventures | Biggest and most external; only once the rest is used daily |
+| 12 | **Pre-generated content packs** (replaces AI, see section 6): lots of voice lines per companion and trigger, then adventures | Writing is easiest once every trigger from step 11 exists |
 
 ---
 
@@ -351,6 +343,6 @@ A step is finished, and can be merged to `main`, when:
 
 ### Still open
 
-2. **AI:** OK with bringing your own API key and paying per use, or should AI wait/skip? (Decide before step 12.)
-3. **Fasting points:** keep the "fasting goal met" points and companion trigger with the manual timer, or make fasting points-free? *Review recommends points-free* (restriction is a known binge trigger).
-4. **To-do redesign:** what overwhelms you most right now? (Input for the mockups in step 5.)
+2. **AI:** OK with bringing your own API key and paying per use, or should AI wait/skip? *Answer (2026-10-21):* no live AI; keep the app free and pre-generate voice lines and adventures instead (section 6).
+3. **Fasting points:** keep the "fasting goal met" points and companion trigger with the manual timer, or make fasting points-free? *Review recommends points-free* (restriction is a known binge trigger). *Answer (2026-10-21):* keep the points.
+4. **To-do redesign:** what overwhelms you most right now? (Input for the mockups in step 5.) *Answer (2026-10-20):* too many taps to get anywhere ("Add habit" first opens the Habits page instead of adding one), and rows take too much space; it should be smaller and easier to overview. Wanted: a switch at the top for habits / tasks / both, habits and tasks as their own pages, and meal prep moved out of Plan (to Log, Today or Me). Visual examples of the ideal look follow.

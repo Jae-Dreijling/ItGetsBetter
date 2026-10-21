@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { Scale, UtensilsCrossed, Droplets, Timer, Dumbbell, SmilePlus, Moon, Pill } from 'lucide-react'
+import { Scale, UtensilsCrossed, Droplets, Timer, Dumbbell, SmilePlus, Moon, Pill, CalendarRange, Waves } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useFeatureTiers } from '../../hooks/useFeatures'
@@ -11,8 +11,10 @@ const groups = [
     items: [
       { label: 'Weight', subtitle: 'Track your progress', icon: Scale, path: '/log/weight', bg: 'bg-secondary-100', text: 'text-secondary-700' },
       { label: 'Meals', subtitle: 'Log what you eat', icon: UtensilsCrossed, path: '/log/meal', bg: 'bg-primary-100', text: 'text-primary-700' },
+      { label: 'Craving', subtitle: 'Ride it out, step by step', icon: Waves, path: '/log/craving', bg: 'bg-accent-100', text: 'text-accent-700' },
+      { label: 'Meal prep', subtitle: 'Plan your week with recipes', icon: CalendarRange, path: '/log/meal-prep', bg: 'bg-secondary-100', text: 'text-secondary-700' },
       { label: 'Water', subtitle: 'Track your intake', icon: Droplets, path: '/log/water', bg: 'bg-secondary-50', text: 'text-secondary-700' },
-      { label: 'Fasting', subtitle: 'Auto-tracked from meals', icon: Timer, path: '/log/fasting', bg: 'bg-accent-50', text: 'text-accent-700' },
+      { label: 'Fasting', subtitle: 'Start and end a fast', icon: Timer, path: '/log/fasting', bg: 'bg-accent-50', text: 'text-accent-700' },
     ],
   },
   {

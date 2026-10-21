@@ -7,6 +7,8 @@ import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useTodaysSleep, useSleepHistory, addSleepEntry } from '../../hooks/useSleep'
 import { getLogicalDate } from '../../lib/date'
+import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { deleteEntry } from '../../lib/deleteEntry'
 
 const QUALITY_LABELS = ['', 'Terrible', 'Poor', 'Fair', 'Good', 'Excellent']
 
@@ -194,6 +196,7 @@ export default function SleepPage() {
                       )}
                     </div>
                   </div>
+                  <DeleteEntryButton label="sleep entry" onDelete={() => deleteEntry('sleepEntries', entry.id!)} />
                 </div>
               ))}
             </div>

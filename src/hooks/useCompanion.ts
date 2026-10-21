@@ -6,7 +6,7 @@ import { getRandomMessage } from '../lib/supportiveMessages'
 import { getSessionCompanionId, setSessionCompanionId, subscribeSessionCompanion, pickSessionCompanion } from '../lib/sessionCompanion'
 import type { Companion, CompanionMessages } from '../types'
 
-const EMPTY_MESSAGES: CompanionMessages = {
+export const EMPTY_MESSAGES: CompanionMessages = {
   general: [],
   morning_greeting: [],
   welcome_back: [],
@@ -39,7 +39,7 @@ export function useCompanions() {
   return useLiveQuery(() => db.companions.toArray())
 }
 
-export function useSessionCompanionId(): number | null {
+function useSessionCompanionId(): number | null {
   return useSyncExternalStore(subscribeSessionCompanion, getSessionCompanionId)
 }
 
@@ -117,6 +117,7 @@ export async function updateCompanion(id: number, changes: Partial<{
   avatar: Blob | null
   messages: CompanionMessages
   personality_group_id: number | null
+  movement: import('../lib/companionMotion').CompanionMovement
 }>) {
   await db.companions.update(id, changes)
 }

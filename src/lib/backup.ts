@@ -16,7 +16,7 @@ const BACKUP_VERSION = 6
 
 type Row = Record<string, unknown>
 
-interface EncodedBlob {
+export interface EncodedBlob {
   __blob: true
   type: string
   base64: string
@@ -64,11 +64,11 @@ function isEncodedBlob(value: unknown): value is EncodedBlob {
   return typeof value === 'object' && value !== null && (value as EncodedBlob).__blob === true
 }
 
-async function encodeBlob(blob: Blob): Promise<EncodedBlob> {
+export async function encodeBlob(blob: Blob): Promise<EncodedBlob> {
   return { __blob: true, type: blob.type, base64: arrayToBase64(new Uint8Array(await blob.arrayBuffer())) }
 }
 
-function decodeBlob(encoded: EncodedBlob): Blob {
+export function decodeBlob(encoded: EncodedBlob): Blob {
   return new Blob([base64ToArray(encoded.base64) as Uint8Array<ArrayBuffer>], { type: encoded.type })
 }
 
@@ -230,11 +230,11 @@ export async function createBackup(password: string): Promise<Blob> {
   return new Blob([JSON.stringify(payload)], { type: 'application/octet-stream' })
 }
 
-// Creates an encrypted backup and saves it (download, or the share sheet in
-// the Android app).
-export async function downloadBackup(password: string): Promise<void> {
+// Creates an encrypted backup and saves it (a download, or the Download
+// folder in the Android app). Returns where it went.
+export async function downloadBackup(password: string): Promise<string> {
   const blob = await createBackup(password)
-  await saveFile(blob, `itgetsbetter-backup-${new Date().toISOString().slice(0, 10)}.igb`)
+  return saveFile(blob, `itgetsbetter-backup-${new Date().toISOString().slice(0, 10)}.igb`)
 }
 
 export async function restoreBackup(file: Blob, password: string): Promise<void> {

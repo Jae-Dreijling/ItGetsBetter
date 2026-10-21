@@ -1,4 +1,4 @@
-import { FEATURES, SPOTLIGHT_CAP, getFeature, type FeatureId, type FeatureTiers } from './features'
+import { FEATURES, DEFAULT_SPOTLIGHT_CAP, getFeature, type FeatureId, type FeatureTiers } from './features'
 
 // The one-time "what would you like to use?" picker shown when 2.0 first
 // opens. Features the user already has data in start selected, so an existing
@@ -23,7 +23,7 @@ export function picksToTiers(selected: Set<FeatureId>, spotlight: Set<FeatureId>
   for (const feature of FEATURES) {
     if (!selected.has(feature.id)) {
       tiers[feature.id] = 'off'
-    } else if (spotlight.has(feature.id) && getFeature(feature.id).canSpotlight && spotlit < SPOTLIGHT_CAP) {
+    } else if (spotlight.has(feature.id) && getFeature(feature.id).canSpotlight && spotlit < DEFAULT_SPOTLIGHT_CAP) {
       tiers[feature.id] = 'spotlight'
       spotlit++
     } else {

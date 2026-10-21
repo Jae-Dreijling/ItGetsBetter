@@ -175,7 +175,7 @@ const FORTUNE_EVENTS: FortuneEventDef[] = [
 
 const FORTUNE_KEY = 'igb_fortune_week'
 
-export function getFortuneState(): StoredFortune | null {
+function getFortuneState(): StoredFortune | null {
   const raw = localStorage.getItem(FORTUNE_KEY)
   if (!raw) return null
   try { return JSON.parse(raw) as StoredFortune } catch { return null }

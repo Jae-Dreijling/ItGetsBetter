@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { AnimatePresence, m } from 'motion/react'
 import { X } from 'lucide-react'
-import { fade, slideUp } from '../../lib/animations'
+import { fade, slideUp } from '../lib/animations'
 
 interface SheetProps {
   open: boolean

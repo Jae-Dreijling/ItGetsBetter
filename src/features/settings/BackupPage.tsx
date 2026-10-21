@@ -24,8 +24,8 @@ export default function BackupPage() {
     setStatus(null)
 
     try {
-      await downloadBackup(password)
-      setStatus({ type: 'success', message: 'Backup created and saved!' })
+      const where = await downloadBackup(password)
+      setStatus({ type: 'success', message: `Backup saved to ${where}.` })
       setPassword('')
     } catch (err) {
       setStatus({ type: 'error', message: `Backup failed: ${err instanceof Error ? err.message : 'Unknown error'}` })

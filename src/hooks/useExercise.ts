@@ -26,7 +26,7 @@ export function saveCustomKcal(exerciseType: string, kcalPerMin: number) {
   localStorage.setItem('igb_exercise_kcal', JSON.stringify({ ...map, [exerciseType]: kcalPerMin }))
 }
 
-export function getKcalPerMin(exerciseType: string): number | null {
+function getKcalPerMin(exerciseType: string): number | null {
   return DEFAULT_KCAL_PER_MIN[exerciseType] ?? getCustomKcalMap()[exerciseType] ?? null
 }
 

@@ -1,6 +1,10 @@
 import type { MealSlot, HabitFrequency, TaskPriority, Weekday } from './enums'
 import type { FeatureTiers } from '../lib/features'
 import type { NotificationPrefs } from '../lib/notifications/plan'
+import type { WeightDisplay } from '../lib/weightTrend'
+import type { CompanionMovement } from '../lib/companionMotion'
+import type { NonScaleAnswer } from '../lib/nonScale'
+import type { CravingOutcome } from '../lib/craving'
 
 export interface UserProfile {
   id?: number
@@ -17,6 +21,13 @@ export interface UserProfile {
   // Per-feature attention tier (spotlight / available / off). Missing means
   // available. See lib/features.
   feature_tiers?: FeatureTiers
+  // How many features may be in the spotlight (2-8). Missing means 3.
+  spotlight_cap?: number
+  // Weight safety valve: show every weigh-in, weekly averages, or only the
+  // trend. Missing means every. See lib/weightTrend.
+  weight_display?: WeightDisplay
+  // Your own items for the craving flow's "instead" list (step 9d).
+  craving_instead?: string[]
   // When the one-time 2.0 feature picker was completed or skipped.
   features_picked_at?: string
   // Phone notification settings (Android app). See lib/notifications.
@@ -127,6 +138,8 @@ export interface Task {
   priority: TaskPriority
   label_ids: number[]
   show_in_today: boolean
+  // Free text from the task's detail page. Missing means none.
+  notes?: string | null
   completed_at: string | null
   created_at: string
 }
@@ -322,6 +335,8 @@ export interface Companion {
   is_active: boolean
   personality_group_id: number | null
   messages: CompanionMessages
+  // How it wanders on screen when idle (see lib/companionMotion). Missing means calm.
+  movement?: CompanionMovement
   created_at: string
 }
 
@@ -335,11 +350,13 @@ export interface PersonalityGroup {
   created_at: string
 }
 
+// A fast you start and end yourself (V2-PLAN §3). While it runs, end_time is
+// null and duration_hours is 0.
 export interface FastingRecord {
   id?: number
   date: string
   start_time: string
-  end_time: string
+  end_time: string | null
   duration_hours: number
   goal_hours: number
   goal_met: boolean
@@ -352,7 +369,7 @@ export interface Win {
   id?: number
   date: string
   text: string
-  source: 'daily_check'
+  source: 'daily_check' | 'milestone' | 'non_scale' | 'craving' | 'own'
   logged_at: string
 }
 
@@ -389,6 +406,118 @@ export interface MealPlanItem {
   meal_entry_id: number | null
   // Points are paid once per item, so un-eating and eating again doesn't pay twice.
   points_given: boolean
+  created_at: string
+}
+
+// Something the user is stepping away from (V2-PLAN §9). See lib/abstinence.
+export interface AbstinenceCounter {
+  id?: number
+  name: string
+  emoji: string
+  // When the current effort started (the first free moment).
+  started_at: string
+  why: string | null
+  // What the habit costs per day, for "money saved". Optional.
+  cost_per_day: number | null
+  archived: boolean
+  created_at: string
+}
+
+// "It happened" (a slip) or a craving that passed without one.
+export interface AbstinenceEvent {
+  id?: number
+  counter_id: number
+  kind: 'slip' | 'craving_resisted'
+  at: string
+  // stressed / bored / social / tired / ...; optional, for patterns.
+  context: string | null
+}
+
+// Someone on the Social page (V2-PLAN §10). See lib/social.
+export interface Person {
+  id?: number
+  name: string
+  emoji: string
+  group: 'partner' | 'family' | 'friend' | 'other'
+  // "MM-DD"; the year is separate and optional (for "turning 30").
+  birthday: string | null
+  birth_year: number | null
+  notes: string | null
+  // How often you'd like to connect, in days; null means no rhythm.
+  rhythm_days: number | null
+  // With 'in_person', only meeting up counts towards the rhythm.
+  prefer: 'in_person' | 'either'
+  archived: boolean
+  created_at: string
+}
+
+export interface SocialContact {
+  id?: number
+  person_id: number
+  // Logical date of the contact.
+  date: string
+  kind: 'saw' | 'talked'
+  logged_at: string
+}
+
+// A mini-goal track (V2-PLAN §14): your own milestones, in order. See lib/goals.
+export interface GoalTrack {
+  id?: number
+  name: string
+  emoji: string
+  archived: boolean
+  created_at: string
+}
+
+export interface GoalMilestone {
+  id?: number
+  track_id: number
+  text: string
+  // Position in the track, 0 first.
+  order: number
+  done_at: string | null
+  // Optional "aim for" date; passing it changes nothing.
+  aim_for: string | null
+  // Optional treat for reaching it, in your own words.
+  treat: string | null
+  // Points are paid once, so un-ticking and ticking again doesn't pay twice.
+  points_given: boolean
+  // Ticks itself when the weight trend gets there (step 9b). Missing or null
+  // means it's ticked by hand. See lib/goals.
+  auto?: MilestoneAuto | null
+  created_at: string
+}
+
+export type MilestoneAuto =
+  | { kind: 'weight_down_kg'; value: number }
+  | { kind: 'weight_at_most_kg'; value: number }
+
+// A monthly non-scale check-in (step 9c). See lib/nonScale.
+export interface NonScaleCheck {
+  id?: number
+  date: string
+  answers: Record<string, NonScaleAnswer>
+  note: string | null
+  logged_at: string
+}
+
+// One run through the craving flow (step 9d). See lib/craving.
+export interface CravingEvent {
+  id?: number
+  date: string
+  hungry: boolean
+  trigger: string | null
+  instead: string | null
+  outcome: CravingOutcome
+  logged_at: string
+}
+
+// A letter to your future self (step 10c). See lib/letters.
+export interface FutureLetter {
+  id?: number
+  text: string
+  unlock: { kind: 'date'; date: string } | { kind: 'milestone'; milestone_id: number }
+  opened_at: string | null
   created_at: string
 }
 

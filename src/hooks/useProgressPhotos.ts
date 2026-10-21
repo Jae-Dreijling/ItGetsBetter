@@ -9,12 +9,6 @@ export function useProgressPhotos() {
   )
 }
 
-export function useProgressPhotosByDate(date: string) {
-  return useLiveQuery(
-    () => db.progressPhotos.where('date').equals(date).toArray(),
-    [date]
-  )
-}
 
 export async function addProgressPhoto(file: File, poseType: string, date?: string) {
   const compressed = await compressImage(file, {

@@ -1129,7 +1129,7 @@ export const ENCOUNTERS: Record<string, EncounterDefinition> = {
 
 const ENCOUNTER_COOLDOWN_KEY = 'igb_encounter_date'
 
-export function hasEncounterToday(): boolean {
+function hasEncounterToday(): boolean {
   return localStorage.getItem(ENCOUNTER_COOLDOWN_KEY) === getLogicalDate()
 }
 

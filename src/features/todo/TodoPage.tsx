@@ -1,450 +1,335 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
-import { Plus, Target, CheckCircle2, Timer, ChevronRight } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router'
+import { AnimatePresence, m } from 'motion/react'
+import { Check, ChevronDown, Feather, Flag, Link2, ListChecks, NotebookText, Plus, Repeat, Timer } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
+import PageContainer from '../../components/layout/PageContainer'
+import Sheet from '../../components/Sheet'
 import { useFeatureTiers } from '../../hooks/useFeatures'
 import { isOn } from '../../lib/features'
-import PageContainer from '../../components/layout/PageContainer'
-import LabelBadge from '../../components/LabelBadge'
-import PriorityBadge from '../../components/PriorityBadge'
-import StreakDisplay from '../../components/StreakDisplay'
-import { useActiveHabits, useTodaysCompletions, useHabitCompletions, toggleHabitCompletion, isTodayScheduled } from '../../hooks/useHabits'
+import { getLogicalDate } from '../../lib/date'
+import { pop } from '../../lib/animations'
 import { formatProgressionValue } from '../../lib/progression'
-import { useTasks, useProjects, toggleTask } from '../../hooks/useTasks'
+import { sortTasks, nextPriority, dueLabel, subtaskProgress, parseTodoView, type TodoView } from '../../lib/todoList'
+import { useActiveHabits, useTodaysCompletions, toggleHabitCompletion, isTodayScheduled } from '../../hooks/useHabits'
+import { useAllTasks, toggleTask, updateTask } from '../../hooks/useTasks'
 import { useLabels } from '../../hooks/useLabels'
-import type { Habit, Task, Label, TaskPriority } from '../../types'
+import QuickAdd from './QuickAdd'
+import type { Habit, Label, Task, TaskPriority, Weekday } from '../../types'
 
-type Filter = 'all' | 'habits' | 'tasks'
-type SortMode = 'priority' | 'due_date'
+const VIEW_KEY = 'igb_todo_view'
+const DAY_NAMES: Record<Weekday, string> = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' }
+
+function storedView(): TodoView {
+  try { return parseTodoView(localStorage.getItem(VIEW_KEY)) ?? 'both' } catch { return 'both' }
+}
 
 export default function TodoPage() {
-  const [chosenFilter, setFilter] = useState<Filter>('all')
+  const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
   const tiers = useFeatureTiers()
   const habitsOn = isOn(tiers, 'habits')
   const tasksOn = isOn(tiers, 'tasks')
+
+  const chosen = parseTodoView(params.get('view')) ?? storedView()
   // With one of the two switched off, the page simply shows the other.
-  const filter: Filter = habitsOn && tasksOn ? chosenFilter : habitsOn ? 'habits' : tasksOn ? 'tasks' : 'all'
+  const view: TodoView = habitsOn && tasksOn ? chosen : habitsOn ? 'habits' : 'tasks'
+  const showHabits = habitsOn && view !== 'tasks'
+  const showTasks = tasksOn && view !== 'habits'
+
   const [labelFilter, setLabelFilter] = useState<number | null>(null)
-  const [projectFilter, setProjectFilter] = useState<number | 'none' | null>(null)
-  const [sortMode, setSortMode] = useState<SortMode>('priority')
+  const [adding, setAdding] = useState(false)
+  const labels = useLabels() ?? []
+  const labelsMap = new Map(labels.map(l => [l.id!, l]))
   const habits = useActiveHabits()
   const completions = useTodaysCompletions()
-  const pendingTasks = useTasks({ completed: false })
-  const labels = useLabels()
-  const projects = useProjects()
-  const navigate = useNavigate()
+  const allTasks = useAllTasks() ?? []
+  const today = getLogicalDate()
 
-  const labelsMap = new Map(labels?.map(l => [l.id!, l]))
-
-  function isHabitDone(habitId: number) {
-    return completions?.some(c => c.habit_id === habitId) ?? false
+  function chooseView(next: TodoView) {
+    try { localStorage.setItem(VIEW_KEY, next) } catch { /* per-device convenience only */ }
+    setParams({ view: next }, { replace: true })
   }
 
-  const todaysHabits = habits?.filter(h => isTodayScheduled(h))
+  const matchesLabel = (ids: number[]) => labelFilter === null || ids.includes(labelFilter)
+  const doneHabitIds = new Set(completions?.map(c => c.habit_id))
+  const todaysHabits = (habits ?? []).filter(h => isTodayScheduled(h) && matchesLabel(h.label_ids))
+  const openHabits = todaysHabits.filter(h => !doneHabitIds.has(h.id!))
+  const doneHabits = todaysHabits.filter(h => doneHabitIds.has(h.id!))
 
-  const filteredHabits = todaysHabits?.filter(h =>
-    labelFilter === null || h.label_ids.includes(labelFilter)
-  )
+  const topTasks = allTasks.filter(t => t.parent_task_id === null && matchesLabel(t.label_ids))
+  const openTasks = sortTasks(topTasks.filter(t => !t.is_completed))
+  const doneTasks = topTasks
+    .filter(t => t.is_completed)
+    .sort((a, b) => (b.completed_at ?? '').localeCompare(a.completed_at ?? ''))
+    .slice(0, 20)
 
-  let filteredTasks = pendingTasks?.slice() ?? []
-  if (labelFilter !== null) {
-    filteredTasks = filteredTasks.filter(t => t.label_ids.includes(labelFilter))
-  }
-  if (projectFilter === 'none') {
-    filteredTasks = filteredTasks.filter(t => t.project_id === null)
-  } else if (projectFilter !== null) {
-    filteredTasks = filteredTasks.filter(t => t.project_id === projectFilter)
-  }
-
-  const prioOrder: Record<TaskPriority, number> = { urgent: 0, high: 1, medium: 2, low: 3 }
-  if (sortMode === 'priority') {
-    filteredTasks.sort((a, b) => prioOrder[a.priority] - prioOrder[b.priority])
-  } else {
-    filteredTasks.sort((a, b) => {
-      if (!a.due_date && !b.due_date) return 0
-      if (!a.due_date) return 1
-      if (!b.due_date) return -1
-      return a.due_date.localeCompare(b.due_date)
-    })
-  }
-
-  const habitsCompleted = todaysHabits?.filter(h => isHabitDone(h.id!)).length ?? 0
-  const habitsTotal = todaysHabits?.length ?? 0
+  const usedLabelIds = new Set([...(habits ?? []).flatMap(h => h.label_ids), ...allTasks.flatMap(t => t.label_ids)])
+  const chipLabels = labels.filter(l => usedLabelIds.has(l.id!))
 
   return (
     <>
       <TopBar
         title="Plan"
         rightContent={isOn(tiers, 'focus_timer') ? (
-          <button
-            onClick={() => navigate('/todo/pomodoro')}
-            className="p-1.5 text-muted hover:text-text-primary"
-            aria-label="Pomodoro timer"
-          >
+          <button onClick={() => navigate('/todo/pomodoro')} className="p-1.5 text-muted hover:text-text-primary" aria-label="Pomodoro timer">
             <Timer className="h-5 w-5" />
           </button>
         ) : undefined}
       />
       <PageContainer>
         {habitsOn && tasksOn && (
-        <div className="mb-4 flex gap-2">
-          {(['all', 'habits', 'tasks'] as Filter[]).map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`flex-1 rounded-lg py-2 text-sm font-medium capitalize transition-colors ${
-                filter === f
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-card text-muted hover:bg-primary-50'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-        )}
-
-        <div className="mb-4 flex flex-wrap gap-2">
-          {labels && labels.length > 0 && (
-            <div className="flex gap-1.5 overflow-x-auto pb-1">
+          <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl bg-card p-1 shadow-sm" role="tablist" aria-label="Show">
+            {(['habits', 'tasks', 'both'] as TodoView[]).map(v => (
               <button
-                onClick={() => setLabelFilter(null)}
-                className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  labelFilter === null ? 'bg-primary-500 text-white' : 'bg-card text-muted'
+                key={v}
+                role="tab"
+                aria-selected={view === v}
+                onClick={() => chooseView(v)}
+                className={`rounded-lg py-1.5 text-sm font-medium capitalize transition-colors ${
+                  view === v ? 'bg-primary-500 text-white' : 'text-muted hover:text-text-primary'
                 }`}
               >
-                All
+                {v}
               </button>
-              {labels.map(l => (
-                <button
-                  key={l.id}
-                  onClick={() => setLabelFilter(labelFilter === l.id! ? null : l.id!)}
-                  className="shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all"
-                  style={{
-                    backgroundColor: labelFilter === l.id! ? l.color : `${l.color}20`,
-                    color: labelFilter === l.id! ? 'white' : l.color,
-                  }}
-                >
-                  {l.name}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {tasksOn && (filter === 'all' || filter === 'tasks') && projects && projects.length > 0 && (
-            <select
-              value={projectFilter === 'none' ? 'none' : projectFilter ?? ''}
-              onChange={e => {
-                const v = e.target.value
-                setProjectFilter(v === '' ? null : v === 'none' ? 'none' : Number(v))
-              }}
-              className="rounded-lg border border-primary-100 dark:border-primary-900 bg-card px-2.5 py-1 text-xs text-text-primary"
-            >
-              <option value="">All projects</option>
-              <option value="none">No project</option>
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          )}
-
-          {tasksOn && (filter === 'all' || filter === 'tasks') && (
-            <div className="flex gap-1 rounded-lg bg-card p-0.5">
-              <button
-                onClick={() => setSortMode('priority')}
-                className={`rounded-md px-2 py-1 text-xs font-medium ${sortMode === 'priority' ? 'bg-primary-500 text-white' : 'text-muted'}`}
-              >
-                Priority
-              </button>
-              <button
-                onClick={() => setSortMode('due_date')}
-                className={`rounded-md px-2 py-1 text-xs font-medium ${sortMode === 'due_date' ? 'bg-primary-500 text-white' : 'text-muted'}`}
-              >
-                Due
-              </button>
-            </div>
-          )}
-        </div>
-
-        {habitsOn && habitsTotal > 0 && (filter === 'all' || filter === 'habits') && (
-          <div className="mb-4 rounded-lg bg-card p-3 shadow-sm flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-success" />
-            <span className="text-sm text-text-primary font-medium">
-              {habitsCompleted} / {habitsTotal} habits done today
-            </span>
+            ))}
           </div>
         )}
 
-        {habitsOn && (filter === 'all' || filter === 'habits') && (
-          <div className="mb-6">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">Habits</h2>
-              <button onClick={() => navigate('/todo/habits')} className="text-xs text-primary-500 font-medium">
-                Manage
-              </button>
+        {chipLabels.length > 0 && (
+          <div className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
+            <Chip active={labelFilter === null} onClick={() => setLabelFilter(null)}>All</Chip>
+            {chipLabels.map(l => (
+              <Chip key={l.id} active={labelFilter === l.id} onClick={() => setLabelFilter(labelFilter === l.id ? null : l.id!)}>
+                {l.name}
+              </Chip>
+            ))}
+          </div>
+        )}
+
+        {showHabits && (
+          <section className="mb-5">
+            {showTasks && <SectionTitle>Habits today</SectionTitle>}
+            <div className="space-y-1.5">
+              {openHabits.map(h => (
+                <HabitRow key={h.id} habit={h} done={false} onOpen={() => navigate(`/todo/habits/${h.id}`)} />
+              ))}
             </div>
-            {filteredHabits && filteredHabits.length > 0 ? (
-              <div className="space-y-2">
-                {(() => {
-                  const chainGroups = new Map<string, typeof filteredHabits>()
-                  for (const h of filteredHabits!) {
-                    if (h.chain_id) {
-                      const arr = chainGroups.get(h.chain_id) ?? []
-                      arr.push(h)
-                      chainGroups.set(h.chain_id, arr)
-                    }
-                  }
-                  for (const [, arr] of chainGroups) {
-                    arr.sort((a, b) => a.chain_order - b.chain_order)
-                  }
-
-                  type Unit =
-                    | { type: 'standalone'; habit: (typeof filteredHabits)[0] }
-                    | { type: 'chain'; chainId: string; habits: typeof filteredHabits }
-
-                  const units: Unit[] = []
-                  const seenChains = new Set<string>()
-                  for (const habit of filteredHabits!) {
-                    if (habit.chain_id) {
-                      if (!seenChains.has(habit.chain_id)) {
-                        seenChains.add(habit.chain_id)
-                        units.push({ type: 'chain', chainId: habit.chain_id, habits: chainGroups.get(habit.chain_id)! })
-                      }
-                    } else {
-                      units.push({ type: 'standalone', habit })
-                    }
-                  }
-
-                  units.sort((a, b) => {
-                    const aDone = a.type === 'standalone'
-                      ? isHabitDone(a.habit.id!)
-                      : a.habits.every(h => isHabitDone(h.id!))
-                    const bDone = b.type === 'standalone'
-                      ? isHabitDone(b.habit.id!)
-                      : b.habits.every(h => isHabitDone(h.id!))
-                    return Number(aDone) - Number(bDone)
-                  })
-
-                  return units.map(unit => {
-                    if (unit.type === 'standalone') {
-                      const habit = unit.habit
-                      return (
-                        <HabitRow
-                          key={habit.id}
-                          habit={habit}
-                          isDone={isHabitDone(habit.id!)}
-                          labels={habit.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
-                          onToggle={() => toggleHabitCompletion(habit.id!)}
-                          onCantFail={() => toggleHabitCompletion(habit.id!, true)}
-                        />
-                      )
-                    }
-                    const chain = unit.habits
-                    const firstUndone = chain.find(h => !isHabitDone(h.id!))
-                    return (
-                      <div key={`chain-${unit.chainId}`} className="rounded-xl border-2 border-primary-200 dark:border-primary-800 p-2 space-y-1.5">
-                        <p className="text-[11px] font-semibold text-primary-400 px-2">🔗 Chain</p>
-                        {chain.map(h => {
-                          const done = isHabitDone(h.id!)
-                          const isNext = h.id === firstUndone?.id
-                          return (
-                            <div key={h.id} className={isNext ? '' : done ? 'opacity-50' : 'opacity-70'}>
-                              {isNext && !done && (
-                                <p className="text-[11px] font-semibold text-accent-600 px-2 mb-0.5">Next up →</p>
-                              )}
-                              <HabitRow
-                                habit={h}
-                                isDone={done}
-                                labels={h.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
-                                onToggle={() => toggleHabitCompletion(h.id!)}
-                                onCantFail={() => toggleHabitCompletion(h.id!, true)}
-                              />
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )
-                  })
-                })()}
-              </div>
-            ) : (
-              <p className="text-center text-sm text-muted py-3">
-                {habits?.length ? 'No habits scheduled for today' : 'No active habits'}
+            {openHabits.length === 0 && (
+              <p className="py-2 text-sm text-muted">
+                {doneHabits.length > 0 ? 'All habits for today are done.' : todaysHabits.length === 0 && (habits?.length ?? 0) === 0 ? 'No habits yet. Tap + to add one.' : 'Nothing scheduled for today.'}
               </p>
             )}
-          </div>
+            <DoneGroup count={doneHabits.length}>
+              {doneHabits.map(h => (
+                <HabitRow key={h.id} habit={h} done onOpen={() => navigate(`/todo/habits/${h.id}`)} />
+              ))}
+            </DoneGroup>
+            <button onClick={() => navigate('/todo/habits/manage')} className="mt-2 text-xs font-medium text-primary-500">
+              Chains & all habits
+            </button>
+          </section>
         )}
 
-        {tasksOn && (filter === 'all' || filter === 'tasks') && (
-          <div className="mb-6">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">Tasks</h2>
-              <button onClick={() => navigate('/todo/tasks')} className="text-xs text-primary-500 font-medium">
-                Manage
-              </button>
+        {showTasks && (
+          <section className="mb-5">
+            {showHabits && <SectionTitle>Tasks</SectionTitle>}
+            <div className="space-y-1.5">
+              {openTasks.map(t => (
+                <TaskRow
+                  key={t.id}
+                  task={t}
+                  today={today}
+                  subtasks={subtaskProgress(allTasks, t.id!)}
+                  labels={t.label_ids.map(id => labelsMap.get(id)).filter((l): l is Label => !!l)}
+                  onOpen={() => navigate(`/todo/tasks/${t.id}`)}
+                />
+              ))}
             </div>
-            {filteredTasks.length > 0 ? (
-              <div className="space-y-2">
-                {filteredTasks.map(task => (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    labels={task.label_ids.map(id => labelsMap.get(id)).filter(Boolean) as Label[]}
-                    projectName={projects?.find(p => p.id === task.project_id)?.name}
-                    onToggle={() => toggleTask(task.id!)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-sm text-muted py-3">No pending tasks</p>
+            {openTasks.length === 0 && (
+              <p className="py-2 text-sm text-muted">{doneTasks.length > 0 ? 'Nothing open. Nice.' : 'No tasks yet. Tap + to add one.'}</p>
             )}
-          </div>
+            <DoneGroup count={doneTasks.length}>
+              {doneTasks.map(t => (
+                <TaskRow
+                  key={t.id}
+                  task={t}
+                  today={today}
+                  subtasks={subtaskProgress(allTasks, t.id!)}
+                  labels={[]}
+                  onOpen={() => navigate(`/todo/tasks/${t.id}`)}
+                />
+              ))}
+            </DoneGroup>
+          </section>
         )}
-
-        {isOn(tiers, 'meal_prep') && (
-          <button
-            onClick={() => navigate('/todo/meal-prep')}
-            className="mb-4 flex w-full items-center gap-3 rounded-lg bg-card px-4 py-3 text-left shadow-sm"
-          >
-            <span className="text-2xl">🥗</span>
-            <div className="flex-1">
-              <p className="font-medium text-text-primary">Meal prep</p>
-              <p className="text-xs text-muted">Plan your week with recipes</p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted" />
-          </button>
-        )}
-
-        <div className="flex gap-2">
-          {habitsOn && (
-          <button
-            onClick={() => navigate('/todo/habits')}
-            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-primary-100 py-2.5 text-sm font-medium text-primary-700"
-          >
-            <Plus className="h-4 w-4" /> Add Habit
-          </button>
-          )}
-          {tasksOn && (
-          <button
-            onClick={() => navigate('/todo/tasks')}
-            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-secondary-100 py-2.5 text-sm font-medium text-secondary-700"
-          >
-            <Plus className="h-4 w-4" /> Add Task
-          </button>
-          )}
-        </div>
       </PageContainer>
+
+      {(habitsOn || tasksOn) && (
+        <button
+          onClick={() => setAdding(true)}
+          className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-lg transition-transform active:scale-95"
+          aria-label="Add"
+        >
+          <Plus className="h-7 w-7" />
+        </button>
+      )}
+
+      <Sheet open={adding} onClose={() => setAdding(false)} title="Add">
+        <QuickAdd
+          kinds={[...(tasksOn ? ['task' as const] : []), ...(habitsOn ? ['habit' as const] : [])]}
+          initialKind={view === 'habits' ? 'habit' : 'task'}
+          labelId={labelFilter}
+          onAdded={() => setAdding(false)}
+        />
+      </Sheet>
     </>
   )
 }
 
-function HabitRow({ habit, isDone, labels, onToggle, onCantFail }: { habit: Habit; isDone: boolean; labels: Label[]; onToggle: () => void; onCantFail: () => void }) {
-  const completions = useHabitCompletions(habit.id!, 30)
-  const streakCount = completions?.length ?? 0
-
-  const [now] = useState(() => Date.now())
-  const daysSinceActivation = habit.activated_at
-    ? Math.floor((now - new Date(habit.activated_at).getTime()) / (1000 * 60 * 60 * 24))
-    : 0
-
-  const freq = habit.frequency
-  const expectedPerDay = freq === 'daily' ? 1
-    : freq === 'weekly' ? 1 / 7
-    : freq === 'monthly' ? 1 / 30
-    : freq === 'custom' && habit.custom_days?.length ? habit.custom_days.length / 7
-    : 1
-  const formationDays = 30
-  const expectedTotal = Math.max(1, Math.round(expectedPerDay * Math.min(daysSinceActivation, formationDays)))
-  const consistency = expectedTotal > 0 ? Math.min(100, Math.round((streakCount / expectedTotal) * 100)) : 0
-  const isFormed = daysSinceActivation >= formationDays && consistency >= 75
-
-  const periodLabel = freq === 'weekly' ? 'Week' : freq === 'monthly' ? 'Month' : 'Day'
-  const periodCurrent = freq === 'weekly' ? Math.floor(daysSinceActivation / 7)
-    : freq === 'monthly' ? Math.floor(daysSinceActivation / 30)
-    : Math.min(daysSinceActivation, formationDays)
-  const periodTotal = freq === 'weekly' ? Math.ceil(formationDays / 7)
-    : freq === 'monthly' ? 1
-    : formationDays
-
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <div className={`flex items-center gap-3 rounded-lg bg-card px-4 py-3 shadow-sm transition-opacity ${isDone ? 'opacity-60' : ''}`}>
-      <button
-        onClick={onToggle}
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-          isDone
-            ? 'border-success bg-success text-white'
-            : 'border-primary-300 hover:border-primary-500'
-        }`}
-      >
-        {isDone && <span className="text-xs">✓</span>}
+    <button
+      onClick={onClick}
+      className={`shrink-0 rounded-full px-3.5 py-1 text-sm font-medium transition-colors ${
+        active ? 'bg-primary-500 text-white' : 'bg-card text-muted shadow-sm'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h2 className="mb-2 text-sm font-semibold text-muted">{children}</h2>
+}
+
+// Finished items fold away so the list shows what's left.
+function DoneGroup({ count, children }: { count: number; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  if (count === 0) return null
+  return (
+    <div className="mt-2">
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-1 py-1 text-sm font-medium text-muted">
+        Done · {count}
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
-      <div className="flex-1 min-w-0">
-        <p className={`font-medium text-text-primary ${isDone ? 'line-through' : ''}`}>
-          {habit.title}
-          {habit.progression?.enabled && (
-            <span className={`ml-1.5 text-xs font-normal ${habit.progression.is_mastered ? 'text-success' : 'text-primary-500'}`}>
-              {habit.progression.is_mastered ? '👑 ' : ''}
-              {formatProgressionValue(habit.progression.current_value, habit.progression.unit)}
-              {habit.progression.paused && ' ⏸'}
-            </span>
-          )}
-        </p>
-        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-          {labels.map(l => <LabelBadge key={l.id} name={l.name} color={l.color} />)}
-          <StreakDisplay completedCount={streakCount} frequency={habit.frequency} customDays={habit.custom_days} lookbackDays={30} />
-        </div>
-        {!isDone && habit.cant_fail_description && (
-          <button
-            onClick={onCantFail}
-            className="mt-1 rounded-full bg-accent-100 px-2.5 py-0.5 text-[11px] font-medium text-accent-700 hover:bg-accent-200 transition-colors"
-          >
-            Can't fail: {habit.cant_fail_description}
-          </button>
-        )}
-        {!isFormed && daysSinceActivation > 0 && (
-          <div className="mt-1 flex items-center gap-1.5">
-            <div className="h-1.5 flex-1 rounded-full bg-surface overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${consistency >= 75 ? 'bg-success' : 'bg-accent-400'}`}
-                style={{ width: `${Math.min((periodCurrent / periodTotal) * 100, 100)}%` }}
-              />
-            </div>
-            <span className="text-[11px] text-muted shrink-0">
-              {periodLabel} {Math.min(periodCurrent, periodTotal)}/{periodTotal} · {consistency}%
-            </span>
-          </div>
-        )}
-        {isFormed && (
-          <p className="mt-0.5 text-[11px] text-success font-medium">✓ Habit formed!</p>
-        )}
-      </div>
-      <Target className="h-4 w-4 shrink-0 text-muted" />
+      {open && <div className="mt-1 space-y-1.5">{children}</div>}
     </div>
   )
 }
 
-function TaskRow({ task, labels, projectName, onToggle }: { task: Task; labels: Label[]; projectName?: string; onToggle: () => void }) {
-  const isOverdue = task.due_date && !task.is_completed && task.due_date < new Date().toISOString().slice(0, 10)
-
+function CheckCircle({ done, onToggle, label }: { done: boolean; onToggle: () => void; label: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg bg-card px-4 py-3 shadow-sm">
-      <button
-        onClick={onToggle}
-        className="flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 border-primary-300 hover:border-primary-500 transition-colors"
-      />
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-text-primary">{task.title}</p>
-        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-          <PriorityBadge priority={task.priority} />
-          {labels.map(l => <LabelBadge key={l.id} name={l.name} color={l.color} />)}
-          {projectName && <span className="text-xs text-muted">📁 {projectName}</span>}
-          {task.due_date && (
-            <span className={`text-xs ${isOverdue ? 'text-danger font-medium' : 'text-muted'}`}>
-              {isOverdue ? 'Overdue: ' : 'Due: '}{task.due_date}
-            </span>
-          )}
-        </div>
-      </div>
+    <button
+      onClick={e => { e.stopPropagation(); onToggle() }}
+      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+        done ? 'border-success bg-success text-white' : 'border-primary-300 hover:border-primary-500'
+      }`}
+      aria-label={label}
+    >
+      <AnimatePresence initial={false}>
+        {done && (
+          <m.span key="check" variants={pop} initial="hidden" animate="visible" exit="exit">
+            <Check className="h-3.5 w-3.5" />
+          </m.span>
+        )}
+      </AnimatePresence>
+    </button>
+  )
+}
+
+function Row({ done, onOpen, children }: { done: boolean; onOpen: () => void; children: React.ReactNode }) {
+  return (
+    <div
+      onClick={onOpen}
+      className={`flex min-h-[3.25rem] cursor-pointer items-center gap-3 rounded-xl bg-card px-3.5 py-2 shadow-sm transition-opacity ${done ? 'opacity-60' : ''}`}
+    >
+      {children}
     </div>
+  )
+}
+
+function frequencyText(habit: Habit): string {
+  if (habit.frequency === 'custom') return habit.custom_days.map(d => DAY_NAMES[d]).join(', ')
+  return habit.frequency.charAt(0).toUpperCase() + habit.frequency.slice(1)
+}
+
+function HabitRow({ habit, done, onOpen }: { habit: Habit; done: boolean; onOpen: () => void }) {
+  const prog = habit.progression?.enabled ? habit.progression : null
+  return (
+    <Row done={done} onOpen={onOpen}>
+      <CheckCircle done={done} onToggle={() => toggleHabitCompletion(habit.id!)} label={done ? `Undo ${habit.title}` : `Done: ${habit.title}`} />
+      <div className="min-w-0 flex-1">
+        <p className={`truncate text-[15px] text-text-primary ${done ? 'line-through' : ''}`}>{habit.title}</p>
+        <p className="flex items-center gap-1.5 text-xs text-muted">
+          <Repeat className="h-3 w-3" aria-hidden />
+          {frequencyText(habit)}
+          {prog && <span>· {formatProgressionValue(prog.current_value, prog.unit)}</span>}
+          {habit.chain_id && <Link2 className="h-3 w-3" aria-label="In a chain" />}
+          {habit.is_floor && <span aria-label="Daily floor">🌱</span>}
+        </p>
+      </div>
+      {!done && habit.cant_fail_description && (
+        <button
+          onClick={e => { e.stopPropagation(); toggleHabitCompletion(habit.id!, true) }}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface hover:text-accent-600"
+          aria-label={`Can't-fail version: ${habit.cant_fail_description}`}
+          title={`Can't-fail: ${habit.cant_fail_description}`}
+        >
+          <Feather className="h-4 w-4" />
+        </button>
+      )}
+    </Row>
+  )
+}
+
+const FLAG_CLASS: Record<TaskPriority, string> = {
+  low: 'text-muted/60',
+  medium: 'text-muted',
+  high: 'text-accent-500 fill-accent-500/20',
+  urgent: 'text-primary-500 fill-primary-500/30',
+}
+
+function TaskRow({ task, today, subtasks, labels, onOpen }: {
+  task: Task
+  today: string
+  subtasks: { done: number; total: number }
+  labels: Label[]
+  onOpen: () => void
+}) {
+  const done = task.is_completed
+  const hasMeta = task.due_date || subtasks.total > 0 || task.notes || labels.length > 0
+  return (
+    <Row done={done} onOpen={onOpen}>
+      <CheckCircle done={done} onToggle={() => toggleTask(task.id!)} label={done ? `Undo ${task.title}` : `Done: ${task.title}`} />
+      <div className="min-w-0 flex-1">
+        <p className={`truncate text-[15px] text-text-primary ${done ? 'line-through' : ''}`}>{task.title}</p>
+        {hasMeta && (
+          <p className="flex items-center gap-1.5 text-xs text-muted">
+            {task.due_date && <span>{dueLabel(task.due_date, today)}</span>}
+            {task.notes && <NotebookText className="h-3 w-3" aria-label="Has notes" />}
+            {subtasks.total > 0 && (
+              <span className="flex items-center gap-0.5"><ListChecks className="h-3 w-3" aria-hidden />{subtasks.done}/{subtasks.total}</span>
+            )}
+            {labels.slice(0, 2).map(l => (
+              <span key={l.id} className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: l.color }} />
+                {l.name}
+              </span>
+            ))}
+          </p>
+        )}
+      </div>
+      {!done && (
+        <button
+          onClick={e => { e.stopPropagation(); updateTask(task.id!, { priority: nextPriority(task.priority) }) }}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-surface"
+          aria-label={`Priority: ${task.priority}. Tap to change`}
+        >
+          <Flag className={`h-4 w-4 ${FLAG_CLASS[task.priority]}`} />
+        </button>
+      )}
+    </Row>
   )
 }
