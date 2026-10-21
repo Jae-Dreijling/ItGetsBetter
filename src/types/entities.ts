@@ -367,7 +367,7 @@ export interface Win {
   id?: number
   date: string
   text: string
-  source: 'daily_check' | 'milestone' | 'non_scale' | 'craving'
+  source: 'daily_check' | 'milestone' | 'non_scale' | 'craving' | 'own'
   logged_at: string
 }
 

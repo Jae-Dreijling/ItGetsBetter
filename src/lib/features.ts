@@ -13,7 +13,7 @@ export type FeatureTier = 'spotlight' | 'available' | 'off'
 
 export type FeatureId =
   | 'weight' | 'meals' | 'cravings' | 'abstinence' | 'water' | 'fasting' | 'exercise' | 'mood' | 'sleep' | 'medicine' | 'measurements' | 'photos'
-  | 'habits' | 'tasks' | 'focus_timer' | 'meal_prep' | 'social' | 'goals'
+  | 'habits' | 'tasks' | 'focus_timer' | 'meal_prep' | 'social' | 'goals' | 'wins_jar'
   | 'timeline' | 'insights' | 'graphs' | 'weekly_review' | 'achievements'
   | 'meditation' | 'grocery' | 'books' | 'motivation_vault'
   | 'journey' | 'rewards'
@@ -66,6 +66,7 @@ export const FEATURES: Feature[] = [
   { id: 'social', name: 'Social', emoji: '🫂', description: 'People you want to see, at your own rhythm', group: 'Planning', paths: ['/me/social'], canSpotlight: true },
   { id: 'focus_timer', name: 'Focus timer', emoji: '🍅', description: 'Pomodoro sessions', group: 'Planning', paths: ['/todo/pomodoro'], canSpotlight: false },
   { id: 'timeline', name: 'My Day', emoji: '🕒', description: 'Everything you logged, in order', group: 'Progress', paths: ['/me/timeline'], canSpotlight: false },
+  { id: 'wins_jar', name: 'Wins jar', emoji: '🫙', description: 'Every win you collected, for the hard days', group: 'Progress', paths: ['/me/wins'], canSpotlight: true },
   { id: 'insights', name: 'Health insights', emoji: '💡', description: 'Patterns in your data', group: 'Progress', paths: ['/me/insights'], canSpotlight: false },
   { id: 'graphs', name: 'Graphs', emoji: '📈', description: 'Charts and trends', group: 'Progress', paths: ['/me/graphs'], canSpotlight: false },
   { id: 'weekly_review', name: 'Weekly review', emoji: '🗓️', description: 'Your week at a glance', group: 'Progress', paths: ['/me/review'], canSpotlight: false },

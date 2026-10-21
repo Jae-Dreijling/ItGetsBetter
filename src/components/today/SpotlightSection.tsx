@@ -25,6 +25,8 @@ import { ContactButtons, THANKS } from '../../features/social/parts'
 import { useTracks, useMilestones } from '../../hooks/useGoals'
 import { nextMilestone } from '../../lib/goals'
 import { MilestoneCheck } from '../../features/goals/parts'
+import { useWins } from '../../hooks/useWins'
+import { winOfTheDay, SOURCE_EMOJI } from '../../lib/winsJar'
 import { useThanks } from '../../features/social/useThanks'
 import type { GameQuest } from '../../types'
 
@@ -46,6 +48,7 @@ const CARDS: Partial<Record<FeatureId, { path: string; Body: () => React.ReactNo
   social: { path: '/me/social', Body: SocialBody },
   goals: { path: '/me/goals', Body: GoalsBody },
   cravings: { path: '/log/craving', Body: CravingBody },
+  wins_jar: { path: '/me/wins', Body: WinsBody },
 }
 
 export default function SpotlightSection({ tiers }: { tiers: FeatureTiers | undefined }) {
@@ -231,6 +234,19 @@ function TasksBody() {
 
   if (tasks.length === 0) return <p className={status}>Nothing for today. 🌿</p>
   return <CheckList items={tasks.map(t => ({ id: t.id!, label: t.title }))} onCheck={id => toggleTask(id)} />
+}
+
+// One win from the jar, the same all day.
+function WinsBody() {
+  const wins = useWins()
+  const win = winOfTheDay(wins ?? [], getLogicalDate())
+  if (!win) return <p className={status}>Your jar fills up as you go. 🫙</p>
+  return (
+    <p className="text-sm text-text-primary">
+      {SOURCE_EMOJI[win.source]} {win.text}
+      <span className="block text-xs text-muted">{format(parseISO(win.date), 'd MMM')}</span>
+    </p>
+  )
 }
 
 // Always one tap from help, never a count of how often.
