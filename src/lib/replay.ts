@@ -1,4 +1,4 @@
-import { addDays, format, parseISO, subDays, subMonths } from 'date-fns'
+import { addDays, format, parseISO, subDays, subMonths, subYears } from 'date-fns'
 import { getLogicalDate } from './date'
 import { MILESTONES } from './abstinence'
 import { trendSeries, trendOn } from './weightTrend'
@@ -10,9 +10,9 @@ import { trendSeries, trendOn } from './weightTrend'
 export type ReplayPeriod = 'start' | '3_months' | 'month'
 
 export const PERIODS: { id: ReplayPeriod; label: string }[] = [
-  { id: 'start', label: 'Since the start' },
-  { id: '3_months', label: '3 months' },
   { id: 'month', label: 'Last month' },
+  { id: '3_months', label: '3 months' },
+  { id: 'start', label: 'Since the start' },
 ]
 
 export function periodStart(period: ReplayPeriod, today: string, firstDay: string): string {
@@ -135,8 +135,74 @@ export function buildStops(input: ReplayInput, now = new Date()): ReplayStop[] {
   const inRange = stops.filter(s => s.date >= since && s.date <= today).sort((a, b) => a.date.localeCompare(b.date))
   return [
     { date: since, kind: 'start', emoji: '🚩', title: format(parseISO(since), 'd MMM yyyy'), line: 'This is where our walk starts. Come on!' },
-    ...inRange,
+    ...bundleOld(inRange, today),
   ]
+}
+
+// ─── Bundling older stops ─────────────────────────────────────────────────────
+
+// The further back, the bigger the bundles, so "since the start" stays a walk
+// and not a hike: the last 6 months stop one by one, then one stop per kind
+// per month (to a year back), per quarter (to two years) and per year.
+function bucketOf(date: string, today: string): { key: string; label: string } | null {
+  const d = parseISO(date)
+  const now = parseISO(today)
+  if (d >= subMonths(now, 6)) return null
+  if (d >= subYears(now, 1)) return { key: format(d, 'yyyy-MM'), label: format(d, 'MMMM yyyy') }
+  if (d >= subYears(now, 2)) {
+    const q = Math.floor(d.getMonth() / 3)
+    const first = new Date(d.getFullYear(), q * 3, 1)
+    return { key: `${d.getFullYear()}-Q${q}`, label: `${format(first, 'MMM')}–${format(new Date(d.getFullYear(), q * 3 + 2, 1), 'MMM yyyy')}` }
+  }
+  return { key: format(d, 'yyyy'), label: format(d, 'yyyy') }
+}
+
+const BUNDLE_NAMES: Partial<Record<StopKind, string>> = {
+  goal: 'goal steps',
+  abstinence: 'free-day milestones',
+  achievement: 'achievements',
+  win: 'win milestones',
+  craving: 'craving milestones',
+  people: 'catch-up milestones',
+  habit: 'check-in milestones',
+  letter: 'letters opened',
+}
+
+const listed = (titles: string[]) => {
+  const shown = titles.slice(0, 3)
+  const more = titles.length - shown.length
+  if (more > 0) return `${shown.join(', ')} and ${more} more`
+  return shown.length > 1 ? `${shown.slice(0, -1).join(', ')} and ${shown[shown.length - 1]}` : shown[0]
+}
+
+function bundle(group: ReplayStop[], label: string): ReplayStop {
+  const first = group[0]
+  const lastStop = group[group.length - 1]
+  if (first.kind === 'weight') {
+    return { ...lastStop, title: `${first.title} → ${lastStop.title}`, line: `${label}: your trend kept going down, ${first.title} → ${lastStop.title}.` }
+  }
+  const name = BUNDLE_NAMES[first.kind] ?? 'moments'
+  return { ...lastStop, emoji: first.emoji, title: `${group.length} ${name}`, line: `${label}: ${listed(group.map(s => s.title))}.` }
+}
+
+export function bundleOld(stops: ReplayStop[], today: string): ReplayStop[] {
+  type Group = { label: string; stops: ReplayStop[] }
+  // Each group sits where its first stop was.
+  const out: (ReplayStop | Group)[] = []
+  const groups = new Map<string, Group>()
+  for (const stop of stops) {
+    const bucket = stop.kind === 'photo' ? null : bucketOf(stop.date, today)
+    if (!bucket) { out.push(stop); continue }
+    const key = `${bucket.key}:${stop.kind}`
+    const group = groups.get(key)
+    if (group) { group.stops.push(stop); continue }
+    const fresh = { label: bucket.label, stops: [stop] }
+    groups.set(key, fresh)
+    out.push(fresh)
+  }
+  return out
+    .map(item => ('stops' in item ? (item.stops.length === 1 ? item.stops[0] : bundle(item.stops, item.label)) : item))
+    .sort((a, b) => a.date.localeCompare(b.date))
 }
 
 // Said at the end, under the finish flag.

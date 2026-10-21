@@ -19,7 +19,7 @@ const chip = (on: boolean) => `shrink-0 rounded-full px-3 py-1.5 text-sm transit
 
 export default function ReplayPage() {
   const navigate = useNavigate()
-  const [period, setPeriod] = useState<ReplayPeriod>('start')
+  const [period, setPeriod] = useState<ReplayPeriod>('month')
   // Photos are off by default: seeing your body isn't nice on every day.
   const [withPhotos, setWithPhotos] = useState(false)
   const data = useReplayStops(period, withPhotos)

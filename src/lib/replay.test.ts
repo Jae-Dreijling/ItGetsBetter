@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { abstinenceReached, buildStops, layoutTrail, periodStart, type ReplayInput } from './replay'
+import { abstinenceReached, buildStops, bundleOld, layoutTrail, periodStart, type ReplayInput } from './replay'
 
 const empty: ReplayInput = {
   since: '2026-08-01', today: '2026-10-21',
@@ -64,5 +64,34 @@ describe('the trail', () => {
     const points = layoutTrail(6, 360)
     expect(points.every(p => p.x > 40 && p.x < 320)).toBe(true)
     expect(points[1].x < 180 && points[2].x > 180).toBe(true)
+  })
+})
+
+describe('bundling older stops', () => {
+  const goal = (date: string, title: string) => ({ date, kind: 'goal' as const, emoji: '🎸', title, line: '' })
+
+  it('keeps the last 6 months one by one', () => {
+    const stops = [goal('2026-06-01', 'A'), goal('2026-06-02', 'B')]
+    expect(bundleOld(stops, '2026-10-21').map(s => s.title)).toEqual(['A', 'B'])
+  })
+
+  it('bundles per kind per month, then per quarter, then per year', () => {
+    const stops = [
+      goal('2023-02-01', 'Y1'), goal('2023-11-01', 'Y2'),
+      goal('2025-01-05', 'Q1'), goal('2025-03-20', 'Q2'),
+      goal('2026-02-03', 'M1'), goal('2026-02-10', 'M2'), goal('2026-02-12', 'M3'), goal('2026-02-20', 'M4'),
+      goal('2026-03-01', 'alone'),
+    ]
+    const out = bundleOld(stops, '2026-10-21')
+    expect(out.map(s => s.title)).toEqual(['2 goal steps', '2 goal steps', '4 goal steps', 'alone'])
+    expect(out[0].line).toBe('2023: Y1 and Y2.')
+    expect(out[1].line).toBe('Jan–Mar 2025: Q1 and Q2.')
+    expect(out[2].line).toBe('February 2026: M1, M2, M3 and 1 more.')
+  })
+
+  it('weight bundles show how far the trend went', () => {
+    const w = (date: string, kg: number) => ({ date, kind: 'weight' as const, emoji: '⚖️', title: `−${kg} kg`, line: '' })
+    const [only] = bundleOld([w('2026-01-02', 2), w('2026-01-20', 4)], '2026-10-21')
+    expect(only.title).toBe('−2 kg → −4 kg')
   })
 })
