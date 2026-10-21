@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
+import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { useNavigate } from 'react-router'
 import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
 import { compressImage } from '../../lib/compressImage'
@@ -343,13 +344,6 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
       </button>
     </div>
   )
-}
-
-// A picture's URL for as long as it's shown, freed again afterwards.
-function useObjectUrl(blob: Blob | null): string | null {
-  const url = useMemo(() => (blob ? URL.createObjectURL(blob) : null), [blob])
-  useEffect(() => () => { if (url) URL.revokeObjectURL(url) }, [url])
-  return url
 }
 
 const MOVEMENTS: { value: CompanionMovement; label: string }[] = [

@@ -20,7 +20,8 @@ export function useQueuedHabits() {
 
 export function useInactiveHabits() {
   return useLiveQuery(() =>
-    db.habits.filter(h => h.is_active === false && h.is_queued === false).toArray()
+    // Built habits have their own section (useBuiltHabits).
+    db.habits.filter(h => h.is_active === false && h.is_queued === false && !h.built_at).toArray()
   )
 }
 

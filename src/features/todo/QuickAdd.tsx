@@ -45,6 +45,8 @@ export default function QuickAdd({ kinds, initialKind, labelId, onAdded }: {
   const [due, setDue] = useState<Due>('none')
   const [pickedDate, setPickedDate] = useState(getLogicalDate())
   const [frequency, setFrequency] = useState<HabitFrequency>('daily')
+  // "Later" puts the habit in the queue, to take on once another one settles.
+  const [when, setWhen] = useState<'now' | 'later'>('now')
   const [labelIds, setLabelIds] = useState<number[]>(labelId !== null ? [labelId] : [])
   const labels = useLabels() ?? []
 
@@ -63,7 +65,7 @@ export default function QuickAdd({ kinds, initialKind, labelId, onAdded }: {
         custom_days: [],
         cant_fail_description: null,
         progression: null,
-        is_queued: false,
+        is_queued: when === 'later',
       })
     }
     onAdded()
@@ -92,7 +94,10 @@ export default function QuickAdd({ kinds, initialKind, labelId, onAdded }: {
           )}
         </div>
       ) : (
-        <Choice value={frequency} options={[['daily', 'Daily'], ['weekly', 'Weekly'], ['monthly', 'Monthly']]} onChange={setFrequency} />
+        <div className="space-y-2">
+          <Choice value={frequency} options={[['daily', 'Daily'], ['weekly', 'Weekly'], ['monthly', 'Monthly']]} onChange={setFrequency} />
+          <Choice value={when} options={[['now', 'Start now'], ['later', 'Later (queue)']]} onChange={setWhen} />
+        </div>
       )}
 
       {labels.length > 0 && <LabelPicker labels={labels} selected={labelIds} onChange={setLabelIds} />}
@@ -102,7 +107,7 @@ export default function QuickAdd({ kinds, initialKind, labelId, onAdded }: {
         disabled={!title.trim()}
         className="w-full rounded-lg bg-primary-500 py-2.5 font-semibold text-white transition-colors hover:bg-primary-600 disabled:opacity-50"
       >
-        Add {kind}
+        {kind === 'habit' && when === 'later' ? 'Add to the queue' : `Add ${kind}`}
       </button>
     </form>
   )

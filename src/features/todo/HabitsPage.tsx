@@ -7,6 +7,9 @@ import LabelPicker from '../../components/LabelPicker'
 import LabelBadge from '../../components/LabelBadge'
 import { useActiveHabits, useQueuedHabits, useInactiveHabits, addHabit, updateHabit, activateHabit, deactivateHabit, deleteHabit } from '../../hooks/useHabits'
 import { useLabels } from '../../hooks/useLabels'
+import { useBuiltHabits, callBackHabit } from '../../hooks/useHabitBuildUp'
+import { useFoldState } from '../../hooks/useFolders'
+import { FoldableSection } from '../../components/Folders'
 import { formatProgressionValue } from '../../lib/progression'
 import type { HabitFrequency, Weekday, Habit, Label } from '../../types'
 
@@ -32,6 +35,8 @@ export default function HabitsPage() {
   const activeHabits = useActiveHabits()
   const queuedHabits = useQueuedHabits()
   const inactiveHabits = useInactiveHabits()
+  const builtHabits = useBuiltHabits()
+  const fold = useFoldState('igb_fold_habits', false)
   const labels = useLabels()
   const [showForm, setShowForm] = useState(false)
   const navigate = useNavigate()
@@ -85,6 +90,23 @@ export default function HabitsPage() {
                 <HabitItem key={habit.id} habit={habit} labelsMap={labelsMap} allLabels={labels ?? []} status="inactive" />
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Habits you stopped tracking because they're part of you now
+            (lib/habitBuildUp). Calling one back starts tracking it fresh. */}
+        {!!builtHabits?.length && (
+          <div className="mb-6">
+            <FoldableSection emoji="🏆" title="Built habits" count={builtHabits.length} open={fold.isOpen('built')} onToggle={() => fold.toggle('built')} gap="space-y-2">
+              {builtHabits.map(h => (
+                <div key={h.id} className="flex items-center gap-3 rounded-xl bg-card px-4 py-3 shadow-sm">
+                  <span className="flex-1 truncate text-text-primary">{h.title}</span>
+                  <button onClick={() => callBackHabit(h.id!)} className="shrink-0 rounded-lg bg-surface px-3 py-1.5 text-xs font-medium text-primary-500">
+                    Call it back
+                  </button>
+                </div>
+              ))}
+            </FoldableSection>
           </div>
         )}
 

@@ -31,6 +31,8 @@ export const EMPTY_MESSAGES: CompanionMessages = {
   idle: [],
   reminder_daily_check: [],
   reminder_floor: [],
+  habit_settled: [],
+  habit_built: [],
 }
 
 export type CompanionEvent = keyof CompanionMessages

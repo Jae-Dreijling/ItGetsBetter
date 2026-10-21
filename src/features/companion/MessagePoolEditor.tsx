@@ -28,6 +28,8 @@ const EVENT_LABELS: { key: CompanionEvent; label: string }[] = [
   { key: 'idle', label: 'Idle / AFK' },
   { key: 'reminder_daily_check', label: 'Daily Check Reminder' },
   { key: 'reminder_floor', label: 'Floor Reminder' },
+  { key: 'habit_settled', label: 'Habit Settled ({habit} {done} of {total}): take on another?' },
+  { key: 'habit_built', label: 'Habit Built: stop tracking it?' },
 ]
 
 const WRAPPING_QUOTE_CHARS = ['"', "'", '“', '”', '‘', '’']

@@ -117,6 +117,13 @@ export interface Habit {
   // Part of the daily floor (max 3, see lib/floor). Missing means no.
   is_floor?: boolean
   activated_at: string | null
+  // Building habits up slowly (lib/habitBuildUp). All optional; missing
+  // means not yet. settled_at: you answered the "take on another?" question.
+  // built_at: you stopped tracking it as a real habit. prompt_snooze_until:
+  // no question about this habit before this logical date.
+  settled_at?: string | null
+  built_at?: string | null
+  prompt_snooze_until?: string | null
   created_at: string
 }
 
@@ -325,6 +332,10 @@ export interface CompanionMessages {
   // companions may not have these yet; code falls back to built-in lines.
   reminder_daily_check?: string[]
   reminder_floor?: string[]
+  // Building habits up (lib/habitBuildUp). Placeholders: {name}, {habit},
+  // {done}, {total}. Older companions may not have these yet.
+  habit_settled?: string[]
+  habit_built?: string[]
 }
 
 export interface Companion {
