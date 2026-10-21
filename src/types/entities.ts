@@ -37,6 +37,8 @@ export interface UserProfile {
   notification_prefs?: NotificationPrefs
   // Daily calorie target for the meal planner. Missing or null means none.
   daily_kcal_target?: number | null
+  // Accessories bought for companions (lib/companionFun), by id.
+  owned_accessories?: string[]
   created_at: string
 }
 
@@ -359,7 +361,20 @@ export interface Companion {
   expressions?: Partial<Record<Expression, Blob>>
   // "MM-DD". On that day it's the one with you all day (lib/calendarMoments).
   birthday?: string | null
+  // The accessory it wears (lib/companionFun). Missing means none.
+  accessory?: string | null
   created_at: string
+}
+
+// A gift a companion gave you, kept in the gift safe (lib/companionFun).
+export interface CompanionGift {
+  id?: number
+  companion_id: number
+  // Kept so the gift still says who it was from if the companion is removed.
+  companion_name: string
+  emoji: string
+  name: string
+  received_at: string
 }
 
 // Something one companion remembers about you (lib/companionMemory). Only

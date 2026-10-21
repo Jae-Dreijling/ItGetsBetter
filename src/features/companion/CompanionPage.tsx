@@ -6,6 +6,8 @@ import { closenessTier, TIER_LABELS } from '../../lib/closeness'
 import { MEMORY_TOPICS } from '../../lib/companionMemory'
 import { EXPRESSIONS } from '../../lib/companionExpressions'
 import { visitsOff, setVisitsOff } from '../../lib/companionVisits'
+import Sheet from '../../components/Sheet'
+import { GiveGift, Wardrobe } from './GiftAndWardrobe'
 import { isQuietToday, setQuietToday } from '../../lib/softDay'
 import { TRAIT_INFO, LEVEL_LABELS, traitsOf, type CompanionTraits, type TraitLevel } from '../../lib/companionPersonality'
 import { useNavigate } from 'react-router'
@@ -149,6 +151,7 @@ function CompanionCard({ companion, closeness, folders, isCurrent, canDeactivate
   onDelete: () => void
 }) {
   const avatarUrl = useObjectUrl(companion.avatar)
+  const [sheet, setSheet] = useState<'gift' | 'wardrobe' | null>(null)
 
   const totalMessages = Object.values(companion.messages).flat().length
 
@@ -191,6 +194,8 @@ function CompanionCard({ companion, closeness, folders, isCurrent, canDeactivate
       </div>
       <div className="mt-2 flex items-center gap-2">
         <MovementPicker companion={companion} />
+        <button onClick={() => setSheet('gift')} className="p-1 text-lg" aria-label={`Give ${companion.name} a gift`}>🎁</button>
+        <button onClick={() => setSheet('wardrobe')} className="p-1 text-lg" aria-label={`${companion.name}'s wardrobe`}>👒</button>
         <span className="flex-1" />
         <FolderSelect area="companions" itemId={companion.id!} folderId={companion.folder_id} folders={folders} label={companion.name} />
         <button onClick={onEdit} className="p-1.5 text-muted hover:text-primary-500">
@@ -198,6 +203,10 @@ function CompanionCard({ companion, closeness, folders, isCurrent, canDeactivate
         </button>
         {canDelete && <DeleteButton name={companion.name} onDelete={onDelete} />}
       </div>
+      <Sheet open={sheet !== null} onClose={() => setSheet(null)} title={sheet === 'wardrobe' ? `${companion.name}'s wardrobe` : `A gift for ${companion.name}`}>
+        {sheet === 'gift' && <GiveGift companion={companion} isCurrent={isCurrent} />}
+        {sheet === 'wardrobe' && <Wardrobe companion={companion} />}
+      </Sheet>
     </div>
   )
 }

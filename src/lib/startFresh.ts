@@ -37,7 +37,7 @@ const NOUNS: Record<string, [string, string]> = {
   groceryItems: ['grocery item', 'grocery items'], books: ['book', 'books'], companions: ['companion', 'companions'],
   motivationNotes: ['vault note', 'vault notes'], gameState: ['game save', 'game saves'], gameQuests: ['quest', 'quests'],
   gameCompanionAffinity: ['companion bond', 'companion bonds'], gameCustomQuestions: ['custom question', 'custom questions'],
-  fastingRecords: ['fast', 'fasts'], companionMemories: ['thing a companion remembers', 'things companions remember'], personalityGroups: ['personality group', 'personality groups'], wins: ['win', 'wins'],
+  fastingRecords: ['fast', 'fasts'], companionMemories: ['thing a companion remembers', 'things companions remember'], companionGifts: ['gift in the gift safe', 'gifts in the gift safe'], personalityGroups: ['personality group', 'personality groups'], wins: ['win', 'wins'],
   recipes: ['recipe', 'recipes'], mealPlanItems: ['planned meal', 'planned meals'], abstinenceCounters: ['counter', 'counters'],
   abstinenceEvents: ['slip or craving', 'slips and cravings'], people: ['person', 'people'], socialContacts: ['catch-up', 'catch-ups'],
   goalTracks: ['goal', 'goals'], goalMilestones: ['goal step', 'goal steps'], nonScaleChecks: ['non-scale check-in', 'non-scale check-ins'],

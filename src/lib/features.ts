@@ -13,7 +13,7 @@ export type FeatureTier = 'spotlight' | 'available' | 'off'
 
 export type FeatureId =
   | 'weight' | 'meals' | 'cravings' | 'abstinence' | 'water' | 'fasting' | 'exercise' | 'mood' | 'sleep' | 'medicine' | 'measurements' | 'photos'
-  | 'habits' | 'tasks' | 'focus_timer' | 'meal_prep' | 'social' | 'goals' | 'wins_jar' | 'letters' | 'replay'
+  | 'habits' | 'tasks' | 'focus_timer' | 'meal_prep' | 'social' | 'goals' | 'wins_jar' | 'letters' | 'replay' | 'gifts'
   | 'timeline' | 'insights' | 'graphs' | 'weekly_review' | 'achievements'
   | 'meditation' | 'grocery' | 'books' | 'motivation_vault'
   | 'journey' | 'rewards'
@@ -78,6 +78,7 @@ export const FEATURES: Feature[] = [
   { id: 'books', name: 'Books', emoji: '📚', description: "What you're reading", group: 'Tools', paths: ['/me/books'], canSpotlight: false },
   { id: 'motivation_vault', name: 'Motivation vault', emoji: '🔥', description: 'Your reasons why', group: 'Tools', paths: ['/me/vault'], canSpotlight: false },
   { id: 'journey', name: 'Journey', emoji: '🗺️', description: 'The adventure game: quests, bosses, character', group: 'Fun', paths: ['/journey', '/me/character'], canSpotlight: true },
+  { id: 'gifts', name: 'Gift safe', emoji: '🎁', description: 'Little gifts your companions gave you', group: 'Fun', paths: ['/me/gifts'], canSpotlight: false },
   { id: 'rewards', name: 'Reward shop', emoji: '🎁', description: 'Spend points on treats', group: 'Fun', paths: ['/me/rewards'], canSpotlight: false },
 ]
 

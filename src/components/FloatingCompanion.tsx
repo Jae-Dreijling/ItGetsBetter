@@ -24,6 +24,7 @@ import { useObjectUrl } from '../hooks/useObjectUrl'
 import { closenessTier } from '../lib/closeness'
 import { expressionFor, type Expression } from '../lib/companionExpressions'
 import { isBirthday, isShinyDay } from '../lib/calendarMoments'
+import { wornAccessory } from '../lib/companionFun'
 import { getLogicalDate } from '../lib/date'
 import { memoryValues } from '../lib/companionMemory'
 import { onThisDay } from '../lib/onThisDay'
@@ -92,6 +93,8 @@ export default function FloatingCompanion() {
   const today = getLogicalDate()
   const birthday = isBirthday(companion?.birthday, today)
   const shiny = companion?.id !== undefined && isShinyDay(companion.id, today)
+  // Its accessory, or a seasonal one in themed weeks (11h).
+  const worn = wornAccessory(companion?.accessory, today)
   const [message, setMessage] = useState<string | null>(null)
   // Resting position, used to place the speech bubble. While dragging, the
   // companion moves through the x/y motion values only, outside React, so a
@@ -602,6 +605,9 @@ export default function FloatingCompanion() {
             <span className="text-xl">💬</span>
           )}
         </m.div>
+        {worn && (
+          <span className="pointer-events-none absolute -left-1.5 -top-2.5 text-base" aria-hidden>{worn}</span>
+        )}
         {(birthday || shiny) && (
           <span className="pointer-events-none absolute -right-1 -top-1 text-sm" aria-label={birthday ? 'Birthday' : 'Shiny day'}>
             {birthday ? '🎂' : '✨'}

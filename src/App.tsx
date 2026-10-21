@@ -75,6 +75,7 @@ const PomodoroPage = lazy(() => import('./features/todo/PomodoroPage'))
 const WinsJarPage = lazy(() => import('./features/wins/WinsJarPage'))
 const LettersPage = lazy(() => import('./features/letters/LettersPage'))
 const ReplayPage = lazy(() => import('./features/replay/ReplayPage'))
+const GiftSafePage = lazy(() => import('./features/gifts/GiftSafePage'))
 const GoalsPage = lazy(() => import('./features/goals/GoalsPage'))
 const GoalTrackPage = lazy(() => import('./features/goals/GoalTrackPage'))
 const CravingPage = lazy(() => import('./features/craving/CravingPage'))
@@ -189,6 +190,7 @@ function AppContent() {
         <Route path="me/wins" element={<WinsJarPage />} />
         <Route path="me/letters" element={<LettersPage />} />
         <Route path="me/replay" element={<ReplayPage />} />
+        <Route path="me/gifts" element={<GiftSafePage />} />
         <Route path="me/goals" element={<GoalsPage />} />
         <Route path="me/goals/:id" element={<GoalTrackPage />} />
         <Route path="me/social" element={<SocialPage />} />

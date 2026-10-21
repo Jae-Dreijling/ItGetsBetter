@@ -22,6 +22,7 @@ const GROUPS: { title: string; items: MeLink[] }[] = [
     items: [
       { label: 'Character', subtitle: 'Level, class & stats', icon: Shield, path: '/me/character' },
       { label: 'Companions', subtitle: 'Manage your mascots', icon: MessageCircle, path: '/me/companion' },
+      { label: 'Gift safe', subtitle: 'Little gifts from your companions', icon: Gift, path: '/me/gifts' },
     ],
   },
   {

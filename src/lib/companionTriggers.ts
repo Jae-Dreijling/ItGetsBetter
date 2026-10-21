@@ -36,13 +36,15 @@ export const EXTRA_TRIGGERS = [
   'quiet_today_on', 'body_double_start', 'body_double',
   // Calendar and rare moments (11g)
   'monday_morning', 'friday_evening', 'weekend_morning', 'holiday', 'together_anniversary', 'companion_birthday', 'shiny_day', 'rare',
+  // Fun and gifts (11h)
+  'gift_received', 'gift_for_you', 'request_done',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
 export type TriggerKey = keyof CompanionMessages
 
 export const TRIGGER_GROUPS = [
-  'Everyday', 'Calendar', 'Handling', 'Nicknames for you', 'Memory', 'Visits', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
+  'Everyday', 'Calendar', 'Handling', 'Nicknames for you', 'Memory', 'Visits', 'Gifts', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
 ] as const
 
 export interface TriggerInfo {
@@ -226,6 +228,31 @@ export const TRIGGERS: TriggerInfo[] = [
   {
     key: 'on_this_day', label: 'On this day (a win from before)', group: 'Memory', placeholders: ['when', 'text'],
     defaults: ['{when} today you wrote this win: “{text}”', 'Remember this, {name}? {when}: “{text}”', 'On this day, {when}: “{text}”. Look how far you are now.'],
+  },
+
+  // Gifts (11h)
+  {
+    key: 'gift_received', label: 'You gave it a gift', group: 'Gifts', placeholders: ['gift'],
+    defaults: ['A {gift}? For me?! Thank you, {name}!', "Oh! I love it. I'm keeping this {gift} forever.", "You didn't have to... but I'm so glad you did."],
+    traitDefaults: {
+      proud: ['A {gift}. Hm. ...It is acceptable. Thank you. Truly.', 'I shall treasure this {gift}. Do not tell anyone I said that.'],
+      sassy: ['A {gift}? Took you long enough. ...I love it.', "Don't look at me while I'm happy."],
+      shy: ['F-for me? Oh... thank you so much...', "I don't know what to say... thank you, {name}."],
+      playful: ['A {gift}!!! Best day ever!', 'YAY! Gift dance! 🎉'],
+    },
+  },
+  {
+    key: 'gift_for_you', label: 'It gives you a gift', group: 'Gifts', placeholders: ['gift'],
+    defaults: ['I got you something: {gift}! It is in your gift safe.', 'Here, {name}. {gift}. Just because.', 'Look what I found for you: {gift}!'],
+    traitDefaults: {
+      proud: ['I have selected a gift for you: {gift}. You are welcome.'],
+      sassy: ["Here. {gift}. Don't make it weird."],
+      shy: ['Um... I got you {gift}. I hope you like it...'],
+    },
+  },
+  {
+    key: 'request_done', label: 'You did its small request', group: 'Gifts',
+    defaults: ['You did it! Thank you for doing that with me.', 'Yay! Tiny things, big difference.', "That's one small kind thing for you, {name}."],
   },
 
   // Visits (11e): said by the companion who comes to visit.

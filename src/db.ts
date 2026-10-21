@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone, NonScaleCheck, CravingEvent, FutureLetter, Folder, CompanionMemory } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone, NonScaleCheck, CravingEvent, FutureLetter, Folder, CompanionMemory, CompanionGift } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 import { autoFromText } from './lib/goals'
 
@@ -58,6 +58,7 @@ export class ItGetsBetterDB extends Dexie {
   futureLetters!: EntityTable<FutureLetter, 'id'>
   folders!: EntityTable<Folder, 'id'>
   companionMemories!: EntityTable<CompanionMemory, 'id'>
+  companionGifts!: EntityTable<CompanionGift, 'id'>
 
   // The name is only overridden in tests, to run upgrades on a separate database.
   constructor(name = 'ItGetsBetter') {
@@ -613,6 +614,11 @@ export class ItGetsBetterDB extends Dexie {
     // Each companion's own memories of you (step 11d). New table only.
     this.version(27).stores({
       companionMemories: '++id, companion_id',
+    })
+
+    // The gift safe: gifts companions gave you (step 11h). New table only.
+    this.version(28).stores({
+      companionGifts: '++id, companion_id, received_at',
     })
 
     this.on('populate', () => {

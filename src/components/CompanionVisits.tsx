@@ -17,6 +17,8 @@ import {
 } from '../lib/companionVisits'
 import type { TriggerValues } from '../lib/companionTriggers'
 import { isQuietToday } from '../lib/softDay'
+import { GIFTS_FOR_YOU } from '../lib/companionFun'
+import { receiveGift } from '../hooks/useCompanionFun'
 import type { Companion } from '../types'
 
 const SIZE = 48
@@ -185,12 +187,19 @@ function Visitor({ visitor, mainName, until, greeting, onLeft }: {
 
   // Time to go: a goodbye, then gone.
   useEffect(() => {
-    const t = setTimeout(() => {
-      say('visit_leaving', undefined, 4500)
+    const t = setTimeout(async () => {
+      // Now and then a visitor leaves a little gift for the gift safe (11h).
+      if (Math.random() < 0.3) {
+        const gift = GIFTS_FOR_YOU[Math.floor(Math.random() * GIFTS_FOR_YOU.length)]
+        await receiveGift(visitor, gift)
+        say('gift_for_you', { gift: `${gift.emoji} ${gift.name}` }, 4500)
+      } else {
+        say('visit_leaving', undefined, 4500)
+      }
       setTimeout(() => ref.current.onLeft(), 4500)
     }, Math.max(0, until - Date.now()))
     return () => clearTimeout(t)
-  }, [until, say])
+  }, [until, say, visitor])
 
   const bubbleOnLeft = spot.x > window.innerWidth / 2
 
