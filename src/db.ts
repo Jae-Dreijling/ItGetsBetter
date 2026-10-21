@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 
 const DEFAULT_LABELS = [
@@ -50,6 +50,8 @@ export class ItGetsBetterDB extends Dexie {
   abstinenceEvents!: EntityTable<AbstinenceEvent, 'id'>
   people!: EntityTable<Person, 'id'>
   socialContacts!: EntityTable<SocialContact, 'id'>
+  goalTracks!: EntityTable<GoalTrack, 'id'>
+  goalMilestones!: EntityTable<GoalMilestone, 'id'>
 
   // The name is only overridden in tests, to run upgrades on a separate database.
   constructor(name = 'ItGetsBetter') {
@@ -554,6 +556,22 @@ export class ItGetsBetterDB extends Dexie {
     this.version(20).stores({
       people: '++id, name, created_at',
       socialContacts: '++id, person_id, date',
+    })
+
+    // Mini-goals. The profile's single goal weight becomes a Weight track,
+    // so it isn't lost (the profile field stays for the weight page).
+    this.version(21).stores({
+      goalTracks: '++id, created_at',
+      goalMilestones: '++id, track_id',
+    }).upgrade(async tx => {
+      const profile = await tx.table('userProfile').toCollection().first()
+      const goal = profile?.goal_weight_milestone_kg
+      if (!goal || goal === profile.starting_weight_kg) return
+      const now = new Date().toISOString()
+      const trackId = await tx.table('goalTracks').add({ name: 'Weight', emoji: '⚖️', archived: false, created_at: now })
+      await tx.table('goalMilestones').add({
+        track_id: trackId, text: `Reach ${goal} kg`, order: 0, done_at: null, aim_for: null, treat: null, points_given: false, created_at: now,
+      })
     })
 
     this.on('populate', () => {

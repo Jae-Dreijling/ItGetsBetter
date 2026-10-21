@@ -13,6 +13,7 @@ export const POINT_VALUES = {
   streak_bonus_per_day: 1,
   daily_check: 3,
   floor_complete: 5,
+  milestone_reached: 15,
 } as const
 
 export type PointSource = keyof typeof POINT_VALUES

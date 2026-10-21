@@ -49,4 +49,29 @@ describe('database upgrades', () => {
     expect(companion.messages.general).toEqual(['Hi'])
     db.close()
   })
+
+  it('v21 turns the profile goal weight into a Weight goal track', async () => {
+    const name = `migration-${crypto.randomUUID()}`
+    const old = new Dexie(name)
+    old.version(20).stores({ userProfile: '++id' })
+    await old.open()
+    await old.table('userProfile').add({ display_name: 'Jae', starting_weight_kg: 90, goal_weight_milestone_kg: 85 })
+    old.close()
+
+    const db = new ItGetsBetterDB(name)
+    await db.open()
+    const [track] = await db.goalTracks.toArray()
+    expect(track).toMatchObject({ name: 'Weight', emoji: '⚖️', archived: false })
+    const milestones = await db.goalMilestones.toArray()
+    expect(milestones).toHaveLength(1)
+    expect(milestones[0]).toMatchObject({ track_id: track.id, text: 'Reach 85 kg', done_at: null })
+    db.close()
+  })
+
+  it('v21 adds no track for a fresh install without a profile', async () => {
+    const db = new ItGetsBetterDB(`migration-${crypto.randomUUID()}`)
+    await db.open()
+    expect(await db.goalTracks.count()).toBe(0)
+    db.close()
+  })
 })

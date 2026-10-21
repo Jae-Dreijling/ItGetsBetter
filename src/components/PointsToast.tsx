@@ -19,6 +19,7 @@ const SOURCE_LABELS: Record<string, string> = {
   streak_bonus_per_day: 'streak bonus',
   daily_check: 'daily check',
   floor_complete: 'full day! floor done',
+  milestone_reached: 'reaching a milestone',
 }
 
 export default function PointsToast() {

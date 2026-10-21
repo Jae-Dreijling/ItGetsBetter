@@ -22,6 +22,9 @@ import { useGameState, useActiveQuests, useQuestProgress } from '../../hooks/use
 import { usePeople, useContacts } from '../../hooks/useSocial'
 import { dueSoon, dueLine, upcomingBirthdays, birthdayLine } from '../../lib/social'
 import { ContactButtons, THANKS } from '../../features/social/parts'
+import { useTracks, useMilestones } from '../../hooks/useGoals'
+import { nextMilestone } from '../../lib/goals'
+import { MilestoneCheck } from '../../features/goals/parts'
 import { useThanks } from '../../features/social/useThanks'
 import type { GameQuest } from '../../types'
 
@@ -41,6 +44,7 @@ const CARDS: Partial<Record<FeatureId, { path: string; Body: () => React.ReactNo
   tasks: { path: '/todo/tasks', Body: TasksBody },
   journey: { path: '/journey', Body: JourneyBody },
   social: { path: '/me/social', Body: SocialBody },
+  goals: { path: '/me/goals', Body: GoalsBody },
 }
 
 export default function SpotlightSection({ tiers }: { tiers: FeatureTiers | undefined }) {
@@ -219,6 +223,30 @@ function TasksBody() {
 
   if (tasks.length === 0) return <p className={status}>Nothing for today. 🌿</p>
   return <CheckList items={tasks.map(t => ({ id: t.id!, label: t.title }))} onCheck={id => toggleTask(id)} />
+}
+
+// The next step of each goal (up to three), tickable right here.
+function GoalsBody() {
+  const tracks = useTracks()
+  const milestones = useMilestones()
+  const steps = (tracks ?? [])
+    .map(t => ({ track: t, next: nextMilestone(milestones.filter(m => m.track_id === t.id)) }))
+    .filter(s => s.next)
+    .slice(0, 3)
+
+  if (steps.length === 0) return <p className={status}>No next step right now. Add a goal whenever you like. 🎯</p>
+  return (
+    <ul className="space-y-1.5">
+      {steps.map(({ track, next }) => (
+        <li key={track.id} className="flex items-center gap-3">
+          <MilestoneCheck milestone={next!} />
+          <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
+            <span aria-hidden>{track.emoji}</span> {next!.text}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 // The person it's been longest since, with one-tap logging; birthdays today

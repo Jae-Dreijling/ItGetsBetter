@@ -354,7 +354,7 @@ export interface Win {
   id?: number
   date: string
   text: string
-  source: 'daily_check'
+  source: 'daily_check' | 'milestone'
   logged_at: string
 }
 
@@ -443,6 +443,31 @@ export interface SocialContact {
   date: string
   kind: 'saw' | 'talked'
   logged_at: string
+}
+
+// A mini-goal track (V2-PLAN §14): your own milestones, in order. See lib/goals.
+export interface GoalTrack {
+  id?: number
+  name: string
+  emoji: string
+  archived: boolean
+  created_at: string
+}
+
+export interface GoalMilestone {
+  id?: number
+  track_id: number
+  text: string
+  // Position in the track, 0 first.
+  order: number
+  done_at: string | null
+  // Optional "aim for" date; passing it changes nothing.
+  aim_for: string | null
+  // Optional treat for reaching it, in your own words.
+  treat: string | null
+  // Points are paid once, so un-ticking and ticking again doesn't pay twice.
+  points_given: boolean
+  created_at: string
 }
 
 export interface ProgressPhoto {
