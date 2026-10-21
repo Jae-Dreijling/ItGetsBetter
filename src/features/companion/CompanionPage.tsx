@@ -10,6 +10,7 @@ import { usePersonalityGroups } from '../../hooks/usePersonalityGroups'
 import { getCompanionHomeRegion, setCompanionHomeRegion, getCompanionAffinityRecord, updateLoverDialogue } from '../../lib/game'
 import { MessagePoolEditor } from './MessagePoolEditor'
 import CompanionTransfer from './CompanionTransfer'
+import type { CompanionMovement } from '../../lib/companionMotion'
 import type { Companion, CompanionMessages } from '../../types'
 
 const JOURNEY_REGIONS = [
@@ -41,7 +42,7 @@ export default function CompanionPage() {
       <TopBar title="Companions" />
       <PageContainer>
         <p className="mb-4 text-sm text-muted">
-          Turn on one or more companions to guide you through the app. When more than one is on, a random one speaks to you each session. Tap a companion to make it the one talking now.
+          Turn on one or more companions to guide you through the app. Each one is small while it's quiet and can move around a little: Still, Calm or Lively. It never moves while you scroll or type. When more than one is on, a random one speaks to you each session. Tap a companion to make it the one talking now.
         </p>
 
         <button
@@ -158,7 +159,9 @@ function CompanionCard({ companion, isCurrent, canDeactivate, canDelete, onMakeC
           <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${companion.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
         </button>
       </div>
-      <div className="mt-2 flex gap-2 justify-end">
+      <div className="mt-2 flex items-center gap-2">
+        <MovementPicker companion={companion} />
+        <span className="flex-1" />
         <button onClick={onEdit} className="p-1.5 text-muted hover:text-primary-500">
           <Pencil className="h-4 w-4" />
         </button>
@@ -337,6 +340,33 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
       >
         {initial ? 'Save Changes' : 'Create Companion'}
       </button>
+    </div>
+  )
+}
+
+const MOVEMENTS: { value: CompanionMovement; label: string }[] = [
+  { value: 'still', label: 'Still' },
+  { value: 'calm', label: 'Calm' },
+  { value: 'lively', label: 'Lively' },
+]
+
+// How this companion wanders when it isn't talking: still, calm (every 30 s
+// to 2 min) or lively (every 15 to 45 s). See lib/companionMotion.
+function MovementPicker({ companion }: { companion: Companion }) {
+  const movement = companion.movement ?? 'calm'
+  return (
+    <div className="flex gap-0.5 rounded-lg bg-surface p-0.5" role="radiogroup" aria-label={`How ${companion.name} moves around`}>
+      {MOVEMENTS.map(m => (
+        <button
+          key={m.value}
+          role="radio"
+          aria-checked={movement === m.value}
+          onClick={() => updateCompanion(companion.id!, { movement: m.value })}
+          className={`rounded-md px-2.5 py-1 text-xs transition-colors ${movement === m.value ? 'bg-primary-500 font-medium text-white' : 'text-muted'}`}
+        >
+          {m.label}
+        </button>
+      ))}
     </div>
   )
 }

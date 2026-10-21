@@ -3,6 +3,7 @@ import { nowISO } from './date'
 import { encodeBlob, decodeBlob, type EncodedBlob } from './backup'
 import { EMPTY_MESSAGES } from '../hooks/useCompanion'
 import type { Companion, CompanionMessages, PersonalityGroup } from '../types'
+import type { CompanionMovement } from './companionMotion'
 
 // Share companions between installs (or bulk-add them): export the ones you
 // made, import a file that only ever *adds*. Nothing existing is changed or
@@ -19,6 +20,8 @@ export interface CompanionFileEntry {
   messages: CompanionMessages
   lover_dialogue: string[]
   home_region: string | null
+  // Optional; files from before this was added mean calm.
+  movement?: CompanionMovement
 }
 
 export interface CompanionFile {
@@ -65,6 +68,7 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
         messages: c.messages,
         lover_dialogue: affinity?.lover_dialogue ?? [],
         home_region: affinity?.home_region ?? null,
+        movement: c.movement ?? 'calm',
       }
     })),
   }
@@ -96,6 +100,7 @@ export function parseCompanionFile(raw: string): ParsedCompanions {
         messages: cleanMessages(c.messages),
         lover_dialogue: strings(c.lover_dialogue),
         home_region: typeof c.home_region === 'string' ? c.home_region : null,
+        movement: c.movement === 'still' || c.movement === 'lively' ? c.movement : 'calm',
       }
     })
   if (companions.length === 0) return { ok: false, error: 'This file has no companions in it.' }
@@ -151,6 +156,7 @@ export async function applyCompanionImport(plan: CompanionImportPlan): Promise<n
         is_active: true,
         personality_group_id: c.personality_group ? groupId.get(key(c.personality_group)) ?? null : null,
         messages: c.messages,
+        movement: c.movement ?? 'calm',
         created_at: nowISO(),
       }) as number
       if (c.lover_dialogue.length > 0 || c.home_region) {

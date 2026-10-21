@@ -2,6 +2,7 @@ import type { MealSlot, HabitFrequency, TaskPriority, Weekday } from './enums'
 import type { FeatureTiers } from '../lib/features'
 import type { NotificationPrefs } from '../lib/notifications/plan'
 import type { WeightDisplay } from '../lib/weightTrend'
+import type { CompanionMovement } from '../lib/companionMotion'
 
 export interface UserProfile {
   id?: number
@@ -330,6 +331,8 @@ export interface Companion {
   is_active: boolean
   personality_group_id: number | null
   messages: CompanionMessages
+  // How it wanders on screen when idle (see lib/companionMotion). Missing means calm.
+  movement?: CompanionMovement
   created_at: string
 }
 

@@ -117,6 +117,7 @@ export async function updateCompanion(id: number, changes: Partial<{
   avatar: Blob | null
   messages: CompanionMessages
   personality_group_id: number | null
+  movement: import('../lib/companionMotion').CompanionMovement
 }>) {
   await db.companions.update(id, changes)
 }

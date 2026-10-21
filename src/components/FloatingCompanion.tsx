@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { AnimatePresence, m, useMotionValue } from 'motion/react'
-import { pop } from '../lib/animations'
+import { AnimatePresence, animate, m, useMotionValue, useReducedMotion } from 'motion/react'
+import { pop, transitions } from '../lib/animations'
+import { nextDelay, pickMove } from '../lib/companionMotion'
 import { useSessionCompanion, useEffectiveMessages, getCompanionMessage, ensureDefaultCompanion, type CompanionEvent } from '../hooks/useCompanion'
 import { useProfile } from '../hooks/useProfile'
 import CompanionChat from './CompanionChat'
@@ -29,6 +30,11 @@ function clampToScreen(p: { x: number; y: number }) {
 function screenBounds() {
   return { left: 0, right: window.innerWidth - SIZE, top: 56, bottom: window.innerHeight - 120 }
 }
+// Size while it's quiet; it grows to full size to talk or be dragged.
+const IDLE_SCALE = 0.5
+// It doesn't wander within this long after a scroll, tap or key press.
+const QUIET_BEFORE_MOVING = 4000
+
 // "Idle" means the user stepped away: no touch, scroll or typing anywhere.
 const IDLE_TIMEOUT = 2 * 60 * 1000
 // During phone-free time the companion nudges regardless of activity.
@@ -62,6 +68,13 @@ export default function FloatingCompanion() {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasLongPress = useRef(false)
   const name = profile?.display_name ?? 'friend'
+  // Each companion has its own way of moving around.
+  const movement = companion?.movement ?? 'calm'
+  const reduceMotion = useReducedMotion()
+  const lastActivity = useRef(0)
+  // Talking, being dragged or chatting: no wandering then.
+  const busyRef = useRef(false)
+  useEffect(() => { busyRef.current = !!message || dragging || chatOpen }, [message, dragging, chatOpen])
 
   // Kept in refs (rather than useCallback deps) so showMessage/handleIdle
   // never change identity when this reactive data updates — otherwise the
@@ -182,6 +195,58 @@ export default function FloatingCompanion() {
     return () => clearInterval(interval)
   }, [isPhoneFreeTime, showMessage])
 
+  // Remember when the user last did something, so wandering never happens
+  // under a finger or while reading a scrolling page.
+  useEffect(() => {
+    const mark = () => { lastActivity.current = Date.now() }
+    const events = ['pointerdown', 'keydown', 'scroll', 'input'] as const
+    for (const e of events) window.addEventListener(e, mark, { capture: true, passive: true })
+    return () => { for (const e of events) window.removeEventListener(e, mark, { capture: true }) }
+  }, [])
+
+  // Idle wandering: a small move after a random wait (see lib/companionMotion).
+  useEffect(() => {
+    if (movement === 'still' || reduceMotion) return
+    let timer: ReturnType<typeof setTimeout> | null = null
+    let cancelled = false
+
+    function schedule(ms: number | null) {
+      if (ms !== null && !cancelled) timer = setTimeout(() => void wander(), ms)
+    }
+
+    async function wander() {
+      const quiet = Date.now() - lastActivity.current > QUIET_BEFORE_MOVING
+      if (document.visibilityState !== 'visible' || busyRef.current || !quiet) {
+        schedule(5000 + Math.random() * 5000)
+        return
+      }
+      const move = pickMove({ x: x.get(), y: y.get() }, screenBounds(), SIZE, Math.random)
+      const walk = { type: 'tween', duration: 0.9, ease: 'easeInOut' } as const
+      if (move.type === 'drift') {
+        await animate(y, move.y, walk)
+      } else if (move.type === 'peek') {
+        const home = x.get()
+        await animate(x, move.x, { type: 'tween', duration: 0.5, ease: 'easeOut' })
+        await animate(x, home, { type: 'tween', duration: 0.6, ease: 'easeInOut', delay: 0.8 })
+      } else {
+        await animate(x, move.exitX, walk)
+        x.set(move.enterX)
+        await animate(x, move.endX, walk)
+      }
+      if (cancelled) return
+      const next = clampToScreen({ x: x.get(), y: y.get() })
+      setPosition(next)
+      localStorage.setItem(POSITION_KEY, JSON.stringify(next))
+      schedule(nextDelay(movement, Math.random()))
+    }
+
+    schedule(nextDelay(movement, Math.random()))
+    return () => {
+      cancelled = true
+      if (timer) clearTimeout(timer)
+    }
+  }, [movement, reduceMotion, x, y])
+
   function cancelLongPress() {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current)
@@ -267,6 +332,9 @@ export default function FloatingCompanion() {
       <m.div
         className="fixed left-0 top-0 z-50 flex h-14 w-14 touch-none select-none items-center justify-center rounded-full bg-card shadow-lg border-2 border-primary-200 dark:border-primary-800 cursor-grab active:cursor-grabbing"
         style={{ x, y }}
+        initial={false}
+        animate={{ scale: message || dragging ? 1 : IDLE_SCALE }}
+        transition={transitions.springy}
         drag
         dragConstraints={bounds}
         dragElastic={0.15}
