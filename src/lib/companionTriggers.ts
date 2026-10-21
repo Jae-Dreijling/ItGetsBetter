@@ -34,13 +34,15 @@ export const EXTRA_TRIGGERS = [
   'visit_knock', 'visit_accepted', 'visit_declined', 'visit_leaving', 'banter', 'banter_reply', 'cheer',
   // Hard days (11f)
   'quiet_today_on', 'body_double_start', 'body_double',
+  // Calendar and rare moments (11g)
+  'monday_morning', 'friday_evening', 'weekend_morning', 'holiday', 'together_anniversary', 'companion_birthday', 'shiny_day', 'rare',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
 export type TriggerKey = keyof CompanionMessages
 
 export const TRIGGER_GROUPS = [
-  'Everyday', 'Handling', 'Nicknames for you', 'Memory', 'Visits', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
+  'Everyday', 'Calendar', 'Handling', 'Nicknames for you', 'Memory', 'Visits', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
 ] as const
 
 export interface TriggerInfo {
@@ -82,6 +84,45 @@ export const TRIGGERS: TriggerInfo[] = [
       'Still awake? Whatever it is, it can wait until tomorrow. Rest if you can.',
       "Late-night {name}! Maybe a glass of water and then bed?",
     ],
+  },
+
+  // Calendar and rare moments (11g), mostly said when the app opens.
+  {
+    key: 'monday_morning', label: 'Monday morning', group: 'Calendar',
+    defaults: ['Monday again! One small thing at a time, {name}.', 'New week, fresh start. No pressure though.', "Mondays are just Sunday's sleepy cousin. We've got this."],
+  },
+  {
+    key: 'friday_evening', label: 'Friday evening', group: 'Calendar',
+    defaults: ['Friday evening! You made it through the week, {name}.', "It's the weekend-ish! Anything nice planned?", 'Friday! Time to let your shoulders drop.'],
+  },
+  {
+    key: 'weekend_morning', label: 'Weekend morning', group: 'Calendar',
+    defaults: ['Weekend morning! Take it slow today, {name}.', 'No alarms, no rush. Happy weekend!', 'Lazy morning? Allowed. Encouraged even.'],
+  },
+  {
+    key: 'holiday', label: 'A holiday', group: 'Calendar', placeholders: ['holiday'],
+    defaults: ['Happy {holiday}, {name}! 🎉', "It's {holiday}! I hope today is kind to you.", '{holiday}! Do something nice for yourself today.'],
+  },
+  {
+    key: 'together_anniversary', label: 'A year together (and more)', group: 'Calendar', placeholders: ['years'],
+    defaults: ['{years} year(s) together today, {name}! Thank you for coming back, again and again.', 'Happy anniversary! {years} year(s) of you and me.', "It's been {years} year(s) since you started. Look how far you've come."],
+  },
+  {
+    key: 'companion_birthday', label: 'Its own birthday (it stays with you all day)', group: 'Calendar',
+    defaults: ["It's my birthday today!! 🎂 Spend the day with me?", 'Guess who has a birthday today? Me! 🎉', 'Birthday me is here all day, {name}! Cake? 🎂'],
+    traitDefaults: {
+      proud: ['Today is my birthday. You may celebrate me accordingly. 🎂'],
+      sassy: ["It's my birthday. You'd better have remembered. 🎂"],
+      shy: ['Um... it is my birthday today. Would you... spend it with me? 🎂'],
+    },
+  },
+  {
+    key: 'shiny_day', label: 'A rare shiny day ✨', group: 'Calendar',
+    defaults: ["✨ Something feels sparkly today. I'm shiny! ✨", 'Whoa, look at me! ✨ A lucky day, {name}!', '✨ Rare shiny me! Make a wish!'],
+  },
+  {
+    key: 'rare', label: 'Rare lines (now and then)', group: 'Everyday',
+    defaults: ['Did you know octopuses have three hearts? I have one, and it likes you.', 'Fun fact: you are doing better than you think.', "I just counted, and you're my favourite. Don't tell the others."],
   },
 
   // Handling (11b): how each companion reacts depends on its traits.

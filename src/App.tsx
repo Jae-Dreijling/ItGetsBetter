@@ -217,6 +217,10 @@ function prefetchTabs() {
   void loadMePage()
 }
 
+
+// The opening greeting is said once per app load.
+let greeted = false
+
 export default function App() {
   const [unlocked, setUnlocked] = useState(!isLockEnabled())
 
@@ -266,6 +270,9 @@ export default function App() {
       ensureDefaultPersonalityGroups()
       checkLevelUpAndClassChange()
       setTimeout(async () => {
+        // Once per app load, even if start-up runs twice (React's dev mode).
+        if (greeted) return
+        greeted = true
         // A birthday or a new abstinence milestone comes first.
         const moment = await appOpenMoment()
         if (moment) return triggerCompanionMessage(moment.event, moment.values)

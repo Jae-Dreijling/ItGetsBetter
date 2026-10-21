@@ -1,3 +1,5 @@
+import { getLogicalDate } from './date'
+
 // The companion speaking this session. Stored in sessionStorage (so the next
 // app open picks again) and observable, so tapping a companion on the
 // Companions page switches the floating companion immediately.
@@ -6,8 +8,12 @@ const SESSION_COMPANION_KEY = 'igb_session_companion_id'
 const listeners = new Set<() => void>()
 
 export function getSessionCompanionId(): number | null {
-  const stored = sessionStorage.getItem(SESSION_COMPANION_KEY)
-  return stored === null ? null : Number(stored)
+  try {
+    const stored = sessionStorage.getItem(SESSION_COMPANION_KEY)
+    return stored === null ? null : Number(stored)
+  } catch {
+    return null
+  }
 }
 
 export function setSessionCompanionId(id: number | null) {
@@ -22,14 +28,18 @@ export function subscribeSessionCompanion(listener: () => void): () => void {
   return () => listeners.delete(listener)
 }
 
-// A tapped (or earlier auto-picked) companion stays current for the session;
-// otherwise a random active companion is picked, falling back to the default
-// one when none are active.
-export function pickSessionCompanion<T extends { id?: number; is_active: boolean; is_default: boolean }>(
+// On its birthday a companion is the one with you all day. Otherwise a
+// tapped (or earlier auto-picked) companion stays current for the session,
+// or a random active companion is picked, falling back to the default one
+// when none are active.
+export function pickSessionCompanion<T extends { id?: number; is_active: boolean; is_default: boolean; birthday?: string | null }>(
   companions: T[],
   storedId: number | null,
   random: () => number = Math.random,
+  today: string = getLogicalDate(),
 ): T | undefined {
+  const birthday = companions.find(c => c.birthday && c.birthday === today.slice(5))
+  if (birthday) return birthday
   if (storedId !== null) {
     const current = companions.find(c => c.id === storedId)
     if (current) return current

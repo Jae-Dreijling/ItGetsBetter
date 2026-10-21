@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db'
 import { closenessTier, TIER_LABELS } from '../../lib/closeness'
 import { MEMORY_TOPICS } from '../../lib/companionMemory'
+import { EXPRESSIONS } from '../../lib/companionExpressions'
 import { visitsOff, setVisitsOff } from '../../lib/companionVisits'
 import { isQuietToday, setQuietToday } from '../../lib/softDay'
 import { TRAIT_INFO, LEVEL_LABELS, traitsOf, type CompanionTraits, type TraitLevel } from '../../lib/companionPersonality'
@@ -244,6 +245,9 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
   const [traits, setTraits] = useState<CompanionTraits>(traitsOf(initial))
   const [about, setAbout] = useState<Record<string, string>>(initial?.about ?? {})
   const [showAbout, setShowAbout] = useState(false)
+  const [birthday, setBirthday] = useState(initial?.birthday ?? '')
+  const [expressions, setExpressions] = useState<NonNullable<Companion['expressions']>>(initial?.expressions ?? {})
+  const validBirthday = /^\d{2}-\d{2}$/.test(birthday) ? birthday : null
   // Only filled-in favourites are kept.
   const aboutToSave = Object.fromEntries(Object.entries(about).map(([k, v]) => [k, v.trim()]).filter(([, v]) => v))
 
@@ -270,10 +274,10 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
     if (!name.trim()) return
     let savedId: number
     if (initial?.id) {
-      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, about: aboutToSave })
+      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, about: aboutToSave, birthday: validBirthday, expressions })
       savedId = initial.id
     } else {
-      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, about: aboutToSave }) as number
+      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, about: aboutToSave, birthday: validBirthday, expressions }) as number
     }
     await setCompanionHomeRegion(savedId, homeRegion)
     await updateLoverDialogue(savedId, loverDialogue)
@@ -358,6 +362,39 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
         </div>
       </div>
 
+      {/* Birthday: on that day it stays with you all day (11g) */}
+      <label className="mb-4 flex items-center gap-2 text-sm text-text-primary">
+        <span className="flex-1">🎂 Birthday <span className="text-xs text-muted">(MM-DD, optional)</span></span>
+        <input
+          value={birthday}
+          onChange={e => setBirthday(e.target.value)}
+          placeholder="11-29"
+          inputMode="numeric"
+          className="w-24 rounded-lg border border-primary-100 bg-surface px-2.5 py-1.5 text-center text-sm text-text-primary focus:border-primary-400 focus:outline-none dark:border-primary-900"
+        />
+      </label>
+
+      {/* Optional expressions (11g) */}
+      <div className="mb-4">
+        <p className="mb-1.5 text-xs font-semibold text-muted uppercase tracking-wide">Expressions (optional)</p>
+        <p className="mb-2 text-xs text-muted">Extra pictures it shows when the moment fits. Without them, its normal picture stays.</p>
+        <div className="flex flex-wrap gap-2">
+          {EXPRESSIONS.map(ex => (
+            <ExpressionSlot
+              key={ex.key}
+              label={`${ex.emoji} ${ex.label}`}
+              picture={expressions[ex.key]}
+              onChange={blob => setExpressions(prev => {
+                const next = { ...prev }
+                if (blob) next[ex.key] = blob
+                else delete next[ex.key]
+                return next
+              })}
+            />
+          ))}
+        </div>
+      </div>
+
       {/* Its own favourites, for answering yours (lib/companionMemory) */}
       <div className="mb-4">
         <button type="button" onClick={() => setShowAbout(!showAbout)} className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted">
@@ -418,6 +455,25 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
       >
         {initial ? 'Save Changes' : 'Create Companion'}
       </button>
+    </div>
+  )
+}
+
+function ExpressionSlot({ label, picture, onChange }: { label: string; picture: Blob | undefined; onChange: (blob: Blob | null) => void }) {
+  const url = useObjectUrl(picture)
+  async function pick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    onChange(await compressImage(file, { maxSizeMB: 0.1, maxWidthOrHeight: 256, useWebWorker: true }))
+  }
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <label className="relative flex h-12 w-12 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface">
+        {url ? <img src={url} alt="" className="h-full w-full object-cover" /> : <Camera className="h-4 w-4 text-muted" />}
+        <input type="file" accept="image/*" onChange={pick} className="hidden" />
+      </label>
+      <span className="text-[10px] text-muted">{label}</span>
+      {picture && <button type="button" onClick={() => onChange(null)} className="text-[10px] text-muted underline">remove</button>}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { EMPTY_MESSAGES } from '../hooks/useCompanion'
 import type { Companion, CompanionMessages, Folder, PersonalityGroup } from '../types'
 import type { CompanionMovement } from './companionMotion'
 import { DEFAULT_TRAITS, traitsOf, type CompanionTraits, type Trait } from './companionPersonality'
+import { EXPRESSIONS, type Expression } from './companionExpressions'
 
 // Share companions between installs (or bulk-add them): export the ones you
 // made, import a file that only ever *adds*. Nothing existing is changed or
@@ -31,6 +32,10 @@ export interface CompanionFileEntry {
   // Its own favourites by memory topic (lib/companionMemory); optional. What
   // it remembers about you stays personal and is never exported.
   about?: Record<string, string>
+  // "MM-DD"; optional.
+  birthday?: string | null
+  // Optional extra pictures per expression (lib/companionExpressions).
+  expressions?: Partial<Record<Expression, EncodedBlob>>
 }
 
 export interface CompanionFile {
@@ -98,6 +103,8 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
         folder: folderOf(c.folder_id)?.name ?? null,
         traits: traitsOf(c),
         about: c.about ?? {},
+        birthday: c.birthday ?? null,
+        expressions: Object.fromEntries(await Promise.all(Object.entries(c.expressions ?? {}).map(async ([k, blob]) => [k, await encodeBlob(blob as Blob)]))),
       }
     })),
   }
@@ -133,6 +140,10 @@ export function parseCompanionFile(raw: string): ParsedCompanions {
         folder: typeof c.folder === 'string' && c.folder.trim() ? c.folder.trim() : null,
         traits: cleanTraits(c.traits),
         about: isObj(c.about) ? Object.fromEntries(Object.entries(c.about).filter((e): e is [string, string] => typeof e[1] === 'string' && e[1].trim() !== '')) : undefined,
+        birthday: typeof c.birthday === 'string' && /^\d{2}-\d{2}$/.test(c.birthday) ? c.birthday : null,
+        expressions: isObj(c.expressions)
+          ? Object.fromEntries(Object.entries(c.expressions).filter(([k, v]) => EXPRESSIONS.some(e => e.key === k) && isObj(v) && v.__blob === true)) as Partial<Record<Expression, EncodedBlob>>
+          : undefined,
       }
     })
   if (companions.length === 0) return { ok: false, error: 'This file has no companions in it.' }
@@ -219,6 +230,10 @@ export async function applyCompanionImport(plan: CompanionImportPlan): Promise<n
         folder_id: c.folder ? folderId.get(key(c.folder)) ?? null : null,
         ...(c.traits && { traits: c.traits }),
         ...(c.about && Object.keys(c.about).length > 0 && { about: c.about }),
+        ...(c.birthday && { birthday: c.birthday }),
+        ...(c.expressions && Object.keys(c.expressions).length > 0 && {
+          expressions: Object.fromEntries(Object.entries(c.expressions).map(([k, v]) => [k, decodeBlob(v as EncodedBlob)])),
+        }),
         created_at: nowISO(),
       }) as number
       if (c.lover_dialogue.length > 0 || c.home_region) {

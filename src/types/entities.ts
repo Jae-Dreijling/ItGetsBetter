@@ -7,6 +7,7 @@ import type { NonScaleAnswer } from '../lib/nonScale'
 import type { CravingOutcome } from '../lib/craving'
 import type { ExtraTrigger } from '../lib/companionTriggers'
 import type { CompanionTraits } from '../lib/companionPersonality'
+import type { Expression } from '../lib/companionExpressions'
 
 export interface UserProfile {
   id?: number
@@ -354,6 +355,10 @@ export interface Companion {
   traits?: Partial<CompanionTraits>
   // Its own favourites ("About me"), by memory topic (lib/companionMemory).
   about?: Record<string, string>
+  // Optional pictures per expression (lib/companionExpressions).
+  expressions?: Partial<Record<Expression, Blob>>
+  // "MM-DD". On that day it's the one with you all day (lib/calendarMoments).
+  birthday?: string | null
   created_at: string
 }
 

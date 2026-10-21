@@ -107,6 +107,8 @@ export async function addCompanion(data: {
   messages?: Partial<CompanionMessages>
   traits?: CompanionTraits
   about?: Record<string, string>
+  birthday?: string | null
+  expressions?: Companion['expressions']
 }) {
   return db.companions.add({
     name: data.name,
@@ -117,6 +119,8 @@ export async function addCompanion(data: {
     messages: { ...EMPTY_MESSAGES, ...data.messages },
     ...(data.traits && { traits: data.traits }),
     ...(data.about && { about: data.about }),
+    ...(data.birthday && { birthday: data.birthday }),
+    ...(data.expressions && { expressions: data.expressions }),
     created_at: nowISO(),
   })
 }
@@ -129,6 +133,8 @@ export async function updateCompanion(id: number, changes: Partial<{
   movement: import('../lib/companionMotion').CompanionMovement
   traits: CompanionTraits
   about: Record<string, string>
+  birthday: string | null
+  expressions: Companion['expressions']
 }>) {
   await db.companions.update(id, changes)
 }

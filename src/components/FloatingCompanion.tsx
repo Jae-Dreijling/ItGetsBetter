@@ -22,6 +22,9 @@ import {
 import { startPrank } from '../lib/companionPranks'
 import { useObjectUrl } from '../hooks/useObjectUrl'
 import { closenessTier } from '../lib/closeness'
+import { expressionFor, type Expression } from '../lib/companionExpressions'
+import { isBirthday, isShinyDay } from '../lib/calendarMoments'
+import { getLogicalDate } from '../lib/date'
 import { memoryValues } from '../lib/companionMemory'
 import { onThisDay } from '../lib/onThisDay'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -82,7 +85,13 @@ export default function FloatingCompanion() {
   const latestMoodScore = useTodaysMoodScore()
   const isPhoneFreeTime = useIsPhoneFreeTime()
   const isGoodnightTime = useIsGoodnightTime()
-  const avatarUrl = useObjectUrl(companion?.avatar)
+  // The picture that fits what it's saying, if it has one (11g).
+  const [expression, setExpression] = useState<Expression | null>(null)
+  const expressionUrl = useObjectUrl(expression ? companion?.expressions?.[expression] : undefined)
+  const plainUrl = useObjectUrl(companion?.avatar)
+  const today = getLogicalDate()
+  const birthday = isBirthday(companion?.birthday, today)
+  const shiny = companion?.id !== undefined && isShinyDay(companion.id, today)
   const [message, setMessage] = useState<string | null>(null)
   // Resting position, used to place the speech bubble. While dragging, the
   // companion moves through the x/y motion values only, outside React, so a
@@ -163,7 +172,6 @@ export default function FloatingCompanion() {
     ensureDefaultCompanion()
   }, [])
 
-
   const showMessage = useCallback((event: CompanionEvent, values?: TriggerValues) => {
     // Quiet today: only answers your own taps (11f).
     if (isQuietToday() && !speaksWhenQuiet(event)) return
@@ -174,6 +182,7 @@ export default function FloatingCompanion() {
     const name = speakingName(nameRef.current, nickname, Math.random())
     // What it remembers about you can turn up in any line ({food}, ...).
     const msg = getCompanionMessage(messagesRef.current, event, name, { ...memoriesRef.current, nickname: nickname ?? nameRef.current, ...values }, traitsRef.current)
+    setExpression(expressionFor(event))
     setMessage(msg)
     if (messageTimer.current) clearTimeout(messageTimer.current)
     messageTimer.current = setTimeout(() => setMessage(null), 5000)
@@ -211,6 +220,12 @@ export default function FloatingCompanion() {
     // One-time wind-down nudge in the 30 minutes before phone-free kicks in.
     if (isGoodnightTimeRef.current && Math.random() < 0.6) {
       showMessage('goodnight')
+      return
+    }
+
+    // Now and then a rare line.
+    if (Math.random() < 0.03) {
+      showMessage('rare')
       return
     }
 
@@ -509,6 +524,7 @@ export default function FloatingCompanion() {
     return <CompanionChat isOpen={chatOpen} onClose={() => setChatOpen(false)} />
   }
 
+  const avatarUrl = (message && expressionUrl) || plainUrl
   const anchor = awaySpot ?? position
   const iconCenter = anchor.x + 28
   const bubbleOnLeft = iconCenter > window.innerWidth / 2
@@ -547,7 +563,7 @@ export default function FloatingCompanion() {
 
       <m.div
         ref={companionEl}
-        className="fixed left-0 top-0 z-50 flex h-14 w-14 touch-none select-none items-center justify-center rounded-full bg-card shadow-lg border-2 border-primary-200 dark:border-primary-800 cursor-grab active:cursor-grabbing"
+        className={`fixed left-0 top-0 z-50 flex h-14 w-14 touch-none select-none items-center justify-center rounded-full bg-card shadow-lg border-2 cursor-grab active:cursor-grabbing ${shiny ? 'border-accent-400 ring-2 ring-accent-200' : 'border-primary-200 dark:border-primary-800'}`}
         style={{ x, y }}
         initial={false}
         animate={{ scale: message || dragging ? 1 : IDLE_SCALE }}
@@ -586,6 +602,11 @@ export default function FloatingCompanion() {
             <span className="text-xl">💬</span>
           )}
         </m.div>
+        {(birthday || shiny) && (
+          <span className="pointer-events-none absolute -right-1 -top-1 text-sm" aria-label={birthday ? 'Birthday' : 'Shiny day'}>
+            {birthday ? '🎂' : '✨'}
+          </span>
+        )}
       </m.div>
     </>
   )
