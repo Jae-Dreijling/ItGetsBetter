@@ -20,6 +20,7 @@ const SOURCE_LABELS: Record<string, string> = {
   daily_check: 'daily check',
   floor_complete: 'full day! floor done',
   milestone_reached: 'reaching a milestone',
+  non_scale_check: 'checking in beyond the scale',
 }
 
 export default function PointsToast() {

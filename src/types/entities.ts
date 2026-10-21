@@ -3,6 +3,7 @@ import type { FeatureTiers } from '../lib/features'
 import type { NotificationPrefs } from '../lib/notifications/plan'
 import type { WeightDisplay } from '../lib/weightTrend'
 import type { CompanionMovement } from '../lib/companionMotion'
+import type { NonScaleAnswer } from '../lib/nonScale'
 
 export interface UserProfile {
   id?: number
@@ -363,7 +364,7 @@ export interface Win {
   id?: number
   date: string
   text: string
-  source: 'daily_check' | 'milestone'
+  source: 'daily_check' | 'milestone' | 'non_scale'
   logged_at: string
 }
 
@@ -485,6 +486,15 @@ export interface GoalMilestone {
 export type MilestoneAuto =
   | { kind: 'weight_down_kg'; value: number }
   | { kind: 'weight_at_most_kg'; value: number }
+
+// A monthly non-scale check-in (step 9c). See lib/nonScale.
+export interface NonScaleCheck {
+  id?: number
+  date: string
+  answers: Record<string, NonScaleAnswer>
+  note: string | null
+  logged_at: string
+}
 
 export interface ProgressPhoto {
   id?: number

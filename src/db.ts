@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone, NonScaleCheck } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 import { autoFromText } from './lib/goals'
 
@@ -53,6 +53,7 @@ export class ItGetsBetterDB extends Dexie {
   socialContacts!: EntityTable<SocialContact, 'id'>
   goalTracks!: EntityTable<GoalTrack, 'id'>
   goalMilestones!: EntityTable<GoalMilestone, 'id'>
+  nonScaleChecks!: EntityTable<NonScaleCheck, 'id'>
 
   // The name is only overridden in tests, to run upgrades on a separate database.
   constructor(name = 'ItGetsBetter') {
@@ -582,6 +583,11 @@ export class ItGetsBetterDB extends Dexie {
       await tx.table('goalMilestones').toCollection().modify((m: GoalMilestone) => {
         if (m.auto === undefined) m.auto = autoFromText(m.text)
       })
+    })
+
+    // Monthly non-scale check-ins (step 9c). New table only.
+    this.version(23).stores({
+      nonScaleChecks: '++id, date',
     })
 
     this.on('populate', () => {

@@ -10,6 +10,7 @@ import { useProfile, updateProfile } from '../../hooks/useProfile'
 import { useWeightEntries, useWeightTrend, addWeightEntry } from '../../hooks/useWeightEntries'
 import { getLogicalDate } from '../../lib/date'
 import { getWeightComparison } from '../../lib/weightComparisons'
+import BeyondScale from './BeyondScale'
 import { changeText, jumpNote, weeklyAverages, type WeightDisplay } from '../../lib/weightTrend'
 import DeleteEntryButton from '../../components/DeleteEntryButton'
 import { deleteEntry } from '../../lib/deleteEntry'
@@ -79,6 +80,8 @@ export default function WeightPage() {
             </div>
           </>
         )}
+
+        <BeyondScale />
 
         {profile && trend !== null && (() => {
           const lost = profile.starting_weight_kg - trend
