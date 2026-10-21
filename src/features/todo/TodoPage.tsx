@@ -12,7 +12,9 @@ import { pop } from '../../lib/animations'
 import { formatProgressionValue } from '../../lib/progression'
 import { sortTasks, nextPriority, dueLabel, subtaskProgress, parseTodoView, type TodoView } from '../../lib/todoList'
 import { useActiveHabits, useTodaysCompletions, toggleHabitCompletion, isTodayScheduled } from '../../hooks/useHabits'
-import { useAllTasks, toggleTask, updateTask } from '../../hooks/useTasks'
+import { useAllTasks, useProjects, toggleTask, updateTask } from '../../hooks/useTasks'
+import { useFoldState } from '../../hooks/useFolders'
+import { FoldableSection } from '../../components/Folders'
 import { useLabels } from '../../hooks/useLabels'
 import QuickAdd from './QuickAdd'
 import type { Habit, Label, Task, TaskPriority, Weekday } from '../../types'
@@ -63,6 +65,27 @@ export default function TodoPage() {
     .filter(t => t.is_completed)
     .sort((a, b) => (b.completed_at ?? '').localeCompare(a.completed_at ?? ''))
     .slice(0, 20)
+
+  // Open tasks in a project sit under that project's foldable header, after
+  // the tasks without one.
+  const projects = useProjects() ?? []
+  const projectFold = useFoldState('igb_folders_closed_projects')
+  const projectIds = new Set(projects.map(p => p.id))
+  const looseTasks = openTasks.filter(t => t.project_id == null || !projectIds.has(t.project_id))
+  const projectGroups = [...projects]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(project => ({ project, tasks: openTasks.filter(t => t.project_id === project.id) }))
+    .filter(g => g.tasks.length > 0)
+  const taskRow = (t: Task) => (
+    <TaskRow
+      key={t.id}
+      task={t}
+      today={today}
+      subtasks={subtaskProgress(allTasks, t.id!)}
+      labels={t.label_ids.map(id => labelsMap.get(id)).filter((l): l is Label => !!l)}
+      onOpen={() => navigate(`/todo/tasks/${t.id}`)}
+    />
+  )
 
   const usedLabelIds = new Set([...(habits ?? []).flatMap(h => h.label_ids), ...allTasks.flatMap(t => t.label_ids)])
   const chipLabels = labels.filter(l => usedLabelIds.has(l.id!))
@@ -134,18 +157,24 @@ export default function TodoPage() {
         {showTasks && (
           <section className="mb-5">
             {showHabits && <SectionTitle>Tasks</SectionTitle>}
-            <div className="space-y-1.5">
-              {openTasks.map(t => (
-                <TaskRow
-                  key={t.id}
-                  task={t}
-                  today={today}
-                  subtasks={subtaskProgress(allTasks, t.id!)}
-                  labels={t.label_ids.map(id => labelsMap.get(id)).filter((l): l is Label => !!l)}
-                  onOpen={() => navigate(`/todo/tasks/${t.id}`)}
-                />
-              ))}
-            </div>
+            <div className="space-y-1.5">{looseTasks.map(taskRow)}</div>
+            {projectGroups.length > 0 && (
+              <div className="mt-3 space-y-3">
+                {projectGroups.map(({ project, tasks }) => (
+                  <FoldableSection
+                    key={project.id}
+                    emoji="📂"
+                    title={project.name}
+                    count={tasks.length}
+                    open={projectFold.isOpen(String(project.id))}
+                    onToggle={() => projectFold.toggle(String(project.id))}
+                    gap="space-y-1.5"
+                  >
+                    {tasks.map(taskRow)}
+                  </FoldableSection>
+                ))}
+              </div>
+            )}
             {openTasks.length === 0 && (
               <p className="py-2 text-sm text-muted">{doneTasks.length > 0 ? 'Nothing open. Nice.' : 'No tasks yet. Tap + to add one.'}</p>
             )}

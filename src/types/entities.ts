@@ -404,6 +404,8 @@ export interface Recipe {
   // Set for recipes imported from another app: its id for the recipe, so a
   // re-import updates instead of duplicating. See MEAL-PLAN-IMPORT.md.
   source_id?: string | null
+  // The folder it's in (lib/folders). Missing or null means none.
+  folder_id?: number | null
   created_at: string
 }
 

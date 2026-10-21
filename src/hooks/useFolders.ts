@@ -47,6 +47,18 @@ export function writeStored(key: string, value: unknown) {
   try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* not remembered, that's fine */ }
 }
 
+// Which foldable sections are closed, remembered per list.
+export function useFoldState(key: string) {
+  const [closed, setClosed] = useState<string[]>(() => readStored<string[]>(key, []))
+  const isOpen = (id: string) => !closed.includes(id)
+  const toggle = (id: string) => {
+    const next = closed.includes(id) ? closed.filter(c => c !== id) : [...closed, id]
+    setClosed(next)
+    writeStored(key, next)
+  }
+  return { isOpen, toggle }
+}
+
 // The folder you last looked at, per list.
 export function useFolderFilter(area: FolderArea, folders: Folder[] | undefined) {
   const key = `igb_folder_${area}`

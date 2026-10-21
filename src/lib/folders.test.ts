@@ -3,6 +3,7 @@ import { db } from '../db'
 import { clearDb } from '../test/dbHelpers'
 import { EMPTY_MESSAGES } from '../hooks/useCompanion'
 import { addFolder, deleteFolder, moveToFolder } from '../hooks/useFolders'
+import { saveRecipe } from '../hooks/useMealPlan'
 import { resetArea } from './resetArea'
 import { groupByFolder } from './folders'
 import type { Folder } from '../types'
@@ -45,5 +46,17 @@ describe('folders in the database', () => {
     await addFolder('recipes', 'Breakfast', '🍳')
     await resetArea('companions')
     expect((await db.folders.toArray()).map(f => f.name)).toEqual(['Breakfast'])
+  })
+  it('a recipe keeps its folder when edited, and keeps existing when the folder goes', async () => {
+    const recipe = { name: 'Oats', servings: 1, ingredients: '', steps: '', kcal: null, protein_g: null, carbs_g: null, fat_g: null, health_score: 3 }
+    const id = await saveRecipe(recipe)
+    const folderId = await addFolder('recipes', 'Breakfast', '🍳')
+    await moveToFolder('recipes', id, folderId)
+    await saveRecipe({ ...recipe, name: 'Overnight oats' }, id)
+    expect((await db.recipes.get(id))!.folder_id).toBe(folderId)
+
+    await deleteFolder(folderId)
+    expect((await db.recipes.get(id))!.name).toBe('Overnight oats')
+    expect((await db.recipes.get(id))!.folder_id).toBeNull()
   })
 })

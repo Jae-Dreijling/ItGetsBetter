@@ -3,7 +3,7 @@ import { ChevronDown, FolderPlus, Pencil } from 'lucide-react'
 import { AnimatePresence, m } from 'motion/react'
 import Sheet from './Sheet'
 import { fade } from '../lib/animations'
-import { addFolder, updateFolder, deleteFolder, moveToFolder, readStored, writeStored, type FolderFilter } from '../hooks/useFolders'
+import { addFolder, updateFolder, deleteFolder, moveToFolder, useFoldState, type FolderFilter } from '../hooks/useFolders'
 import { FOLDER_EMOJIS, groupByFolder, type FolderArea } from '../lib/folders'
 import type { Folder } from '../types'
 
@@ -120,42 +120,51 @@ export function FolderSections<T extends { id?: number; folder_id?: number | nul
   folders: Folder[]
   render: (item: T) => ReactNode
 }) {
-  const key = `igb_folders_closed_${area}`
-  const [closed, setClosed] = useState<string[]>(() => readStored<string[]>(key, []))
+  const fold = useFoldState(`igb_folders_closed_${area}`)
   const sections = groupByFolder(items, folders)
 
   // No folders yet: just the plain list.
   if (folders.length === 0) return <div className="space-y-3">{items.map(render)}</div>
 
-  function toggle(id: string) {
-    const next = closed.includes(id) ? closed.filter(c => c !== id) : [...closed, id]
-    setClosed(next)
-    writeStored(key, next)
-  }
-
   return (
     <div className="space-y-4">
       {sections.map(({ folder, items: inside }) => {
         const id = folder ? String(folder.id) : 'none'
-        const open = !closed.includes(id)
         return (
-          <section key={id}>
-            <button onClick={() => toggle(id)} aria-expanded={open} className="mb-2 flex w-full items-center gap-2 text-left text-sm font-semibold text-muted">
-              <span aria-hidden>{folder?.emoji ?? '📂'}</span>
-              <span className="flex-1">{folder?.name ?? 'No folder'} · {inside.length}</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${open ? '' : '-rotate-90'}`} />
-            </button>
-            <AnimatePresence initial={false}>
-              {open && (
-                <m.div variants={fade} initial="hidden" animate="visible" exit="exit" className="space-y-3">
-                  {inside.length ? inside.map(render) : <p className="text-xs text-muted">Nothing here yet. Use the 📁 on an item to move it in.</p>}
-                </m.div>
-              )}
-            </AnimatePresence>
-          </section>
+          <FoldableSection key={id} emoji={folder?.emoji ?? '📂'} title={folder?.name ?? 'No folder'} count={inside.length} open={fold.isOpen(id)} onToggle={() => fold.toggle(id)}>
+            {inside.length ? inside.map(render) : <p className="text-xs text-muted">Nothing here yet. Use the 📁 on an item to move it in.</p>}
+          </FoldableSection>
         )
       })}
     </div>
+  )
+}
+
+// A section with a header you tap to fold it open or closed.
+export function FoldableSection({ emoji, title, count, open, onToggle, gap = 'space-y-3', children }: {
+  emoji: string
+  title: string
+  count: number
+  open: boolean
+  onToggle: () => void
+  gap?: string
+  children: ReactNode
+}) {
+  return (
+    <section>
+      <button onClick={onToggle} aria-expanded={open} className="mb-2 flex w-full items-center gap-2 text-left text-sm font-semibold text-muted">
+        <span aria-hidden>{emoji}</span>
+        <span className="flex-1">{title} · {count}</span>
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? '' : '-rotate-90'}`} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <m.div variants={fade} initial="hidden" animate="visible" exit="exit" className={gap}>
+            {children}
+          </m.div>
+        )}
+      </AnimatePresence>
+    </section>
   )
 }
 
