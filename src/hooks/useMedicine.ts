@@ -30,6 +30,12 @@ export function isMedicineDueToday(medicine: { id?: number; frequency: string; c
   return true
 }
 
+// Whether to remind about a medicine today: due today by its schedule, and
+// not an "as needed" one (those are logged when taken, never nagged about).
+export function needsReminderToday(medicine: { id?: number; frequency: string; created_at: string; is_active?: boolean }): boolean {
+  return medicine.is_active !== false && medicine.frequency !== 'as needed' && isMedicineDueToday(medicine)
+}
+
 export function useTodaysMedicines() {
   const active = useActiveMedicines()
   if (!active) return undefined

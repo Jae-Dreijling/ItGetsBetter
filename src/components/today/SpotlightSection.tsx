@@ -17,7 +17,7 @@ import { useCurrentFast, formatFastingDuration } from '../../hooks/useFasting'
 import { useTodaysExercise } from '../../hooks/useExercise'
 import { useTodaysMood } from '../../hooks/useMood'
 import { useTodaysSleep } from '../../hooks/useSleep'
-import { useTodaysMedicines, useTodaysMedicineLogs, toggleMedicineLog } from '../../hooks/useMedicine'
+import { useTodaysMedicines, useTodaysMedicineLogs, toggleMedicineLog, needsReminderToday } from '../../hooks/useMedicine'
 import { useGameState, useActiveQuests, useQuestProgress } from '../../hooks/useGame'
 import { usePeople, useContacts } from '../../hooks/useSocial'
 import { dueSoon, dueLine, upcomingBirthdays, birthdayLine } from '../../lib/social'
@@ -343,7 +343,8 @@ function MedicineReminderLine() {
   const navigate = useNavigate()
   const meds = useTodaysMedicines()
   const logs = useTodaysMedicineLogs()
-  const untaken = meds?.filter(m => !logs?.some(l => l.medicine_id === m.id)).length ?? 0
+  // "As needed" medicines are never "not taken yet".
+  const untaken = meds?.filter(m => needsReminderToday(m) && !logs?.some(l => l.medicine_id === m.id)).length ?? 0
   if (untaken === 0) return null
   return (
     <button
