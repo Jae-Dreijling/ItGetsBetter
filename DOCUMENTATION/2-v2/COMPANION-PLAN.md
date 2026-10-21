@@ -69,6 +69,23 @@ Rules that hold for every part:
 - **Prank hints:** while a button is hidden, the companion trembles now and then and lets a "pffft" slip.
 - **Hard-day visits:** with a mood of 1 or 2 today, caring and romantic companions knock to keep you company (up to two a day, an hour apart), visit with soft words and leave something kind.
 
+## Not built yet (ideas from 2026-10-21, noted for later)
+
+Everything in 11a to 11j is built. These parts of the user's ideas are only partly there, or not yet:
+
+- **Hard-day support from several companions at once:** today one knocks at a time (up to two a day). The idea was that several might come by.
+- **Real conversations between companions:** banter is a two-line exchange from generic lines. Missing: longer exchanges, and relationships between specific characters (the Obey Me brothers bickering, Kyle versus Cartman), with lines written per pair.
+- **Group celebrations with all companions:** only the visitor joins the main companion; switched-on companions that aren't on screen don't cheer.
+- **Three-choice questions per character:** the 14 questions are the same for everyone. Each character should have its own questions and its own reactions to each answer.
+- **Daily surprise per character:** fortunes, fun facts, "would you rather" and compliments are generic lists. Each character should share its own (Lucifer's facts about the Devildom, Twilight's library facts).
+- **Memory questions in the Journey and in chat:** asked only on Today. The pattern-matching chat doesn't use memories or nicknames yet.
+- **Body doubling during a task:** only during the focus timer. Idea: "do this together" on a task's page.
+- **A real birthday celebration:** a companion's birthday gives a line, a 🎂 and the whole day together. Missing: something special (confetti, a cake moment, a gift for you, its friends visiting). Your own birthday isn't known by the app yet.
+- **Expressions per character:** the feature exists, but no character has expression pictures yet (content to make).
+- **Feeling alive extras:** idle animations, reactions to weather and season, outfits per character (accessories are emoji only), seasonal events beyond seasonal accessories, collections and decorations.
+- **Relationship depth:** conversations and backstory that unlock at higher closeness (and as Lovers) were planned in V2-PLAN §5; not built.
+- **Per-character prank and entrance variety:** pranks hide one button and entrances roll in; character-specific tricks (Discord's chaos, Kenny "dying") are lines only, not different behaviour.
+
 ## 11i: Tools for lines
 
 - **Coverage view** per companion: which triggers have its own lines and which fall back to the defaults.
