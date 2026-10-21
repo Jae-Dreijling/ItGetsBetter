@@ -14,7 +14,7 @@ type ImportState =
   | { step: 'pick' }
   | { step: 'error'; error: string }
   | { step: 'preview'; plan: CompanionImportPlan; folders: Folder[] }
-  | { step: 'done'; added: number }
+  | { step: 'done'; added: number; updated: number }
 
 // Export the companions you made, or import a file of companions. Importing
 // only ever adds; see lib/companionTransfer.
@@ -61,6 +61,7 @@ function ImportFlow({ onClose }: { onClose: () => void }) {
   const [state, setState] = useState<ImportState>({ step: 'pick' })
   const [working, setWorking] = useState(false)
   const [intoFolder, setIntoFolder] = useState('')
+  const [updateMine, setUpdateMine] = useState(true)
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = e.target.files?.[0]
@@ -75,7 +76,8 @@ function ImportFlow({ onClose }: { onClose: () => void }) {
   async function confirm(plan: CompanionImportPlan) {
     setWorking(true)
     try {
-      setState({ step: 'done', added: await applyCompanionImport(plan) })
+      await applyCompanionImport(plan, { update: updateMine })
+      setState({ step: 'done', added: plan.add.length, updated: updateMine ? plan.update.length : 0 })
     } catch (err) {
       setState({ step: 'error', error: `Import failed, nothing was added: ${err instanceof Error ? err.message : String(err)}` })
     } finally {
@@ -112,7 +114,10 @@ function ImportFlow({ onClose }: { onClose: () => void }) {
     return (
       <div className="space-y-4 text-center">
         <p className="text-4xl" aria-hidden>🎉</p>
-        <p className="text-text-primary">Added {state.added} companion{state.added === 1 ? '' : 's'}. They're switched on, so they can start talking.</p>
+        <p className="text-text-primary">
+          {state.added > 0 && `Added ${state.added} companion${state.added === 1 ? '' : 's'}. They're switched on, so they can start talking. `}
+          {state.updated > 0 && `Updated ${state.updated} you already had.`}
+        </p>
         <button onClick={onClose} className="w-full rounded-lg bg-primary-500 py-2.5 font-semibold text-white">Done</button>
       </div>
     )
@@ -149,12 +154,21 @@ function ImportFlow({ onClose }: { onClose: () => void }) {
       {plan.newFolders.length > 0 && (
         <p className="text-sm text-muted">Makes the folder{plan.newFolders.length === 1 ? '' : 's'} {plan.newFolders.map(f => `${f.emoji} ${f.name}`).join(', ')}.</p>
       )}
-      {plan.skipped.length > 0 && (
+      {plan.update.length > 0 && (
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg bg-surface p-3">
+          <input type="checkbox" checked={updateMine} onChange={e => setUpdateMine(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-primary-500" />
+          <span className="text-sm text-text-primary">
+            Update the {plan.update.length} you already have
+            <span className="block text-xs text-muted">Adds their new lines and sets personality, options, birthday, favourites and nicknames. Keeps your pictures, your own lines, what they remember and your closeness.</span>
+          </span>
+        </label>
+      )}
+      {plan.skipped.length > 0 && !(updateMine && plan.update.length > 0) && (
         <p className="text-xs text-muted">Skipped (you already have one with this name): {plan.skipped.join(', ')}</p>
       )}
-      {plan.add.length > 0 ? (
+      {plan.add.length > 0 || (updateMine && plan.update.length > 0) ? (
         <button onClick={() => confirm(plan)} disabled={working} className="w-full rounded-lg bg-primary-500 py-2.5 font-semibold text-white disabled:opacity-50">
-          {working ? 'Adding...' : `Add ${plan.add.length}`}
+          {working ? 'Working...' : [plan.add.length > 0 && `Add ${plan.add.length}`, updateMine && plan.update.length > 0 && `update ${plan.update.length}`].filter(Boolean).join(' and ').replace(/^u/, 'U')}
         </button>
       ) : (
         <button onClick={onClose} className="w-full rounded-lg bg-surface py-2.5 text-sm text-muted">Close</button>

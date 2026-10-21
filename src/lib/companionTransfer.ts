@@ -13,6 +13,10 @@ import { EXPRESSIONS, type Expression } from './companionExpressions'
 // groups travel along and are matched by name. Game progress (affinity) stays
 // personal; lover lines and home region are part of the character, so they go.
 // Folders go by name too: a folder you already have is reused.
+// Re-importing (a newer version of a character file) can also update the
+// companions you already have: their lines are merged (nothing you wrote is
+// lost), and personality, options, favourites, birthday and nicknames come
+// from the file. Pictures you set, memories and closeness stay yours.
 
 export const COMPANIONS_FORMAT = 'itgetsbetter-companions'
 
@@ -172,33 +176,49 @@ export interface CompanionImportPlan {
   // Names skipped because a companion with that name already exists (or
   // appears twice in the file).
   skipped: string[]
+  // The skipped ones you already have, which an update can refresh.
+  update: CompanionFileEntry[]
   newGroups: CompanionFile['personality_groups']
   // Folders the file uses that you don't have yet; made on import.
   newFolders: { name: string; emoji: string }[]
 }
 
 export function planCompanionImport(file: CompanionFile, existing: Companion[], existingGroups: PersonalityGroup[], existingFolders: Folder[] = []): CompanionImportPlan {
-  const taken = new Set(existing.map(c => key(c.name)))
+  const have = new Set(existing.map(c => key(c.name)))
+  const taken = new Set(have)
   const add: CompanionFileEntry[] = []
+  const update: CompanionFileEntry[] = []
   const skipped: string[] = []
   for (const c of file.companions) {
-    if (taken.has(key(c.name))) skipped.push(c.name)
-    else {
+    if (taken.has(key(c.name))) {
+      skipped.push(c.name)
+      if (have.has(key(c.name)) && !update.some(u => key(u.name) === key(c.name))) update.push(c)
+    } else {
       add.push(c)
       taken.add(key(c.name))
     }
   }
   const groupNames = new Set(existingGroups.map(g => key(g.name)))
-  const needed = new Set(add.map(c => c.personality_group).filter((n): n is string => !!n).map(key))
+  const needed = new Set([...add, ...update].map(c => c.personality_group).filter((n): n is string => !!n).map(key))
   const newGroups = file.personality_groups.filter(g => needed.has(key(g.name)) && !groupNames.has(key(g.name)))
   const folderNames = new Set(existingFolders.map(f => key(f.name)))
   const newFolders: CompanionImportPlan['newFolders'] = []
-  for (const name of add.map(c => c.folder).filter((n): n is string => !!n)) {
+  for (const name of [...add, ...update].map(c => c.folder).filter((n): n is string => !!n)) {
     if (folderNames.has(key(name))) continue
     folderNames.add(key(name))
     newFolders.push({ name, emoji: file.folders?.find(f => key(f.name) === key(name))?.emoji ?? '📁' })
   }
-  return { add, skipped, newGroups, newFolders }
+  return { add, skipped, update, newGroups, newFolders }
+}
+
+// Lines per moment: what's there, plus the file's new ones.
+function mergeMessages(mine: CompanionMessages, theirs: CompanionMessages): CompanionMessages {
+  const merged = { ...mine }
+  for (const k of Object.keys(theirs) as (keyof CompanionMessages)[]) {
+    const lines = [...(mine[k] ?? []), ...(theirs[k] ?? [])]
+    merged[k] = lines.filter((l, i) => lines.indexOf(l) === i)
+  }
+  return merged
 }
 
 // "Put them all in a folder" on import: every companion without a folder of
@@ -211,9 +231,10 @@ export function withFolder(plan: CompanionImportPlan, name: string, existingFold
   return { ...plan, add, newFolders: exists ? plan.newFolders : [...plan.newFolders, { name: folder, emoji: '📁' }] }
 }
 
-// Adds the planned companions (and groups they need) in one go. Imported
-// companions start switched on, like a newly made one.
-export async function applyCompanionImport(plan: CompanionImportPlan): Promise<number> {
+// Adds the planned companions (and groups they need) in one go, and with
+// update on, refreshes the ones you already have. Imported companions start
+// switched on, like a newly made one.
+export async function applyCompanionImport(plan: CompanionImportPlan, { update = false } = {}): Promise<number> {
   await db.transaction('rw', [db.companions, db.personalityGroups, db.gameCompanionAffinity, db.folders], async () => {
     for (const f of plan.newFolders) await db.folders.add({ area: 'companions', name: f.name, emoji: f.emoji, created_at: nowISO() })
     const folderId = new Map((await db.folders.where('area').equals('companions').toArray()).map(f => [key(f.name), f.id!]))
@@ -256,6 +277,35 @@ export async function applyCompanionImport(plan: CompanionImportPlan): Promise<n
         })
       }
     }
+
+    if (!update) return
+    const mine = await db.companions.toArray()
+    for (const c of plan.update) {
+      const current = mine.find(m => key(m.name) === key(c.name))
+      if (!current) continue
+      const expressions = { ...Object.fromEntries(Object.entries(c.expressions ?? {}).map(([k, v]) => [k, decodeBlob(v as EncodedBlob)])), ...current.expressions }
+      await db.companions.update(current.id!, {
+        messages: mergeMessages(current.messages, c.messages),
+        ...(c.traits && { traits: c.traits }),
+        ...(c.options && { options: c.options }),
+        ...(c.about && Object.keys(c.about).length > 0 && { about: { ...current.about, ...c.about } }),
+        ...(c.birthday && { birthday: c.birthday }),
+        ...(!current.avatar && c.avatar && { avatar: decodeBlob(c.avatar) }),
+        ...(Object.keys(expressions).length > 0 && { expressions }),
+        ...(current.folder_id == null && c.folder && { folder_id: folderId.get(key(c.folder)) ?? null }),
+        ...(current.personality_group_id == null && c.personality_group && { personality_group_id: groupId.get(key(c.personality_group)) ?? null }),
+      })
+      const bond = await db.gameCompanionAffinity.where('companion_id').equals(current.id!).first()
+      if (bond) {
+        const lines = [...bond.lover_dialogue, ...c.lover_dialogue]
+        await db.gameCompanionAffinity.update(bond.id!, { lover_dialogue: lines.filter((l, i) => lines.indexOf(l) === i) })
+      } else if (c.lover_dialogue.length > 0 || c.home_region) {
+        await db.gameCompanionAffinity.add({
+          companion_id: current.id!, affinity: 0, is_lover: false, lover_dialogue: c.lover_dialogue, home_region: c.home_region ?? 'ponyville',
+          is_discovered: false, last_visit_at: null, created_at: nowISO(),
+        })
+      }
+    }
   })
-  return plan.add.length
+  return plan.add.length + (update ? plan.update.length : 0)
 }

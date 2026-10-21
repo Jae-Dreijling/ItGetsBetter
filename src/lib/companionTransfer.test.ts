@@ -103,6 +103,32 @@ describe('companion export and import', () => {
     expect(all.find(c => c.name === 'Kyle')!.folder_id).toBe(byName.get('South Park'))
   })
 
+  it('re-importing can update the ones you have: lines merged, personality set, your picture kept', async () => {
+    const id = await db.companions.add(companion('Lucifer', { avatar: new Blob(['mine'], { type: 'image/png' }), messages: { ...EMPTY_MESSAGES, general: ['My own line'] } })) as number
+    await db.gameCompanionAffinity.add({ companion_id: id, affinity: 55, is_lover: false, lover_dialogue: ['Old'], home_region: 'canterlot', is_discovered: true, last_visit_at: null, created_at: '' })
+    const file = parseCompanionFile(JSON.stringify({
+      format: 'itgetsbetter-companions', version: 1, exported_at: '', personality_groups: [],
+      companions: [{ name: 'lucifer', avatar: null, personality_group: null, messages: { general: ['Fine.'], saw_someone: ['You saw {person}.'] }, lover_dialogue: ['New'], home_region: 'traveler', traits: { proud: 2 }, birthday: '11-01', about: { food: 'fine dining' } }],
+    }))
+    if (!file.ok) throw new Error(file.error)
+    const plan = planCompanionImport(file.file, await db.companions.toArray(), [])
+    expect(plan.add).toHaveLength(0)
+    expect(plan.update.map(c => c.name)).toEqual(['lucifer'])
+    // Without update, nothing changes.
+    await applyCompanionImport(plan)
+    expect((await db.companions.get(id))!.birthday).toBeUndefined()
+    await applyCompanionImport(plan, { update: true })
+    const after = (await db.companions.get(id))!
+    expect(after.messages.general).toEqual(['My own line', 'Fine.'])
+    expect(after.messages.saw_someone).toEqual(['You saw {person}.'])
+    expect(after.traits?.proud).toBe(2)
+    expect(after.birthday).toBe('11-01')
+    expect(after.about).toEqual({ food: 'fine dining' })
+    expect(await after.avatar!.text()).toBe('mine')
+    const bond = (await db.gameCompanionAffinity.where('companion_id').equals(id).first())!
+    expect(bond).toMatchObject({ affinity: 55, lover_dialogue: ['Old', 'New'], home_region: 'canterlot' })
+  })
+
   it('explains a wrong file', () => {
     expect(parseCompanionFile('nope')).toMatchObject({ ok: false })
     expect(parseCompanionFile(JSON.stringify({ version: 6, tables: {} }))).toMatchObject({ ok: false })
