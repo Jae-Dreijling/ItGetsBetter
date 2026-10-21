@@ -35,11 +35,6 @@ export function useWeightTrend() {
   }
 }
 
-export function useLatestWeight() {
-  return useLiveQuery(() =>
-    db.weightEntries.orderBy('logged_at').last()
-  )
-}
 
 export async function addWeightEntry(
   value_kg: number,

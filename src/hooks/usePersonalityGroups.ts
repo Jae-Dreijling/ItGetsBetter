@@ -15,9 +15,6 @@ export function usePersonalityGroups() {
   return useLiveQuery(() => db.personalityGroups.toArray())
 }
 
-export function usePersonalityGroup(id: number | null) {
-  return useLiveQuery(() => id == null ? undefined : db.personalityGroups.get(id), [id])
-}
 
 export async function addPersonalityGroup(name: string) {
   return db.personalityGroups.add({

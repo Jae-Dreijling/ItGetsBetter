@@ -9,9 +9,6 @@ export function getLogicalDate(timestamp: Date = new Date()): string {
   return format(timestamp, 'yyyy-MM-dd')
 }
 
-export function toLogicalDate(dateString: string): string {
-  return dateString
-}
 
 export function nowISO(): string {
   return new Date().toISOString()

@@ -39,7 +39,7 @@ export function useCompanions() {
   return useLiveQuery(() => db.companions.toArray())
 }
 
-export function useSessionCompanionId(): number | null {
+function useSessionCompanionId(): number | null {
   return useSyncExternalStore(subscribeSessionCompanion, getSessionCompanionId)
 }
 

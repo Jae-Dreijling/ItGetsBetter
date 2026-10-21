@@ -54,15 +54,6 @@ export function useTodaysMedicineLogs() {
   )
 }
 
-export function useMedicineHistory(medicineId: number, limit: number = 14) {
-  return useLiveQuery(() =>
-    db.medicineLogs
-      .where('medicine_id').equals(medicineId)
-      .reverse()
-      .limit(limit)
-      .toArray()
-  , [medicineId, limit])
-}
 
 export async function addMedicine(name: string, frequency: string) {
   await db.medicines.add({

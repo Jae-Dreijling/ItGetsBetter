@@ -104,7 +104,7 @@ export function statLevelInfo(score: number): LevelInfo {
   return computeLevelInfo(score, 1)
 }
 
-export function statLevel(score: number): number {
+function statLevel(score: number): number {
   return score <= 0 ? 0 : Math.floor(Math.sqrt(score))
 }
 

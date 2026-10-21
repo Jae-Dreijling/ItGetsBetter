@@ -8,11 +8,6 @@ export function useAchievements() {
   return useLiveQuery(() => db.achievements.toArray())
 }
 
-export function useUnlockedAchievements() {
-  return useLiveQuery(() =>
-    db.achievements.filter(a => a.is_unlocked === true).toArray()
-  )
-}
 
 export async function checkAndUnlockAchievements(): Promise<string[]> {
   const stats = await gatherStats()

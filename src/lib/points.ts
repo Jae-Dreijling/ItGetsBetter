@@ -10,7 +10,6 @@ export const POINT_VALUES = {
   sleep_logged: 3,
   mood_logged: 2,
   medicine_taken: 2,
-  streak_bonus_per_day: 1,
   daily_check: 3,
   floor_complete: 5,
   milestone_reached: 15,

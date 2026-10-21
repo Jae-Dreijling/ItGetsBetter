@@ -16,7 +16,6 @@ const SOURCE_LABELS: Record<string, string> = {
   sleep_logged: 'logging sleep',
   mood_logged: 'logging mood',
   medicine_taken: 'taking medicine',
-  streak_bonus_per_day: 'streak bonus',
   daily_check: 'daily check',
   floor_complete: 'full day! floor done',
   milestone_reached: 'reaching a milestone',

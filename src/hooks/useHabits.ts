@@ -29,29 +29,12 @@ export function useHabit(id: number) {
   return useLiveQuery(async () => (await db.habits.get(id)) ?? null, [id])
 }
 
-export function useAllHabits() {
-  return useLiveQuery(() => db.habits.toArray())
-}
-
 export function useTodaysCompletions() {
   const today = getLogicalDate()
   return useLiveQuery(
     () => db.habitCompletions.where('date').equals(today).toArray(),
     [today]
   )
-}
-
-export function useHabitCompletions(habitId: number, days: number = 21) {
-  return useLiveQuery(() => {
-    const from = new Date()
-    from.setDate(from.getDate() - days)
-    from.setHours(12, 0, 0, 0)
-    const fromStr = getLogicalDate(from)
-    return db.habitCompletions
-      .where('habit_id').equals(habitId)
-      .and(c => c.date >= fromStr)
-      .toArray()
-  }, [habitId, days])
 }
 
 export function isTodayScheduled(habit: { frequency: HabitFrequency; custom_days?: Weekday[] }): boolean {
@@ -110,69 +93,6 @@ export async function updateHabit(id: number, changes: Partial<{
   is_queued: boolean
 }>) {
   await db.habits.update(id, changes)
-}
-
-export interface HabitFormationStatus {
-  habitId: number
-  habitTitle: string
-  daysSinceActivation: number
-  completionsInWindow: number
-  requiredCompletions: number
-  consistency: number
-  isFormed: boolean
-}
-
-export async function getHabitFormationStatus(habitId: number): Promise<HabitFormationStatus | null> {
-  const habit = await db.habits.get(habitId)
-  if (!habit || !habit.is_active || !habit.activated_at) return null
-
-  const activatedDate = new Date(habit.activated_at)
-  const now = new Date()
-  const daysSince = Math.floor((now.getTime() - activatedDate.getTime()) / (1000 * 60 * 60 * 24))
-  const window = Math.min(daysSince, 30)
-
-  if (window < 1) return { habitId: habit.id!, habitTitle: habit.title, daysSinceActivation: 0, completionsInWindow: 0, requiredCompletions: 23, consistency: 0, isFormed: false }
-
-  const fromDate = new Date(now)
-  fromDate.setDate(fromDate.getDate() - window)
-  fromDate.setHours(12, 0, 0, 0)
-  const fromStr = getLogicalDate(fromDate)
-
-  const completions = await db.habitCompletions
-    .where('habit_id').equals(habit.id!)
-    .and(c => c.date >= fromStr)
-    .toArray()
-
-  const requiredCompletions = Math.ceil(30 * 0.75)
-  const consistency = window > 0 ? Math.round((completions.length / window) * 100) : 0
-  const isFormed = daysSince >= 30 && completions.length >= requiredCompletions
-
-  return {
-    habitId: habit.id!,
-    habitTitle: habit.title,
-    daysSinceActivation: daysSince,
-    completionsInWindow: completions.length,
-    requiredCompletions,
-    consistency,
-    isFormed,
-  }
-}
-
-export async function canActivateInCategory(labelIds: number[]): Promise<{ allowed: boolean; blockingHabit?: string }> {
-  const activeHabits = await db.habits
-    .filter(h => h.is_active === true && h.activated_at !== null)
-    .toArray()
-
-  for (const habit of activeHabits) {
-    const overlap = habit.label_ids.some(id => labelIds.includes(id))
-    if (!overlap) continue
-
-    const status = await getHabitFormationStatus(habit.id!)
-    if (status && !status.isFormed) {
-      return { allowed: false, blockingHabit: `"${habit.title}" needs ${30 - status.daysSinceActivation} more days (${status.consistency}% consistency)` }
-    }
-  }
-  return { allowed: true }
 }
 
 export async function activateHabit(id: number) {

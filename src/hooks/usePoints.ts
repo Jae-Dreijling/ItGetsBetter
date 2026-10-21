@@ -16,19 +16,7 @@ export function usePointsBalance() {
   })
 }
 
-export function useTodaysPoints() {
-  const today = getLogicalDate()
-  return useLiveQuery(
-    () => db.pointsTransactions.where('date').equals(today).toArray(),
-    [today]
-  )
-}
 
-export function usePointsHistory(limit: number = 30) {
-  return useLiveQuery(() =>
-    db.pointsTransactions.orderBy('date').reverse().limit(limit).toArray()
-  , [limit])
-}
 
 export async function awardPoints(source: PointSource, sourceId?: number) {
   const today = getLogicalDate()
@@ -60,23 +48,3 @@ export async function awardPoints(source: PointSource, sourceId?: number) {
   if (source === 'water_goal_met') triggerCompanionMessage('water_goal_met')
 }
 
-export async function awardStreakBonus(streakDays: number) {
-  const today = getLogicalDate()
-  const alreadyAwarded = await db.pointsTransactions
-    .where('date').equals(today)
-    .and(t => t.source_type === 'streak_bonus_per_day')
-    .first()
-
-  if (alreadyAwarded) return
-
-  const bonus = Math.min(streakDays, 21) * POINT_VALUES.streak_bonus_per_day
-  if (bonus <= 0) return
-
-  await db.pointsTransactions.add({
-    amount: bonus,
-    source_type: 'streak_bonus_per_day',
-    source_id: null,
-    date: today,
-    created_at: nowISO(),
-  })
-}

@@ -257,6 +257,8 @@ export default function App() {
       }
       checkProgressionAdvancements()
       checkAutoMilestones()
+      // Left over from v1's "current focus" card, which 2.0's spotlight replaced.
+      localStorage.removeItem('igb_current_focus')
       ensureDefaultCompanion()
       ensureDefaultPersonalityGroups()
       checkLevelUpAndClassChange()

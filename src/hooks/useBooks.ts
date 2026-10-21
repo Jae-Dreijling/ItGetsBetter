@@ -15,9 +15,6 @@ export function useFinishedBooks() {
   )
 }
 
-export function useAllBooks() {
-  return useLiveQuery(() => db.books.toArray())
-}
 
 export async function addBook(data: { title: string; author?: string; total_pages: number }) {
   await db.books.add({
@@ -60,9 +57,6 @@ export async function finishBook(id: number, rating: number, notes: string | nul
   if (wasFirstEver) triggerCompanionMessage('first_milestone')
 }
 
-export async function updateBook(id: number, changes: Partial<{ title: string; author: string | null; total_pages: number; rating: number | null; notes: string | null }>) {
-  await db.books.update(id, changes)
-}
 
 export async function deleteBook(id: number) {
   await db.books.delete(id)
