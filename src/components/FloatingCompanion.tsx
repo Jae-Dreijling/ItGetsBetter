@@ -17,7 +17,7 @@ import type { TriggerValues } from '../lib/companionTriggers'
 import { startIdleTimer } from '../lib/idleTimer'
 import {
   traitsOf, closenessOf, refusesPickup, isThrow, tapsInWindow, TAPS_FOR_FLUSTER, jumpsAtFinger, startsPrank, rollsIn,
-  isCalmPlace, cooledDown, type COOLDOWN_MS,
+  isCalmPlace, cooledDown, allows, forcedOn, type COOLDOWN_MS,
 } from '../lib/companionPersonality'
 import { startPrank } from '../lib/companionPranks'
 import { useObjectUrl } from '../hooks/useObjectUrl'
@@ -60,12 +60,13 @@ const IDLE_TIMEOUT = 2 * 60 * 1000
 const PHONE_FREE_NUDGE_INTERVAL = 60 * 1000
 
 // Little body reactions to being handled (11b). Transform only.
-type Reaction = 'dizzy' | 'jiggle' | 'flinch' | 'roll'
+type Reaction = 'dizzy' | 'jiggle' | 'flinch' | 'roll' | 'tremble'
 const REACTIONS: Record<Reaction, TargetAndTransition> = {
   dizzy: { rotate: [0, -30, 25, -20, 15, -8, 0], transition: { duration: 1.2 } },
   jiggle: { x: [0, -5, 5, -4, 4, 0], transition: { duration: 0.5 } },
   flinch: { scale: [1, 0.75, 1], transition: { duration: 0.35 } },
   roll: { rotate: [-720, 0], transition: { duration: 0.9, ease: 'easeOut' } },
+  tremble: { x: [0, -1.5, 1.5, -1.5, 1.5, -1, 1, 0], transition: { duration: 0.6 } },
 }
 
 const COOLDOWNS_KEY = 'igb_companion_cooldowns'
@@ -142,6 +143,7 @@ export default function FloatingCompanion() {
   const isGoodnightTimeRef = useRef(isGoodnightTime)
   const affinityRef = useRef(affinity)
   const traitsRef = useRef(traitsOf(companion))
+  const companionRef = useRef(companion)
   const companionIdRef = useRef(companion?.id)
   const memories = useLiveQuery(
     async () => (companion?.id === undefined ? [] : db.companionMemories.where('companion_id').equals(companion.id).toArray()),
@@ -159,6 +161,7 @@ export default function FloatingCompanion() {
   useEffect(() => { affinityRef.current = affinity }, [affinity])
   useEffect(() => {
     traitsRef.current = traitsOf(companion)
+    companionRef.current = companion
     companionIdRef.current = companion?.id
   }, [companion])
   useEffect(() => { pathRef.current = location.pathname }, [location.pathname])
@@ -374,7 +377,9 @@ export default function FloatingCompanion() {
     function onPointerDown(e: PointerEvent) {
       if (companionEl.current?.contains(e.target as Node) || awayRef.current || !playfulWelcome()) return
       const traits = traitsRef.current
-      if (!jumpsAtFinger(traits, closenessOf(affinityRef.current?.affinity), Math.random())) return
+      const self = companionRef.current
+      if (!allows(self, 'entrances')) return
+      if (!jumpsAtFinger(traits, closenessOf(affinityRef.current?.affinity), Math.random(), forcedOn(self, 'entrances'))) return
       if (!cooledDown(readCooldowns().jump, 'jump', Date.now())) return
       markCooldown('jump')
       awayRef.current = true
@@ -413,7 +418,8 @@ export default function FloatingCompanion() {
     let endPrank: (() => void) | null = null
     let timer: ReturnType<typeof setTimeout> | null = null
 
-    if (!reduceMotion && rollsIn(traits, onOpen, Math.random()) && cooledDown(readCooldowns().rollIn, 'rollIn', now) && playfulWelcome()) {
+    const self = companionRef.current
+    if (!reduceMotion && allows(self, 'entrances') && rollsIn(traits, onOpen, Math.random(), forcedOn(self, 'entrances')) && cooledDown(readCooldowns().rollIn, 'rollIn', now) && playfulWelcome()) {
       markCooldown('rollIn')
       awayRef.current = true
       const home = positionRef.current
@@ -425,15 +431,30 @@ export default function FloatingCompanion() {
         awayRef.current = false
         if (Math.random() < 0.6) showMessage('rolled_in')
       }, onOpen ? 600 : 900)
-    } else if (!onOpen && startsPrank(traits, Math.random()) && cooledDown(readCooldowns().prank, 'prank', now) && playfulWelcome()) {
-      // After the page has drawn its buttons.
+    } else if (!onOpen && allows(self, 'pranks') && startsPrank(traits, Math.random(), forcedOn(self, 'pranks')) && cooledDown(readCooldowns().prank, 'prank', now) && playfulWelcome()) {
+      // After the page has drawn its buttons. While the prank runs, the
+      // companion trembles now and then and lets a "pffft" slip (11j), so
+      // you know something's up.
       timer = setTimeout(() => {
-        endPrank = startPrank(() => showMessage('prank_revealed'))
-        if (endPrank) markCooldown('prank')
+        endPrank = startPrank(() => {
+          stopHints()
+          showMessage('prank_revealed')
+        })
+        if (!endPrank) return
+        markCooldown('prank')
+        tremble = setInterval(() => react('tremble'), 4000)
+        hint = setTimeout(() => showMessage('prank_hint'), 8000)
       }, 1500)
+    }
+    let tremble: ReturnType<typeof setInterval> | null = null
+    let hint: ReturnType<typeof setTimeout> | null = null
+    function stopHints() {
+      if (tremble) clearInterval(tremble)
+      if (hint) clearTimeout(hint)
     }
     return () => {
       if (timer) clearTimeout(timer)
+      stopHints()
       endPrank?.()
     }
   // Only on page changes; everything else is read from refs.

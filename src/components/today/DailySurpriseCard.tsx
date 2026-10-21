@@ -6,9 +6,9 @@ import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { receiveGift } from '../../hooks/useCompanionFun'
 import { getLogicalDate } from '../../lib/date'
 import { fadeUp, pop } from '../../lib/animations'
-import { traitsOf } from '../../lib/companionPersonality'
+import { traitsOf, allows } from '../../lib/companionPersonality'
 import { changeCloseness } from '../../lib/closeness'
-import { surpriseFor, hashSeed } from '../../lib/companionFun'
+import { surpriseFor, surpriseKinds, hashSeed } from '../../lib/companionFun'
 
 const DONE_KEY = 'igb_daily_surprise'
 
@@ -27,8 +27,9 @@ export default function DailySurpriseCard() {
   const [open, setOpen] = useState(false)
   const [reply, setReply] = useState<string | null>(null)
 
-  if (done || !companion?.id) return null
-  const surprise = surpriseFor(hashSeed(`${today}:${companion.id}`))
+  if (done || !companion?.id || !allows(companion, 'surprises')) return null
+  const traits = traitsOf(companion)
+  const surprise = surpriseFor(hashSeed(`${today}:${companion.id}`), surpriseKinds(traits, allows(companion, 'gifts')), traits.romantic > 0)
   const name = profile?.display_name ?? 'friend'
 
   async function reveal() {

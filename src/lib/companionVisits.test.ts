@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { pickVisitor, readVisit, startVisit, knockCooledDown, markKnock, VISIT_MS, KNOCK_COOLDOWN_MS } from './companionVisits'
+import {
+  pickVisitor, readVisit, startVisit, knockCooledDown, markKnock, VISIT_MS, KNOCK_COOLDOWN_MS,
+  supportKnockAllowed, markSupportKnock, pickSupporter, SUPPORT_GAP_MS,
+} from './companionVisits'
 
 const store = new Map<string, string>()
 vi.stubGlobal('localStorage', {
@@ -22,6 +25,21 @@ describe('visits', () => {
     const picks = Array.from({ length: 200 }, () => pickVisitor([{ id: 1, affinity: 0 }, { id: 2, affinity: 100 }], sure))
     expect(picks.filter(p => p === 2).length).toBeGreaterThan(picks.filter(p => p === 1).length)
     expect(pickVisitor([], Math.random)).toBeNull()
+  })
+
+  it('on a hard day, up to two support visits, an hour apart, caring ones first', () => {
+    const now = 5_000_000
+    expect(supportKnockAllowed('2026-10-21', now)).toBe(true)
+    markSupportKnock('2026-10-21', now)
+    expect(supportKnockAllowed('2026-10-21', now + 1000)).toBe(false)
+    expect(supportKnockAllowed('2026-10-21', now + SUPPORT_GAP_MS)).toBe(true)
+    markSupportKnock('2026-10-21', now + SUPPORT_GAP_MS)
+    expect(supportKnockAllowed('2026-10-21', now + 5 * SUPPORT_GAP_MS)).toBe(false)
+    expect(supportKnockAllowed('2026-10-22', now + 5 * SUPPORT_GAP_MS)).toBe(true)
+    let i = 0
+    const picks = Array.from({ length: 300 }, () => pickSupporter([{ id: 1, care: 0 }, { id: 2, care: 4 }], () => ((i++ * 0.618) % 1)))
+    expect(picks.filter(p => p === 2).length).toBeGreaterThan(picks.filter(p => p === 1).length * 2)
+    expect(startVisit(9, now, true).support).toBe(true)
   })
 
   it('a visit lasts its time, and knocking has a cooldown', () => {

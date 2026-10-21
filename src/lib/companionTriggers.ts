@@ -38,6 +38,8 @@ export const EXTRA_TRIGGERS = [
   'monday_morning', 'friday_evening', 'weekend_morning', 'holiday', 'together_anniversary', 'companion_birthday', 'shiny_day', 'rare',
   // Fun and gifts (11h)
   'gift_received', 'gift_for_you', 'request_done',
+  // Prank hints and support visits (11j)
+  'prank_hint', 'support_knock', 'support_visit', 'support_leaving',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
@@ -185,6 +187,14 @@ export const TRIGGERS: TriggerInfo[] = [
     },
   },
   {
+    key: 'prank_hint', label: 'Hinting at a prank (something is hidden)', group: 'Handling',
+    defaults: ['Pffft...', '*trying very hard not to laugh*', 'Hehe... nothing. Nothing at all.'],
+    traitDefaults: {
+      sassy: ['Something missing, {name}? No idea what you mean.', 'Pffft. Look harder.'],
+      proud: ['I have done nothing. Carry on.'],
+    },
+  },
+  {
     key: 'prank_revealed', label: 'Prank found (a hidden button)', group: 'Handling',
     defaults: ['Hehe, you found it! I hid it.', 'Pranked! That was me.', 'Okay okay, I put it back. Got you though!'],
     traitDefaults: {
@@ -293,6 +303,27 @@ export const TRIGGERS: TriggerInfo[] = [
       sassy: ["I'm off. Try not to miss me too much."],
       shy: ['Th-thank you for having me... bye!'],
     },
+  },
+  {
+    key: 'support_knock', label: 'Asks to come by on a hard day', group: 'Visits',
+    defaults: ['I heard today is hard. Can I come sit with you for a while?', "Knock knock... it's me. Want some company today, {name}?", "I won't say much. Can I just be here with you?"],
+    traitDefaults: {
+      romantic: ['My dear {name}, may I come and hold your hand for a bit?'],
+      sassy: ["Move over. I'm keeping you company today, no arguments. ...If that's okay."],
+      proud: ['I have cleared my schedule. For you. May I come by?'],
+    },
+  },
+  {
+    key: 'support_visit', label: 'Kind words while visiting on a hard day', group: 'Visits',
+    defaults: ["You don't have to do anything right now. Just breathe.", "I'm proud of you for getting through today.", 'Hard days end too. I am right here.', 'Want to drink some water? I will wait.'],
+    traitDefaults: {
+      romantic: ['You are so loved, {name}. Even today. Especially today.'],
+      sassy: ['Anyone who gives you a hard time has to go through me first.'],
+    },
+  },
+  {
+    key: 'support_leaving', label: 'Leaving after a hard-day visit', group: 'Visits',
+    defaults: ['I have to go, but I left you a hug. Be gentle with yourself, {name}.', 'Rest well, okay? Tomorrow is a new page.', 'I am only a tap away. Always.'],
   },
   {
     key: 'banter', label: 'Starts some banter with the other companion', group: 'Visits', placeholders: ['other'],

@@ -4,7 +4,7 @@ import { encodeBlob, decodeBlob, type EncodedBlob } from './backup'
 import { EMPTY_MESSAGES } from '../hooks/useCompanion'
 import type { Companion, CompanionMessages, Folder, PersonalityGroup } from '../types'
 import type { CompanionMovement } from './companionMotion'
-import { DEFAULT_TRAITS, traitsOf, type CompanionTraits, type Trait } from './companionPersonality'
+import { DEFAULT_TRAITS, OPTION_INFO, traitsOf, type CompanionTraits, type CompanionOptions, type Trait } from './companionPersonality'
 import { EXPRESSIONS, type Expression } from './companionExpressions'
 
 // Share companions between installs (or bulk-add them): export the ones you
@@ -32,6 +32,8 @@ export interface CompanionFileEntry {
   // Its own favourites by memory topic (lib/companionMemory); optional. What
   // it remembers about you stays personal and is never exported.
   about?: Record<string, string>
+  // On or off by hand (lib/companionPersonality); optional.
+  options?: CompanionOptions
   // "MM-DD"; optional.
   birthday?: string | null
   // Optional extra pictures per expression (lib/companionExpressions).
@@ -103,6 +105,7 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
         folder: folderOf(c.folder_id)?.name ?? null,
         traits: traitsOf(c),
         about: c.about ?? {},
+        options: c.options ?? {},
         birthday: c.birthday ?? null,
         expressions: Object.fromEntries(await Promise.all(Object.entries(c.expressions ?? {}).map(async ([k, blob]) => [k, await encodeBlob(blob as Blob)]))),
       }
@@ -140,6 +143,9 @@ export function parseCompanionFile(raw: string): ParsedCompanions {
         folder: typeof c.folder === 'string' && c.folder.trim() ? c.folder.trim() : null,
         traits: cleanTraits(c.traits),
         about: isObj(c.about) ? Object.fromEntries(Object.entries(c.about).filter((e): e is [string, string] => typeof e[1] === 'string' && e[1].trim() !== '')) : undefined,
+        options: isObj(c.options)
+          ? Object.fromEntries(Object.entries(c.options).filter(([k, v]) => OPTION_INFO.some(o => o.option === k) && typeof v === 'boolean'))
+          : undefined,
         birthday: typeof c.birthday === 'string' && /^\d{2}-\d{2}$/.test(c.birthday) ? c.birthday : null,
         expressions: isObj(c.expressions)
           ? Object.fromEntries(Object.entries(c.expressions).filter(([k, v]) => EXPRESSIONS.some(e => e.key === k) && isObj(v) && v.__blob === true)) as Partial<Record<Expression, EncodedBlob>>
@@ -230,6 +236,7 @@ export async function applyCompanionImport(plan: CompanionImportPlan): Promise<n
         folder_id: c.folder ? folderId.get(key(c.folder)) ?? null : null,
         ...(c.traits && { traits: c.traits }),
         ...(c.about && Object.keys(c.about).length > 0 && { about: c.about }),
+        ...(c.options && Object.keys(c.options).length > 0 && { options: c.options }),
         ...(c.birthday && { birthday: c.birthday }),
         ...(c.expressions && Object.keys(c.expressions).length > 0 && {
           expressions: Object.fromEntries(Object.entries(c.expressions).map(([k, v]) => [k, decodeBlob(v as EncodedBlob)])),

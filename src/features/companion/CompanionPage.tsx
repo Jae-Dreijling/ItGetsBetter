@@ -9,7 +9,7 @@ import { visitsOff, setVisitsOff } from '../../lib/companionVisits'
 import Sheet from '../../components/Sheet'
 import { GiveGift, Wardrobe } from './GiftAndWardrobe'
 import { isQuietToday, setQuietToday } from '../../lib/softDay'
-import { TRAIT_INFO, LEVEL_LABELS, traitsOf, type CompanionTraits, type TraitLevel } from '../../lib/companionPersonality'
+import { TRAIT_INFO, LEVEL_LABELS, OPTION_INFO, traitsOf, type CompanionTraits, type CompanionOptions, type TraitLevel } from '../../lib/companionPersonality'
 import { useNavigate } from 'react-router'
 import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
 import { compressImage } from '../../lib/compressImage'
@@ -252,6 +252,7 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
   })
   const personalityGroups = usePersonalityGroups()
   const [traits, setTraits] = useState<CompanionTraits>(traitsOf(initial))
+  const [options, setOptions] = useState<CompanionOptions>(initial?.options ?? {})
   const [about, setAbout] = useState<Record<string, string>>(initial?.about ?? {})
   const [showAbout, setShowAbout] = useState(false)
   const [birthday, setBirthday] = useState(initial?.birthday ?? '')
@@ -283,10 +284,10 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
     if (!name.trim()) return
     let savedId: number
     if (initial?.id) {
-      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, about: aboutToSave, birthday: validBirthday, expressions })
+      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, options, about: aboutToSave, birthday: validBirthday, expressions })
       savedId = initial.id
     } else {
-      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, about: aboutToSave, birthday: validBirthday, expressions }) as number
+      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, options, about: aboutToSave, birthday: validBirthday, expressions }) as number
     }
     await setCompanionHomeRegion(savedId, homeRegion)
     await updateLoverDialogue(savedId, loverDialogue)
@@ -368,6 +369,41 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
               <p className="text-[11px] text-muted">{description}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Personal options (11j): Auto follows its personality. */}
+      <div className="mb-4">
+        <p className="mb-1.5 text-xs font-semibold text-muted uppercase tracking-wide">Personal options</p>
+        <p className="mb-2 text-xs text-muted">Auto lets its personality decide. On or Off is your choice for this companion.</p>
+        <div className="space-y-1.5">
+          {OPTION_INFO.map(({ option, label }) => {
+            const value = options[option] === undefined ? 'auto' : options[option] ? 'on' : 'off'
+            return (
+              <div key={option} className="flex items-center gap-2">
+                <span className="flex-1 text-sm text-text-primary">{label}</span>
+                <div className="flex gap-0.5 rounded-lg bg-surface p-0.5" role="radiogroup" aria-label={label}>
+                  {(['auto', 'on', 'off'] as const).map(v => (
+                    <button
+                      key={v}
+                      type="button"
+                      role="radio"
+                      aria-checked={value === v}
+                      onClick={() => setOptions(prev => {
+                        const next = { ...prev }
+                        if (v === 'auto') delete next[option]
+                        else next[option] = v === 'on'
+                        return next
+                      })}
+                      className={`rounded-md px-2.5 py-1 text-xs capitalize transition-colors ${value === v ? 'bg-primary-500 font-medium text-white' : 'text-muted'}`}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 

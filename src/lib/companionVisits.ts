@@ -18,6 +18,8 @@ const OFF_KEY = 'igb_visits_off'
 export interface Visit {
   companionId: number
   until: number
+  // A hard-day visit (11j): soft words instead of banter.
+  support?: boolean
 }
 
 function read<T>(key: string, fallback: T): T {
@@ -31,8 +33,8 @@ export function readVisit(now = Date.now()): Visit | null {
   const visit = read<Visit | null>(STATE_KEY, null)
   return visit && visit.until > now ? visit : null
 }
-export function startVisit(companionId: number, now = Date.now()): Visit {
-  const visit = { companionId, until: now + VISIT_MS }
+export function startVisit(companionId: number, now = Date.now(), support = false): Visit {
+  const visit = { companionId, until: now + VISIT_MS, ...(support && { support }) }
   write(STATE_KEY, visit)
   return visit
 }
@@ -60,6 +62,36 @@ export function pickVisitor(candidates: { id: number; affinity: number | null }[
   const weights = candidates.map(c => 0.2 + closenessOf(c.affinity))
   const best = Math.max(...candidates.map(c => closenessOf(c.affinity)))
   if (random() >= 0.12 + best * 0.3) return null
+  let roll = random() * weights.reduce((a, b) => a + b, 0)
+  for (let i = 0; i < candidates.length; i++) {
+    roll -= weights[i]
+    if (roll <= 0) return candidates[i].id
+  }
+  return candidates[candidates.length - 1].id
+}
+
+// Hard days (11j): with a mood of 1 or 2 today, companions may knock to keep
+// you company, outside the usual limits: up to two a day, an hour apart,
+// caring and romantic ones first.
+const SUPPORT_KEY = 'igb_support_visits'
+export const SUPPORT_PER_DAY = 2
+export const SUPPORT_GAP_MS = 60 * 60 * 1000
+
+export function supportKnockAllowed(today: string, now = Date.now()): boolean {
+  const s = read<{ date: string; count: number; lastAt: number }>(SUPPORT_KEY, { date: '', count: 0, lastAt: 0 })
+  if (s.date !== today) return true
+  return s.count < SUPPORT_PER_DAY && now - s.lastAt >= SUPPORT_GAP_MS
+}
+
+export function markSupportKnock(today: string, now = Date.now()) {
+  const s = read<{ date: string; count: number; lastAt: number }>(SUPPORT_KEY, { date: '', count: 0, lastAt: 0 })
+  write(SUPPORT_KEY, { date: today, count: (s.date === today ? s.count : 0) + 1, lastAt: now })
+}
+
+// Who comes by on a hard day: weighted by how caring and romantic they are.
+export function pickSupporter(candidates: { id: number; care: number }[], random: () => number): number | null {
+  if (candidates.length === 0) return null
+  const weights = candidates.map(c => 0.5 + c.care)
   let roll = random() * weights.reduce((a, b) => a + b, 0)
   for (let i = 0; i < candidates.length; i++) {
     roll -= weights[i]

@@ -3,19 +3,57 @@
 // and closeness (its affinity with you), which softens or strengthens that.
 // Pure choices here (testable); FloatingCompanion acts them out.
 
-export type Trait = 'playful' | 'proud' | 'shy' | 'sassy'
+export type Trait = 'playful' | 'proud' | 'shy' | 'sassy' | 'romantic' | 'nerdy' | 'caring'
 export type TraitLevel = 0 | 1 | 2
 export type CompanionTraits = Record<Trait, TraitLevel>
 
-// A companion without traits set: a little playful, nothing else.
-export const DEFAULT_TRAITS: CompanionTraits = { playful: 1, proud: 0, shy: 0, sassy: 0 }
+// A companion without traits set: a little playful and a little caring.
+export const DEFAULT_TRAITS: CompanionTraits = { playful: 1, proud: 0, shy: 0, sassy: 0, romantic: 0, nerdy: 0, caring: 1 }
 
 export const TRAIT_INFO: { trait: Trait; label: string; description: string }[] = [
-  { trait: 'playful', label: 'Playful', description: 'Jumps at your finger, plays pranks, rolls in unannounced' },
+  { trait: 'playful', label: 'Playful', description: 'Jumps at your finger, plays pranks, silly surprises' },
   { trait: 'proud', label: 'Proud', description: "Doesn't like being picked up and may walk right back" },
   { trait: 'shy', label: 'Shy', description: 'Flinches when tapped, gets flustered' },
   { trait: 'sassy', label: 'Sassy', description: 'Tells you off, pranks you, makes an entrance' },
+  { trait: 'romantic', label: 'Romantic', description: 'Sweet compliments, comes by on hard days' },
+  { trait: 'nerdy', label: 'Nerdy', description: 'Shares fun facts' },
+  { trait: 'caring', label: 'Caring', description: 'Small requests, gifts, comes by on hard days' },
 ]
+
+// Personal options per companion (11j): each is decided by its personality
+// unless you set it on or off yourself.
+export type CompanionOption = 'pranks' | 'entrances' | 'surprises' | 'requests' | 'questions' | 'visits' | 'gifts'
+export type CompanionOptions = Partial<Record<CompanionOption, boolean>>
+
+export const OPTION_INFO: { option: CompanionOption; label: string }[] = [
+  { option: 'pranks', label: 'Plays pranks' },
+  { option: 'entrances', label: 'Jumps at your finger, rolls in' },
+  { option: 'surprises', label: 'Daily surprises' },
+  { option: 'requests', label: 'Small requests' },
+  { option: 'questions', label: 'Asks you things' },
+  { option: 'visits', label: 'Comes to visit' },
+  { option: 'gifts', label: 'Brings you gifts' },
+]
+
+// What its personality would choose.
+function byPersonality(t: CompanionTraits, option: CompanionOption): boolean {
+  switch (option) {
+    case 'pranks':
+    case 'entrances': return t.playful === 2 || t.sassy > 0
+    case 'requests': return t.caring > 0 || t.playful > 0 || t.romantic > 0
+    case 'gifts': return t.caring > 0 || t.romantic > 0 || t.playful > 0
+    default: return true
+  }
+}
+
+export function allows(companion: { traits?: Partial<CompanionTraits>; options?: CompanionOptions } | undefined | null, option: CompanionOption): boolean {
+  return companion?.options?.[option] ?? byPersonality(traitsOf(companion), option)
+}
+
+// Set on by hand although its personality wouldn't: still now and then.
+export function forcedOn(companion: { traits?: Partial<CompanionTraits>; options?: CompanionOptions } | undefined | null, option: CompanionOption): boolean {
+  return companion?.options?.[option] === true && !byPersonality(traitsOf(companion), option)
+}
 
 export const LEVEL_LABELS = ['Not', 'A bit', 'Very'] as const
 
@@ -26,7 +64,7 @@ export function traitsOf(companion: { traits?: Partial<CompanionTraits> } | unde
 // The trait that shows most, for picking fitting built-in lines. Ties go to
 // the one that changes the tone most.
 export function dominantTrait(traits: CompanionTraits): Trait | null {
-  const order: Trait[] = ['sassy', 'proud', 'shy', 'playful']
+  const order: Trait[] = ['sassy', 'proud', 'romantic', 'shy', 'caring', 'nerdy', 'playful']
   const top = Math.max(...order.map(t => traits[t]))
   return top === 0 ? null : order.find(t => traits[t] === top)!
 }
@@ -56,20 +94,20 @@ export function tapsInWindow(times: number[], now: number): number[] {
 
 // Jumping to where you tap (per tap elsewhere on the screen): very playful
 // ones now and then, more when you're close.
-export function jumpsAtFinger(traits: CompanionTraits, closeness: number, random: number): boolean {
-  const base = traits.playful === 2 ? 0.03 : traits.playful === 1 ? 0.006 : 0
+export function jumpsAtFinger(traits: CompanionTraits, closeness: number, random: number, forced = false): boolean {
+  const base = traits.playful === 2 ? 0.03 : traits.playful === 1 ? 0.006 : forced ? 0.01 : 0
   return random < base * (0.6 + closeness)
 }
 
 // Hiding a button for you to find, on changing pages.
-export function startsPrank(traits: CompanionTraits, random: number): boolean {
-  return random < (traits.playful === 2 ? 0.05 : 0) + traits.sassy * 0.03
+export function startsPrank(traits: CompanionTraits, random: number, forced = false): boolean {
+  return random < (traits.playful === 2 ? 0.05 : 0) + traits.sassy * 0.03 + (forced ? 0.04 : 0)
 }
 
 // Being gone for a moment and rolling back in: on opening the app, and more
 // rarely on changing pages.
-export function rollsIn(traits: CompanionTraits, onOpen: boolean, random: number): boolean {
-  const flair = (traits.playful === 2 ? 1 : 0) + traits.sassy
+export function rollsIn(traits: CompanionTraits, onOpen: boolean, random: number, forced = false): boolean {
+  const flair = (traits.playful === 2 ? 1 : 0) + traits.sassy + (forced ? 1 : 0)
   return random < flair * (onOpen ? 0.12 : 0.02)
 }
 

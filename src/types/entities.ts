@@ -6,7 +6,7 @@ import type { CompanionMovement } from '../lib/companionMotion'
 import type { NonScaleAnswer } from '../lib/nonScale'
 import type { CravingOutcome } from '../lib/craving'
 import type { ExtraTrigger } from '../lib/companionTriggers'
-import type { CompanionTraits } from '../lib/companionPersonality'
+import type { CompanionTraits, CompanionOptions } from '../lib/companionPersonality'
 import type { Expression } from '../lib/companionExpressions'
 
 export interface UserProfile {
@@ -355,6 +355,8 @@ export interface Companion {
   folder_id?: number | null
   // Personality (lib/companionPersonality). Missing means the defaults.
   traits?: Partial<CompanionTraits>
+  // Personal options, on or off by hand; missing means its personality decides.
+  options?: CompanionOptions
   // Its own favourites ("About me"), by memory topic (lib/companionMemory).
   about?: Record<string, string>
   // Optional pictures per expression (lib/companionExpressions).

@@ -8,11 +8,14 @@ import { useProfile } from '../hooks/useProfile'
 import { useObjectUrl } from '../hooks/useObjectUrl'
 import { useIsPhoneFreeTime } from '../hooks/useSchedule'
 import { fadeUp, pop } from '../lib/animations'
-import { traitsOf, isCalmPlace } from '../lib/companionPersonality'
+import { traitsOf, isCalmPlace, allows } from '../lib/companionPersonality'
+import { useTodaysMoodScore } from '../hooks/useMood'
+import { getLogicalDate } from '../lib/date'
+import { LOW_MOOD } from '../lib/softDay'
 import { changeCloseness } from '../lib/closeness'
 import { onCompanionMoment, askMainCompanion, msSinceLastMoment } from '../lib/companionMessenger'
 import {
-  readVisit, startVisit, endVisit, markKnock, knockCooledDown, visitsOff, pickVisitor,
+  readVisit, startVisit, endVisit, markKnock, knockCooledDown, visitsOff, pickVisitor, supportKnockAllowed, markSupportKnock, pickSupporter,
   BIG_MOMENTS, CHECK_EVERY_MS, ACCEPT_CLOSENESS, type Visit,
 } from '../lib/companionVisits'
 import type { TriggerValues } from '../lib/companionTriggers'
@@ -31,38 +34,61 @@ export default function CompanionVisits() {
   const companions = useLiveQuery(() => db.companions.toArray())
   const bonds = useLiveQuery(() => db.gameCompanionAffinity.toArray())
   const isPhoneFreeTime = useIsPhoneFreeTime()
+  const mood = useTodaysMoodScore()
   const { profile } = useProfile()
   const name = profile?.display_name ?? 'friend'
   const [visit, setVisit] = useState<Visit | null>(readVisit)
-  const [knock, setKnock] = useState<{ companion: Companion; line: string; declined: boolean } | null>(null)
+  const [knock, setKnock] = useState<{ companion: Companion; line: string; declined: boolean; support: boolean } | null>(null)
   const [greeting, setGreeting] = useState<string | null>(null)
 
   // Everything the check needs, read when it runs.
-  const latest = useRef({ current, companions, bonds, isPhoneFreeTime, path: location.pathname, visit, knock, name })
+  const latest = useRef({ current, companions, bonds, isPhoneFreeTime, path: location.pathname, visit, knock, name, mood })
   useEffect(() => {
-    latest.current = { current, companions, bonds, isPhoneFreeTime, path: location.pathname, visit, knock, name }
+    latest.current = { current, companions, bonds, isPhoneFreeTime, path: location.pathname, visit, knock, name, mood }
   })
 
   useEffect(() => {
     function check() {
       const s = latest.current
-      if (s.visit || s.knock || !s.companions || !s.current || visitsOff() || !knockCooledDown()) return
+      if (s.visit || s.knock || !s.companions || !s.current || visitsOff()) return
       if (s.isPhoneFreeTime || isQuietToday() || isCalmPlace(s.path) || document.visibilityState !== 'visible') return
-      const others = s.companions.filter(c => c.id !== s.current!.id)
+      const others = s.companions.filter(c => c.id !== s.current!.id && allows(c, 'visits'))
+      // A hard day: someone may come by to keep you company (11j).
+      const today = getLogicalDate()
+      if (s.mood != null && s.mood <= LOW_MOOD && supportKnockAllowed(today)) {
+        const id = pickSupporter(others.map(c => ({ id: c.id!, care: traitsOf(c).caring + traitsOf(c).romantic })), Math.random)
+        const companion = others.find(c => c.id === id)
+        if (!companion) return
+        markSupportKnock(today)
+        setKnock({ companion, declined: false, support: true, line: getCompanionMessage(companion.messages, 'support_knock', s.name, {}, traitsOf(companion)) })
+        return
+      }
+      if (!knockCooledDown()) return
       const id = pickVisitor(others.map(c => ({ id: c.id!, affinity: s.bonds?.find(b => b.companion_id === c.id)?.affinity ?? null })), Math.random)
       const companion = others.find(c => c.id === id)
       if (!companion) return
       markKnock()
-      setKnock({ companion, declined: false, line: getCompanionMessage(companion.messages, 'visit_knock', s.name, {}, traitsOf(companion)) })
+      setKnock({ companion, declined: false, support: false, line: getCompanionMessage(companion.messages, 'visit_knock', s.name, {}, traitsOf(companion)) })
     }
     const first = setTimeout(check, 25_000)
     const every = setInterval(check, CHECK_EVERY_MS)
-    return () => { clearTimeout(first); clearInterval(every) }
+    window.addEventListener('igb-support-check', check)
+    return () => { clearTimeout(first); clearInterval(every); window.removeEventListener('igb-support-check', check) }
   }, [])
+
+  // Right after a low mood is logged, check sooner.
+  useEffect(() => {
+    if (mood == null || mood > LOW_MOOD) return
+    const t = setTimeout(() => {
+      const s = latest.current
+      if (!s.visit && !s.knock) window.dispatchEvent(new Event('igb-support-check'))
+    }, 8000)
+    return () => clearTimeout(t)
+  }, [mood])
 
   async function accept() {
     if (!knock) return
-    const v = startVisit(knock.companion.id!)
+    const v = startVisit(knock.companion.id!, Date.now(), knock.support)
     await changeCloseness(knock.companion.id!, ACCEPT_CLOSENESS)
     setGreeting(getCompanionMessage(knock.companion.messages, 'visit_accepted', name, {}, traitsOf(knock.companion)))
     setKnock(null)
@@ -87,6 +113,7 @@ export default function CompanionVisits() {
           visitor={visitor}
           mainName={current?.name ?? 'your companion'}
           until={visit.until}
+          support={!!visit.support}
           greeting={greeting}
           onLeft={() => { endVisit(); setVisit(null); setGreeting(null) }}
         />
@@ -96,7 +123,7 @@ export default function CompanionVisits() {
 }
 
 function KnockCard({ knock, onAccept, onDecline }: {
-  knock: { companion: Companion; line: string; declined: boolean }
+  knock: { companion: Companion; line: string; declined: boolean; support: boolean }
   onAccept: () => void
   onDecline: () => void
 }) {
@@ -113,7 +140,7 @@ function KnockCard({ knock, onAccept, onDecline }: {
         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface">
           {avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : <span aria-hidden>🚪</span>}
         </div>
-        <p className="text-xs font-medium text-muted">{knock.declined ? knock.companion.name : `🚪 Knock knock! ${knock.companion.name} would like to visit`}</p>
+        <p className="text-xs font-medium text-muted">{knock.declined ? knock.companion.name : knock.support ? `🫶 ${knock.companion.name} would like to keep you company` : `🚪 Knock knock! ${knock.companion.name} would like to visit`}</p>
       </div>
       <p className="text-sm text-text-primary">{knock.line}</p>
       {!knock.declined && (
@@ -129,10 +156,11 @@ function KnockCard({ knock, onAccept, onDecline }: {
 // The visitor: a second, simpler companion on screen. It cheers on big
 // moments, chats now and then (sometimes with your companion) and says
 // goodbye when its visit is over.
-function Visitor({ visitor, mainName, until, greeting, onLeft }: {
+function Visitor({ visitor, mainName, until, support, greeting, onLeft }: {
   visitor: Companion
   mainName: string
   until: number
+  support: boolean
   greeting: string | null
   onLeft: () => void
 }) {
@@ -171,7 +199,10 @@ function Visitor({ visitor, mainName, until, greeting, onLeft }: {
     function schedule() {
       t = setTimeout(() => {
         if (document.visibilityState === 'visible' && msSinceLastMoment() > 8000) {
-          if (Math.random() < 0.6) {
+          if (support) {
+            // A hard-day visit: soft words, no banter.
+            say('support_visit', undefined, 7000)
+          } else if (Math.random() < 0.6) {
             say('banter', { other: ref.current.mainName })
             setTimeout(() => askMainCompanion('banter_reply', { other: visitor.name }), 2800)
           } else {
@@ -183,23 +214,23 @@ function Visitor({ visitor, mainName, until, greeting, onLeft }: {
     }
     schedule()
     return () => clearTimeout(t)
-  }, [say, visitor.name])
+  }, [say, visitor.name, support])
 
   // Time to go: a goodbye, then gone.
   useEffect(() => {
     const t = setTimeout(async () => {
       // Now and then a visitor leaves a little gift for the gift safe (11h).
-      if (Math.random() < 0.3) {
+      if (allows(visitor, 'gifts') && Math.random() < (support ? 0.6 : 0.3)) {
         const gift = GIFTS_FOR_YOU[Math.floor(Math.random() * GIFTS_FOR_YOU.length)]
         await receiveGift(visitor, gift)
         say('gift_for_you', { gift: `${gift.emoji} ${gift.name}` }, 4500)
       } else {
-        say('visit_leaving', undefined, 4500)
+        say(support ? 'support_leaving' : 'visit_leaving', undefined, 4500)
       }
       setTimeout(() => ref.current.onLeft(), 4500)
     }, Math.max(0, until - Date.now()))
     return () => clearTimeout(t)
-  }, [until, say, visitor])
+  }, [until, say, visitor, support])
 
   const bubbleOnLeft = spot.x > window.innerWidth / 2
 

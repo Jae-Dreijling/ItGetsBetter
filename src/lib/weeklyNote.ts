@@ -20,6 +20,9 @@ const OPENINGS: Record<Trait | 'none', string> = {
   proud: 'I have reviewed your week, {name}. It was... more than acceptable.',
   shy: 'Um, {name}... I wrote you a little note about your week.',
   sassy: "Okay {name}, weekly debrief. Don't get a big head.",
+  romantic: 'My dear {name}, I wrote down every lovely thing you did last week:',
+  nerdy: 'Weekly data report, {name}! The numbers are in:',
+  caring: "Hi {name}. I've been keeping an eye on you, in a good way:",
 }
 
 const CLOSINGS: Record<Trait | 'none', string> = {
@@ -28,6 +31,9 @@ const CLOSINGS: Record<Trait | 'none', string> = {
   proud: 'Carry on. I expect nothing less.',
   shy: "...that's all. I'm really proud of you.",
   sassy: "Fine. I'm a little impressed.",
+  romantic: 'I am so proud of you. Always. 💗',
+  nerdy: 'Conclusion: you are doing great. Statistically significant.',
+  caring: 'Be gentle with yourself this week. I am right here.',
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`

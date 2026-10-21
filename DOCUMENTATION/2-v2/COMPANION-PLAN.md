@@ -62,6 +62,13 @@ Rules that hold for every part:
 - **Small requests:** "Drink a glass of water with me?" Optional, a reward, never a penalty.
 - **Seasons:** a few small themed weeks per year.
 
+## 11j: Personality types and personal options (added 2026-10-21)
+
+- **More traits:** romantic, nerdy and caring, next to playful, proud, shy and sassy. What a companion shares depends on them: fun facts from nerdy (or very playful) ones, "would you rather" from playful or sassy ones, compliments from caring, romantic or shy ones (romantic ones get romantic compliments), fortunes from anyone.
+- **Personal options per companion:** pranks, entrances, daily surprises, small requests, questions, visiting and bringing gifts. Each is Auto (its personality decides), On or Off.
+- **Prank hints:** while a button is hidden, the companion trembles now and then and lets a "pffft" slip.
+- **Hard-day visits:** with a mood of 1 or 2 today, caring and romantic companions knock to keep you company (up to two a day, an hour apart), visit with soft words and leave something kind.
+
 ## 11i: Tools for lines
 
 - **Coverage view** per companion: which triggers have its own lines and which fall back to the defaults.

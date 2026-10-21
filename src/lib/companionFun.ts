@@ -1,3 +1,5 @@
+import type { CompanionTraits } from './companionPersonality'
+
 // Fun and gifts (COMPANION-PLAN 11h): the daily surprise, gifts both ways,
 // accessories and small requests. Never needed, never lost: nothing here
 // takes anything away or punishes skipping it.
@@ -139,16 +141,37 @@ export type Surprise =
   | { kind: 'compliment'; text: string }
   | { kind: 'gift'; gift: { emoji: string; name: string } }
 
+export const ROMANTIC_COMPLIMENTS = [
+  'I think about you more than I should admit.',
+  'You make even an ordinary day feel special.',
+  'If I could, I would hold your hand right now.',
+  'Your smile is my favourite thing, did you know?',
+  'I am very lucky that you picked me.',
+]
+
+// Which surprises fit a companion (11j): fun facts from nerdy or very
+// playful ones, "would you rather" from playful or sassy ones, compliments
+// from caring, romantic or shy ones, gifts from those who bring gifts.
+// Fortunes fit anyone.
+export function surpriseKinds(t: CompanionTraits, givesGifts: boolean): Surprise['kind'][] {
+  const kinds: Surprise['kind'][] = ['fortune']
+  if (t.nerdy > 0 || t.playful === 2) kinds.push('fact')
+  if (t.playful > 0 || t.sassy > 0) kinds.push('would_you_rather')
+  if (t.caring > 0 || t.romantic > 0 || t.shy > 0) kinds.push('compliment')
+  if (givesGifts) kinds.push('gift')
+  return kinds
+}
+
 // The same surprise all day, picked from the day.
-export function surpriseFor(seed: number): Surprise {
+export function surpriseFor(seed: number, kinds: Surprise['kind'][] = ['fortune', 'fact', 'would_you_rather', 'compliment', 'gift'], romantic = false): Surprise {
   const s = Math.abs(seed)
   const pick = <T,>(list: T[]) => list[Math.floor(s / 7) % list.length]
-  switch (s % 5) {
-    case 0: return { kind: 'fortune', text: pick(FORTUNES) }
-    case 1: return { kind: 'fact', text: pick(FUN_FACTS) }
-    case 2: return { kind: 'would_you_rather', options: pick(WOULD_YOU_RATHER) }
-    case 3: return { kind: 'compliment', text: pick(COMPLIMENTS) }
-    default: return { kind: 'gift', gift: pick(GIFTS_FOR_YOU) }
+  switch (kinds[s % kinds.length]) {
+    case 'fact': return { kind: 'fact', text: pick(FUN_FACTS) }
+    case 'would_you_rather': return { kind: 'would_you_rather', options: pick(WOULD_YOU_RATHER) }
+    case 'compliment': return { kind: 'compliment', text: pick(romantic ? ROMANTIC_COMPLIMENTS : COMPLIMENTS) }
+    case 'gift': return { kind: 'gift', gift: pick(GIFTS_FOR_YOU) }
+    default: return { kind: 'fortune', text: pick(FORTUNES) }
   }
 }
 

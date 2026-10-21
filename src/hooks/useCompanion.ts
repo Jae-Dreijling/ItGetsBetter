@@ -6,7 +6,7 @@ import { getRandomMessage } from '../lib/supportiveMessages'
 import { getSessionCompanionId, setSessionCompanionId, subscribeSessionCompanion, pickSessionCompanion } from '../lib/sessionCompanion'
 import { EXTRA_TRIGGERS, triggerInfo, canSay, fillPlaceholders, type TriggerValues } from '../lib/companionTriggers'
 import { pickFresh, rememberLine } from '../lib/recentLines'
-import { dominantTrait, type CompanionTraits } from '../lib/companionPersonality'
+import { dominantTrait, type CompanionTraits, type CompanionOptions } from '../lib/companionPersonality'
 import type { Companion, CompanionMessages } from '../types'
 
 export const EMPTY_MESSAGES: CompanionMessages = {
@@ -106,6 +106,7 @@ export async function addCompanion(data: {
   personality_group_id?: number | null
   messages?: Partial<CompanionMessages>
   traits?: CompanionTraits
+  options?: CompanionOptions
   about?: Record<string, string>
   birthday?: string | null
   expressions?: Companion['expressions']
@@ -118,6 +119,7 @@ export async function addCompanion(data: {
     personality_group_id: data.personality_group_id ?? null,
     messages: { ...EMPTY_MESSAGES, ...data.messages },
     ...(data.traits && { traits: data.traits }),
+    ...(data.options && { options: data.options }),
     ...(data.about && { about: data.about }),
     ...(data.birthday && { birthday: data.birthday }),
     ...(data.expressions && { expressions: data.expressions }),
@@ -132,6 +134,7 @@ export async function updateCompanion(id: number, changes: Partial<{
   personality_group_id: number | null
   movement: import('../lib/companionMotion').CompanionMovement
   traits: CompanionTraits
+  options: CompanionOptions
   about: Record<string, string>
   birthday: string | null
   expressions: Companion['expressions']

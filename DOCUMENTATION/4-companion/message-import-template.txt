@@ -91,6 +91,9 @@
 [jumped_in]
 // Jumped at your finger.
 
+[prank_hint]
+// Hinting at a prank (something is hidden).
+
 [prank_revealed]
 // Prank found (a hidden button).
 
@@ -129,6 +132,15 @@
 
 [visit_leaving]
 // Leaving after a visit.
+
+[support_knock]
+// Asks to come by on a hard day.
+
+[support_visit]
+// Kind words while visiting on a hard day.
+
+[support_leaving]
+// Leaving after a hard-day visit.
 
 [banter]
 // Starts some banter with the other companion.  Placeholders: {other}

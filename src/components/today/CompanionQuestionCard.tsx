@@ -8,7 +8,7 @@ import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { getLogicalDate } from '../../lib/date'
 import { fadeUp } from '../../lib/animations'
 import { fillPlaceholders } from '../../lib/companionTriggers'
-import { traitsOf } from '../../lib/companionPersonality'
+import { traitsOf, allows } from '../../lib/companionPersonality'
 import { closenessTier, changeCloseness, TIER_LABELS } from '../../lib/closeness'
 import { nicknameFor } from '../../lib/nicknames'
 import { asksToday, closenessChange, pickQuestion, type QuestionAnswer } from '../../lib/companionQuestions'
@@ -53,7 +53,7 @@ export default function CompanionQuestionCard() {
     return (await db.companionMemories.where('companion_id').equals(companion.id).toArray()).map(m => m.topic)
   }, [companion?.id])
 
-  if (!companion?.id || bond === undefined || known === undefined) return null
+  if (!companion?.id || bond === undefined || known === undefined || !allows(companion, 'questions')) return null
   const seed = hash(`${today}:${companion.id}`)
   if (!answered && (!asksToday(seed) || (state.date === today && state.done))) return null
 

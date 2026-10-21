@@ -6,7 +6,7 @@ import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { awardPoints } from '../../hooks/usePoints'
 import { getLogicalDate } from '../../lib/date'
 import { fadeUp } from '../../lib/animations'
-import { traitsOf } from '../../lib/companionPersonality'
+import { traitsOf, allows } from '../../lib/companionPersonality'
 import { changeCloseness } from '../../lib/closeness'
 import { REQUESTS, REQUEST_CLOSENESS, REQUEST_POINTS, hashSeed } from '../../lib/companionFun'
 import { isQuietToday } from '../../lib/softDay'
@@ -28,7 +28,7 @@ export default function CompanionRequestCard() {
   })
   const [thanks, setThanks] = useState<string | null>(null)
 
-  if (!companion?.id) return null
+  if (!companion?.id || !allows(companion, 'requests')) return null
   const seed = Math.abs(hashSeed(`request:${today}:${companion.id}`))
   const asks = seed % 2 === 0 && hour >= 11 && hour < 20 && !isQuietToday()
   if (!thanks && (done || !asks)) return null
