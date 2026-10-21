@@ -13,6 +13,8 @@ import { useFeatureTiers } from '../../hooks/useFeatures'
 import { isOn } from '../../lib/features'
 import { getLogicalDate } from '../../lib/date'
 import type { MealSlot } from '../../types'
+import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { deleteEntry } from '../../lib/deleteEntry'
 
 const MEAL_SLOTS: { label: string; value: MealSlot }[] = [
   { label: 'Breakfast', value: 'breakfast' },
@@ -217,6 +219,7 @@ export default function MealsPage() {
                   key={meal.id}
                   meal={meal}
                   onBurnOff={meal.calories ? () => setBurnOffMeal({ name: meal.name, calories: meal.calories! }) : undefined}
+                  onDelete={() => deleteEntry('mealEntries', meal.id!)}
                 />
               ))}
             </div>
@@ -240,9 +243,11 @@ export default function MealsPage() {
 function MealCard({
   meal,
   onBurnOff,
+  onDelete,
 }: {
   meal: { id?: number; meal_slot: MealSlot; name: string | null; photo: Blob | null; health_score: number; calories: number | null; logged_at: string }
   onBurnOff?: () => void
+  onDelete: () => void
 }) {
   const [thumbUrl, setThumbUrl] = useState<string | null>(null)
 
@@ -280,6 +285,7 @@ function MealCard({
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">
         {meal.health_score}
       </div>
+      <DeleteEntryButton label={meal.name ?? 'meal'} onDelete={onDelete} />
     </div>
   )
 }

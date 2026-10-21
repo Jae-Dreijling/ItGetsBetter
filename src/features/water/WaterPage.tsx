@@ -5,6 +5,8 @@ import PageContainer from '../../components/layout/PageContainer'
 import { useTodaysWater, useTodaysWaterTotal, addWaterEntry, undoLastWaterEntry } from '../../hooks/useWater'
 import { useProfile } from '../../hooks/useProfile'
 import { format } from 'date-fns'
+import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { deleteEntry } from '../../lib/deleteEntry'
 
 const PRESETS = [
   { label: '250ml', ml: 250 },
@@ -124,8 +126,11 @@ export default function WaterPage() {
                   <span className="text-sm text-muted">
                     {format(new Date(entry.logged_at), 'h:mm a')}
                   </span>
-                  <span className="font-medium text-text-primary">
-                    {entry.amount_ml >= 1000 ? `${(entry.amount_ml / 1000).toFixed(1)}L` : `${entry.amount_ml}ml`}
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium text-text-primary">
+                      {entry.amount_ml >= 1000 ? `${(entry.amount_ml / 1000).toFixed(1)}L` : `${entry.amount_ml}ml`}
+                    </span>
+                    <DeleteEntryButton label="water entry" onDelete={() => deleteEntry('waterEntries', entry.id!)} />
                   </span>
                 </div>
               ))}

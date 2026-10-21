@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router'
 import { COLOR_THEMES, resolveColorTheme, type ColorThemeSetting } from '../../lib/themes'
 import { useState } from 'react'
-import { UserCircle, Download, Sun, Moon, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Wrench, Sprout, Palette, LayoutGrid, BellRing } from 'lucide-react'
+import { UserCircle, Download, Sun, Moon, CalendarClock, HardDrive, Lock, Tag, RefreshCw, Cloud, Wrench, Sprout, Palette, LayoutGrid, BellRing, RotateCcw } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
@@ -125,6 +125,17 @@ export default function SettingsPage() {
             <div>
               <p className="font-medium text-text-primary">Backup & Restore</p>
               <p className="text-sm text-muted">Export or import your data</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/settings/reset')}
+            className="flex w-full items-center gap-3 rounded-xl bg-card p-4 shadow-sm text-left"
+          >
+            <RotateCcw className="h-5 w-5 text-secondary-500" />
+            <div>
+              <p className="font-medium text-text-primary">Reset parts of the app</p>
+              <p className="text-sm text-muted">Start over with weight, companions, the journey and more, one at a time</p>
             </div>
           </button>
 

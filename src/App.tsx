@@ -50,6 +50,7 @@ const HabitDetailPage = lazy(() => import('./features/todo/HabitDetailPage'))
 const ExportPage = lazy(() => import('./features/settings/ExportPage'))
 const DevToolsPage = lazy(() => import('./features/settings/DevToolsPage'))
 const StartFreshPage = lazy(() => import('./features/settings/StartFreshPage'))
+const ResetPage = lazy(() => import('./features/settings/ResetPage'))
 const ThemePage = lazy(() => import('./features/settings/ThemePage'))
 const FeaturesPage = lazy(() => import('./features/settings/FeaturesPage'))
 const NotificationsPage = lazy(() => import('./features/settings/NotificationsPage'))
@@ -165,6 +166,7 @@ function AppContent() {
         <Route path="settings/profile" element={<ProfileSettings />} />
         <Route path="settings/backup" element={<BackupPage />} />
         <Route path="settings/start-fresh" element={<StartFreshPage />} />
+        <Route path="settings/reset" element={<ResetPage />} />
         <Route path="settings/theme" element={<ThemePage />} />
         <Route path="settings/features" element={<FeaturesPage />} />
         <Route path="settings/notifications" element={<NotificationsPage />} />

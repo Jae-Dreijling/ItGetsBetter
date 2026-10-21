@@ -4,6 +4,8 @@ import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useLatestMeasurement, useMeasurements, addMeasurement } from '../../hooks/useMeasurements'
 import { getLogicalDate } from '../../lib/date'
+import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { deleteEntry } from '../../lib/deleteEntry'
 
 const FIELDS = [
   { key: 'neck_cm', label: 'Neck' },
@@ -97,9 +99,12 @@ export default function MeasurementsPage() {
                 const recorded = FIELDS.filter((f) => entry[f.key as FieldKey] !== null)
                 return (
                   <div key={entry.id} className="rounded-lg bg-card px-4 py-3 shadow-sm">
-                    <p className="mb-1 text-sm font-medium text-text-primary">
-                      {format(new Date(entry.date), 'EEE, MMM d, yyyy')}
-                    </p>
+                    <div className="mb-1 flex items-center justify-between">
+                      <p className="text-sm font-medium text-text-primary">
+                        {format(new Date(entry.date), 'EEE, MMM d, yyyy')}
+                      </p>
+                      <DeleteEntryButton label="measurements" onDelete={() => deleteEntry('measurements', entry.id!)} />
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {recorded.map((f) => (
                         <span key={f.key} className="rounded-full bg-surface px-2 py-0.5 text-xs text-muted">

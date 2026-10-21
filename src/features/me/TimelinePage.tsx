@@ -5,9 +5,14 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { db } from '../../db'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
+import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { deleteEntry, type EntryKind } from '../../lib/deleteEntry'
 
 interface TimelineEntry {
   id: string
+  // What deleting this entry removes (see lib/deleteEntry).
+  kind: EntryKind
+  entryId: number
   time: string
   emoji: string
   label: string
@@ -78,18 +83,18 @@ export default function TimelinePage() {
     const items: TimelineEntry[] = []
 
     for (const w of weights) {
-      items.push({ id: `w-${w.id}`, time: w.logged_at, emoji: '⚖️', label: 'Weight', detail: `${w.value_kg} kg` })
+      items.push({ id: `w-${w.id}`, kind: 'weightEntries', entryId: w.id!, time: w.logged_at, emoji: '⚖️', label: 'Weight', detail: `${w.value_kg} kg` })
     }
 
     for (const m of meals) {
       const slot = MEAL_SLOT[m.meal_slot] ?? m.meal_slot
       const name = m.name ? ` · ${m.name}` : ''
       const stars = STARS[m.health_score] ?? ''
-      items.push({ id: `m-${m.id}`, time: m.logged_at, emoji: '🍽️', label: slot, detail: `${stars}${name}`.trim() })
+      items.push({ id: `m-${m.id}`, kind: 'mealEntries', entryId: m.id!, time: m.logged_at, emoji: '🍽️', label: slot, detail: `${stars}${name}`.trim() })
     }
 
     for (const w of waters) {
-      items.push({ id: `wa-${w.id}`, time: w.logged_at, emoji: '💧', label: 'Water', detail: `${w.amount_ml} ml` })
+      items.push({ id: `wa-${w.id}`, kind: 'waterEntries', entryId: w.id!, time: w.logged_at, emoji: '💧', label: 'Water', detail: `${w.amount_ml} ml` })
     }
 
     for (const e of exercises) {
@@ -97,41 +102,41 @@ export default function TimelinePage() {
       if (e.duration_minutes) parts.push(`${e.duration_minutes} min`)
       if (e.distance_km) parts.push(`${e.distance_km} km`)
       if (e.sets && e.reps) parts.push(`${e.sets}×${e.reps}`)
-      items.push({ id: `e-${e.id}`, time: e.logged_at, emoji: '💪', label: 'Exercise', detail: parts.join(' · ') })
+      items.push({ id: `e-${e.id}`, kind: 'exerciseEntries', entryId: e.id!, time: e.logged_at, emoji: '💪', label: 'Exercise', detail: parts.join(' · ') })
     }
 
     for (const mo of moods) {
       const tags = mo.tags.length ? ` · ${mo.tags.join(', ')}` : ''
-      items.push({ id: `mo-${mo.id}`, time: mo.logged_at, emoji: '😊', label: 'Mood', detail: `${mo.score}/5${tags}` })
+      items.push({ id: `mo-${mo.id}`, kind: 'moodEntries', entryId: mo.id!, time: mo.logged_at, emoji: '😊', label: 'Mood', detail: `${mo.score}/5${tags}` })
     }
 
     for (const s of sleeps) {
       const quality = s.quality_rating ? ` · ${STARS[s.quality_rating]}` : ''
       const feeling = s.wake_feeling ? ` · ${s.wake_feeling}` : ''
-      items.push({ id: `sl-${s.id}`, time: s.logged_at, emoji: '😴', label: 'Sleep', detail: `${s.hours_slept}h${quality}${feeling}` })
+      items.push({ id: `sl-${s.id}`, kind: 'sleepEntries', entryId: s.id!, time: s.logged_at, emoji: '😴', label: 'Sleep', detail: `${s.hours_slept}h${quality}${feeling}` })
     }
 
     for (const ml of medLogs) {
       if (!ml.taken) continue
       const name = medMap.get(ml.medicine_id) ?? 'Medicine'
-      items.push({ id: `med-${ml.id}`, time: ml.logged_at, emoji: '💊', label: 'Medicine', detail: name })
+      items.push({ id: `med-${ml.id}`, kind: 'medicineLogs', entryId: ml.id!, time: ml.logged_at, emoji: '💊', label: 'Medicine', detail: name })
     }
 
     for (const hc of habitDone) {
       const title = habitMap.get(hc.habit_id) ?? 'Habit'
       const tag = hc.is_cant_fail ? " · can't fail" : ''
-      items.push({ id: `hc-${hc.id}`, time: hc.logged_at, emoji: '🔥', label: 'Habit', detail: `${title}${tag}` })
+      items.push({ id: `hc-${hc.id}`, kind: 'habitCompletions', entryId: hc.id!, time: hc.logged_at, emoji: '🔥', label: 'Habit', detail: `${title}${tag}` })
     }
 
     for (const ms of measurements) {
       const filled = MEASURE_FIELDS.filter(f => ms[f] != null).length
       if (filled === 0) continue
-      items.push({ id: `ms-${ms.id}`, time: ms.logged_at, emoji: '📏', label: 'Measurements', detail: `${filled} measurement${filled !== 1 ? 's' : ''} logged` })
+      items.push({ id: `ms-${ms.id}`, kind: 'measurements', entryId: ms.id!, time: ms.logged_at, emoji: '📏', label: 'Measurements', detail: `${filled} measurement${filled !== 1 ? 's' : ''} logged` })
     }
 
     for (const t of tasks) {
       if (!t.completed_at) continue
-      items.push({ id: `t-${t.id}`, time: t.completed_at, emoji: '✅', label: 'Task', detail: t.title })
+      items.push({ id: `t-${t.id}`, kind: 'taskCompletion', entryId: t.id!, time: t.completed_at, emoji: '✅', label: 'Task', detail: t.title })
     }
 
     items.sort((a, b) => a.time.localeCompare(b.time))
@@ -187,7 +192,8 @@ export default function TimelinePage() {
                   <div className="flex-1 rounded-xl bg-card px-3 py-2.5 shadow-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-base leading-none">{entry.emoji}</span>
-                      <span className="text-sm font-semibold text-text-primary">{entry.label}</span>
+                      <span className="flex-1 text-sm font-semibold text-text-primary">{entry.label}</span>
+                      <DeleteEntryButton label={entry.label.toLowerCase()} onDelete={() => deleteEntry(entry.kind, entry.entryId)} />
                     </div>
                     {entry.detail && (
                       <p className="mt-0.5 text-xs text-muted leading-snug">{entry.detail}</p>

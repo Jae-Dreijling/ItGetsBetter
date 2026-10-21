@@ -11,6 +11,8 @@ import { useWeightEntries, useWeightTrend, addWeightEntry } from '../../hooks/us
 import { getLogicalDate } from '../../lib/date'
 import { getWeightComparison } from '../../lib/weightComparisons'
 import { changeText, jumpNote, weeklyAverages, type WeightDisplay } from '../../lib/weightTrend'
+import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { deleteEntry } from '../../lib/deleteEntry'
 
 const DISPLAYS: { value: WeightDisplay; label: string; hint: string }[] = [
   { value: 'every', label: 'Every time', hint: 'Every weigh-in is shown, small, next to the trend.' },
@@ -193,7 +195,10 @@ export default function WeightPage() {
                   <span className="text-sm text-muted">
                     {format(parseISO(entry.date), 'EEE, MMM d')}
                   </span>
-                  <span className="font-semibold text-text-primary">{entry.value_kg} kg</span>
+                  <span className="flex items-center gap-2">
+                    <span className="font-semibold text-text-primary">{entry.value_kg} kg</span>
+                    <DeleteEntryButton label={`weigh-in of ${entry.value_kg} kg`} onDelete={() => deleteEntry('weightEntries', entry.id!)} />
+                  </span>
                 </div>
               ))}
             </div>

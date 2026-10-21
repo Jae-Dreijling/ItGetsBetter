@@ -7,6 +7,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useTodaysMood, useMoodHistory, useMoodTags, addMoodEntry, addMoodTag, deleteMoodTag } from '../../hooks/useMood'
+import DeleteEntryButton from '../../components/DeleteEntryButton'
+import { deleteEntry } from '../../lib/deleteEntry'
 
 
 export default function MoodPage() {
@@ -203,6 +205,7 @@ export default function MoodPage() {
                       ))}
                     </div>
                   </div>
+                  <DeleteEntryButton label="mood entry" onDelete={() => deleteEntry('moodEntries', entry.id!)} />
                 </div>
               ))}
             </div>
