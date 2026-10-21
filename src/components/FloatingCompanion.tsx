@@ -20,6 +20,8 @@ import {
 } from '../lib/companionPersonality'
 import { startPrank } from '../lib/companionPranks'
 import { useObjectUrl } from '../hooks/useObjectUrl'
+import { closenessTier } from '../lib/closeness'
+import { nicknameFor, speakingName } from '../lib/nicknames'
 
 const POSITION_KEY = 'igb_companion_position'
 const SIZE = 56
@@ -122,6 +124,7 @@ export default function FloatingCompanion() {
   const isGoodnightTimeRef = useRef(isGoodnightTime)
   const affinityRef = useRef(affinity)
   const traitsRef = useRef(traitsOf(companion))
+  const companionIdRef = useRef(companion?.id)
   const pathRef = useRef(location.pathname)
   const positionRef = useRef(position)
   useEffect(() => { messagesRef.current = effectiveMessages }, [effectiveMessages])
@@ -130,7 +133,10 @@ export default function FloatingCompanion() {
   useEffect(() => { isPhoneFreeTimeRef.current = isPhoneFreeTime }, [isPhoneFreeTime])
   useEffect(() => { isGoodnightTimeRef.current = isGoodnightTime }, [isGoodnightTime])
   useEffect(() => { affinityRef.current = affinity }, [affinity])
-  useEffect(() => { traitsRef.current = traitsOf(companion) }, [companion])
+  useEffect(() => {
+    traitsRef.current = traitsOf(companion)
+    companionIdRef.current = companion?.id
+  }, [companion])
   useEffect(() => { pathRef.current = location.pathname }, [location.pathname])
   useEffect(() => { positionRef.current = position }, [position])
 
@@ -147,7 +153,12 @@ export default function FloatingCompanion() {
 
 
   const showMessage = useCallback((event: CompanionEvent, values?: TriggerValues) => {
-    const msg = getCompanionMessage(messagesRef.current, event, nameRef.current, values, traitsRef.current)
+    // It calls you by its nickname for you now and then (11c).
+    const id = companionIdRef.current
+    const bond = affinityRef.current
+    const nickname = id === undefined ? null : nicknameFor(messagesRef.current, traitsRef.current, closenessTier(bond?.affinity, bond?.is_lover), id)
+    const name = speakingName(nameRef.current, nickname, Math.random())
+    const msg = getCompanionMessage(messagesRef.current, event, name, { nickname: nickname ?? nameRef.current, ...values }, traitsRef.current)
     setMessage(msg)
     if (messageTimer.current) clearTimeout(messageTimer.current)
     messageTimer.current = setTimeout(() => setMessage(null), 5000)

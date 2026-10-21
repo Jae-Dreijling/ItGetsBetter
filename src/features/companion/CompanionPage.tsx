@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useObjectUrl } from '../../hooks/useObjectUrl'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../../db'
+import { closenessTier, TIER_LABELS } from '../../lib/closeness'
 import { TRAIT_INFO, LEVEL_LABELS, traitsOf, type CompanionTraits, type TraitLevel } from '../../lib/companionPersonality'
 import { useNavigate } from 'react-router'
 import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
@@ -41,6 +44,7 @@ export default function CompanionPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
 
   const folders = useFolders('companions')
+  const bonds = useLiveQuery(() => db.gameCompanionAffinity.toArray())
   const [filter, setFilter] = useFolderFilter('companions', folders)
   const activeCount = companions?.filter(c => c.is_active).length ?? 0
   const counts = new Map<number, number>()
@@ -54,6 +58,7 @@ export default function CompanionPage() {
       <CompanionCard
         key={c.id}
         companion={c}
+        closeness={(() => { const b = bonds?.find(x => x.companion_id === c.id); return TIER_LABELS[closenessTier(b?.affinity, b?.is_lover)] })()}
         folders={folders ?? []}
         isCurrent={current?.id === c.id}
         canDeactivate={activeCount > 1 || !c.is_active}
@@ -125,8 +130,9 @@ export default function CompanionPage() {
   )
 }
 
-function CompanionCard({ companion, folders, isCurrent, canDeactivate, canDelete, onMakeCurrent, onToggleActive, onEdit, onDelete }: {
+function CompanionCard({ companion, closeness, folders, isCurrent, canDeactivate, canDelete, onMakeCurrent, onToggleActive, onEdit, onDelete }: {
   companion: Companion
+  closeness: string
   folders: Folder[]
   isCurrent: boolean
   canDeactivate: boolean
@@ -165,7 +171,7 @@ function CompanionCard({ companion, folders, isCurrent, canDeactivate, canDelete
                 </span>
               )}
             </p>
-            <p className="text-xs text-muted">{totalMessages} messages · {companion.is_default ? 'Default' : 'Custom'}</p>
+            <p className="text-xs text-muted">{totalMessages} messages · {closeness}</p>
           </div>
         </button>
         <button

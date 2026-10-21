@@ -25,13 +25,15 @@ export const EXTRA_TRIGGERS = [
   'meditation_done', 'focus_session_done', 'book_finished', 'grocery_trip_done', 'recipe_added', 'reward_claimed',
   // Handling (11b)
   'pickup_refused', 'put_down', 'thrown', 'tapped_a_lot', 'tapped_sleepy', 'tapped_shy', 'jumped_in', 'prank_revealed', 'rolled_in',
+  // Nicknames the companion picks for you, per closeness (11c)
+  'nickname_friend', 'nickname_close', 'nickname_lover',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
 export type TriggerKey = keyof CompanionMessages
 
 export const TRIGGER_GROUPS = [
-  'Everyday', 'Handling', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
+  'Everyday', 'Handling', 'Nicknames for you', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
 ] as const
 
 export interface TriggerInfo {
@@ -135,6 +137,25 @@ export const TRIGGERS: TriggerInfo[] = [
       sassy: ['Miss me? Of course you did.', 'Make way, make way!'],
       playful: ['Rolling rolling rolling! Hi!', 'Surprise entrance! 🎉'],
     },
+  },
+
+  // Nicknames (11c): not lines but names the companion calls you, one per
+  // line, by how close you are. While you're getting to know each other it
+  // uses your own name.
+  {
+    key: 'nickname_friend', label: 'Nicknames once you are friends', group: 'Nicknames for you',
+    defaults: ['buddy', 'friend', 'pal'],
+    traitDefaults: { playful: ['partner in crime', 'buddy'], proud: ['my loyal friend', 'good friend'], shy: ['f-friend', 'um, friend'], sassy: ['trouble', 'dork'] },
+  },
+  {
+    key: 'nickname_close', label: 'Nicknames once you are close', group: 'Nicknames for you',
+    defaults: ['bestie', 'my favourite person', 'sunshine'],
+    traitDefaults: { playful: ['bestest buddy', 'sidekick'], proud: ['my dear', 'my most trusted'], shy: ['my favourite person', 'sunshine'], sassy: ['my favourite idiot', 'troublemaker'] },
+  },
+  {
+    key: 'nickname_lover', label: 'Nicknames as lovers (Journey)', group: 'Nicknames for you',
+    defaults: ['love', 'darling', 'sweetheart'],
+    traitDefaults: { playful: ['cutie', 'my heart'], proud: ['my beloved', 'my treasure'], shy: ['m-my love', 'sweetheart'], sassy: ['babe', 'gorgeous'] },
   },
 
   // Logging
