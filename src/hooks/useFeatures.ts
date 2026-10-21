@@ -62,6 +62,7 @@ export async function getFeatureUsage(): Promise<Partial<Record<FeatureId, boole
     goals: await has('goalTracks'),
     cravings: await has('cravingEvents'),
     wins_jar: await has('wins'),
+    letters: await has('futureLetters'),
   }
 }
 

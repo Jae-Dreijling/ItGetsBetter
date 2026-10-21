@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin, Sprout, Users, Target, Heart, type LucideIcon } from 'lucide-react'
+import { Settings, Download, Gift, Star, Trophy, BarChart3, CalendarCheck, Camera, FileSpreadsheet, Lightbulb, ShoppingCart, BookOpen, MessageCircle, Flame, Clock, Wind, Shield, MapPin, Sprout, Users, Target, Heart, Mail, type LucideIcon } from 'lucide-react'
 import { isPathOn } from '../../lib/features'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
@@ -27,6 +27,7 @@ const GROUPS: { title: string; items: MeLink[] }[] = [
     items: [
       { label: 'My Day', subtitle: 'Everything you logged, in order', icon: Clock, path: '/me/timeline' },
       { label: 'Wins jar', subtitle: 'Every win you collected', icon: Heart, path: '/me/wins' },
+      { label: 'Letters to future you', subtitle: 'Write now, open later', icon: Mail, path: '/me/letters' },
       { label: 'Goals', subtitle: 'Your own milestones, step by step', icon: Target, path: '/me/goals' },
       { label: 'Social', subtitle: 'People you want to see, at your rhythm', icon: Users, path: '/me/social' },
       { label: 'Abstinence', subtitle: "Free days from what you're stepping away from", icon: Sprout, path: '/me/abstinence' },

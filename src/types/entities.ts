@@ -510,6 +510,15 @@ export interface CravingEvent {
   logged_at: string
 }
 
+// A letter to your future self (step 10c). See lib/letters.
+export interface FutureLetter {
+  id?: number
+  text: string
+  unlock: { kind: 'date'; date: string } | { kind: 'milestone'; milestone_id: number }
+  opened_at: string | null
+  created_at: string
+}
+
 export interface ProgressPhoto {
   id?: number
   date: string
