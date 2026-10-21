@@ -4,6 +4,7 @@ import { encodeBlob, decodeBlob, type EncodedBlob } from './backup'
 import { EMPTY_MESSAGES } from '../hooks/useCompanion'
 import type { Companion, CompanionMessages, Folder, PersonalityGroup } from '../types'
 import type { CompanionMovement } from './companionMotion'
+import { DEFAULT_TRAITS, traitsOf, type CompanionTraits, type Trait } from './companionPersonality'
 
 // Share companions between installs (or bulk-add them): export the ones you
 // made, import a file that only ever *adds*. Nothing existing is changed or
@@ -25,6 +26,8 @@ export interface CompanionFileEntry {
   movement?: CompanionMovement
   // The folder's name (lib/folders); optional, missing means none.
   folder?: string | null
+  // Personality (lib/companionPersonality); optional, missing means the defaults.
+  traits?: CompanionTraits
 }
 
 export interface CompanionFile {
@@ -47,6 +50,16 @@ function cleanMessages(v: unknown): CompanionMessages {
   const messages = { ...EMPTY_MESSAGES }
   for (const k of Object.keys(EMPTY_MESSAGES) as (keyof CompanionMessages)[]) messages[k] = strings(source[k])
   return messages
+}
+
+// Only known traits, each 0, 1 or 2; anything else is left out.
+function cleanTraits(v: unknown): CompanionTraits | undefined {
+  if (!isObj(v)) return undefined
+  const traits = { ...DEFAULT_TRAITS }
+  for (const t of Object.keys(DEFAULT_TRAITS) as Trait[]) {
+    if (v[t] === 0 || v[t] === 1 || v[t] === 2) traits[t] = v[t]
+  }
+  return traits
 }
 
 // The companions you made (not the built-in one), ready to save as a file.
@@ -80,6 +93,7 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
         home_region: affinity?.home_region ?? null,
         movement: c.movement ?? 'calm',
         folder: folderOf(c.folder_id)?.name ?? null,
+        traits: traitsOf(c),
       }
     })),
   }
@@ -113,6 +127,7 @@ export function parseCompanionFile(raw: string): ParsedCompanions {
         home_region: typeof c.home_region === 'string' ? c.home_region : null,
         movement: c.movement === 'still' || c.movement === 'lively' ? c.movement : 'calm',
         folder: typeof c.folder === 'string' && c.folder.trim() ? c.folder.trim() : null,
+        traits: cleanTraits(c.traits),
       }
     })
   if (companions.length === 0) return { ok: false, error: 'This file has no companions in it.' }
@@ -197,6 +212,7 @@ export async function applyCompanionImport(plan: CompanionImportPlan): Promise<n
         messages: c.messages,
         movement: c.movement ?? 'calm',
         folder_id: c.folder ? folderId.get(key(c.folder)) ?? null : null,
+        ...(c.traits && { traits: c.traits }),
         created_at: nowISO(),
       }) as number
       if (c.lover_dialogue.length > 0 || c.home_region) {

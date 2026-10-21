@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useObjectUrl } from '../../hooks/useObjectUrl'
+import { TRAIT_INFO, LEVEL_LABELS, traitsOf, type CompanionTraits, type TraitLevel } from '../../lib/companionPersonality'
 import { useNavigate } from 'react-router'
 import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
 import { compressImage } from '../../lib/compressImage'
@@ -229,6 +230,7 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
     goodnight: [], first_milestone: [], idle: [],
   })
   const personalityGroups = usePersonalityGroups()
+  const [traits, setTraits] = useState<CompanionTraits>(traitsOf(initial))
 
   useEffect(() => {
     if (initial?.id) {
@@ -253,10 +255,10 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
     if (!name.trim()) return
     let savedId: number
     if (initial?.id) {
-      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages })
+      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits })
       savedId = initial.id
     } else {
-      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages }) as number
+      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits }) as number
     }
     await setCompanionHomeRegion(savedId, homeRegion)
     await updateLoverDialogue(savedId, loverDialogue)
@@ -308,6 +310,36 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Personality: how it reacts to being handled (lib/companionPersonality) */}
+      <div className="mb-4">
+        <p className="mb-1.5 text-xs font-semibold text-muted uppercase tracking-wide">Personality</p>
+        <p className="mb-2 text-xs text-muted">How this companion reacts when you tap, move or throw it, and whether it plays pranks. Closeness softens a proud one over time.</p>
+        <div className="space-y-2">
+          {TRAIT_INFO.map(({ trait, label, description }) => (
+            <div key={trait}>
+              <div className="flex items-center gap-2">
+                <span className="flex-1 text-sm text-text-primary">{label}</span>
+                <div className="flex gap-0.5 rounded-lg bg-surface p-0.5" role="radiogroup" aria-label={label}>
+                  {LEVEL_LABELS.map((levelLabel, level) => (
+                    <button
+                      key={levelLabel}
+                      type="button"
+                      role="radio"
+                      aria-checked={traits[trait] === level}
+                      onClick={() => setTraits({ ...traits, [trait]: level as TraitLevel })}
+                      className={`rounded-md px-2.5 py-1 text-xs transition-colors ${traits[trait] === level ? 'bg-primary-500 font-medium text-white' : 'text-muted'}`}
+                    >
+                      {levelLabel}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[11px] text-muted">{description}</p>
+            </div>
+          ))}
         </div>
       </div>
 

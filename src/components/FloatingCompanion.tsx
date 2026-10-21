@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { AnimatePresence, animate, m, useMotionValue, useReducedMotion } from 'motion/react'
+import { useLocation } from 'react-router'
+import { AnimatePresence, animate, m, useMotionValue, useReducedMotion, type TargetAndTransition } from 'motion/react'
 import { pop, transitions } from '../lib/animations'
 import { nextDelay, pickMove } from '../lib/companionMotion'
 import { useSessionCompanion, useEffectiveMessages, getCompanionMessage, ensureDefaultCompanion, type CompanionEvent } from '../hooks/useCompanion'
@@ -13,6 +14,12 @@ import { getDataAwareNudge } from '../lib/companionNudges'
 import { registerCompanionMessageHandler } from '../lib/companionMessenger'
 import type { TriggerValues } from '../lib/companionTriggers'
 import { startIdleTimer } from '../lib/idleTimer'
+import {
+  traitsOf, closenessOf, refusesPickup, isThrow, tapsInWindow, TAPS_FOR_FLUSTER, jumpsAtFinger, startsPrank, rollsIn,
+  isCalmPlace, cooledDown, type COOLDOWN_MS,
+} from '../lib/companionPersonality'
+import { startPrank } from '../lib/companionPranks'
+import { useObjectUrl } from '../hooks/useObjectUrl'
 
 const POSITION_KEY = 'igb_companion_position'
 const SIZE = 56
@@ -41,6 +48,24 @@ const IDLE_TIMEOUT = 2 * 60 * 1000
 // During phone-free time the companion nudges regardless of activity.
 const PHONE_FREE_NUDGE_INTERVAL = 60 * 1000
 
+// Little body reactions to being handled (11b). Transform only.
+type Reaction = 'dizzy' | 'jiggle' | 'flinch' | 'roll'
+const REACTIONS: Record<Reaction, TargetAndTransition> = {
+  dizzy: { rotate: [0, -30, 25, -20, 15, -8, 0], transition: { duration: 1.2 } },
+  jiggle: { x: [0, -5, 5, -4, 4, 0], transition: { duration: 0.5 } },
+  flinch: { scale: [1, 0.75, 1], transition: { duration: 0.35 } },
+  roll: { rotate: [-720, 0], transition: { duration: 0.9, ease: 'easeOut' } },
+}
+
+const COOLDOWNS_KEY = 'igb_companion_cooldowns'
+type Cooldowns = Partial<Record<keyof typeof COOLDOWN_MS, number>>
+function readCooldowns(): Cooldowns {
+  try { return JSON.parse(localStorage.getItem(COOLDOWNS_KEY) ?? '{}') as Cooldowns } catch { return {} }
+}
+function markCooldown(kind: keyof typeof COOLDOWN_MS) {
+  try { localStorage.setItem(COOLDOWNS_KEY, JSON.stringify({ ...readCooldowns(), [kind]: Date.now() })) } catch { /* fine */ }
+}
+
 export default function FloatingCompanion() {
   const companion = useSessionCompanion()
   const effectiveMessages = useEffectiveMessages(companion)
@@ -49,7 +74,7 @@ export default function FloatingCompanion() {
   const latestMoodScore = useLatestMoodScore()
   const isPhoneFreeTime = useIsPhoneFreeTime()
   const isGoodnightTime = useIsGoodnightTime()
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const avatarUrl = useObjectUrl(companion?.avatar)
   const [message, setMessage] = useState<string | null>(null)
   // Resting position, used to place the speech bubble. While dragging, the
   // companion moves through the x/y motion values only, outside React, so a
@@ -73,6 +98,16 @@ export default function FloatingCompanion() {
   const movement = companion?.movement ?? 'calm'
   const reduceMotion = useReducedMotion()
   const lastActivity = useRef(0)
+  const location = useLocation()
+  const companionEl = useRef<HTMLDivElement>(null)
+  const [reaction, setReaction] = useState<{ kind: Reaction; n: number } | null>(null)
+  const react = useCallback((kind: Reaction) => setReaction(r => ({ kind, n: (r?.n ?? 0) + 1 })), [])
+  const tapTimes = useRef<number[]>([])
+  // Where the speech bubble goes while the companion is away from its spot.
+  const [awaySpot, setAwaySpot] = useState<{ x: number; y: number } | null>(null)
+  const drag = useRef<{ from: { x: number; y: number }; refused: boolean; thrown: boolean } | null>(null)
+  // Off on its own (jumped at your finger, rolling in): no wandering then.
+  const awayRef = useRef(false)
   // Talking, being dragged or chatting: no wandering then.
   const busyRef = useRef(false)
   useEffect(() => { busyRef.current = !!message || dragging || chatOpen }, [message, dragging, chatOpen])
@@ -86,29 +121,33 @@ export default function FloatingCompanion() {
   const isPhoneFreeTimeRef = useRef(isPhoneFreeTime)
   const isGoodnightTimeRef = useRef(isGoodnightTime)
   const affinityRef = useRef(affinity)
+  const traitsRef = useRef(traitsOf(companion))
+  const pathRef = useRef(location.pathname)
+  const positionRef = useRef(position)
   useEffect(() => { messagesRef.current = effectiveMessages }, [effectiveMessages])
   useEffect(() => { nameRef.current = name }, [name])
   useEffect(() => { moodScoreRef.current = latestMoodScore }, [latestMoodScore])
   useEffect(() => { isPhoneFreeTimeRef.current = isPhoneFreeTime }, [isPhoneFreeTime])
   useEffect(() => { isGoodnightTimeRef.current = isGoodnightTime }, [isGoodnightTime])
   useEffect(() => { affinityRef.current = affinity }, [affinity])
+  useEffect(() => { traitsRef.current = traitsOf(companion) }, [companion])
+  useEffect(() => { pathRef.current = location.pathname }, [location.pathname])
+  useEffect(() => { positionRef.current = position }, [position])
+
+  // Pranks, jumps and entrances only where and when they're welcome: not in
+  // calm places (the craving flow, wiping data), not on a low-mood day.
+  const playfulWelcome = useCallback(() => {
+    const mood = moodScoreRef.current
+    return !isCalmPlace(pathRef.current) && !(mood != null && mood <= 2) && !busyRef.current && !isPhoneFreeTimeRef.current
+  }, [])
 
   useEffect(() => {
     ensureDefaultCompanion()
   }, [])
 
-  useEffect(() => {
-    if (companion?.avatar) {
-      const url = URL.createObjectURL(companion.avatar)
-      setAvatarUrl(url)
-      return () => URL.revokeObjectURL(url)
-    } else {
-      setAvatarUrl(null)
-    }
-  }, [companion?.avatar])
 
   const showMessage = useCallback((event: CompanionEvent, values?: TriggerValues) => {
-    const msg = getCompanionMessage(messagesRef.current, event, nameRef.current, values)
+    const msg = getCompanionMessage(messagesRef.current, event, nameRef.current, values, traitsRef.current)
     setMessage(msg)
     if (messageTimer.current) clearTimeout(messageTimer.current)
     messageTimer.current = setTimeout(() => setMessage(null), 5000)
@@ -224,7 +263,7 @@ export default function FloatingCompanion() {
 
     async function wander() {
       const quiet = Date.now() - lastActivity.current > QUIET_BEFORE_MOVING
-      if (document.visibilityState !== 'visible' || busyRef.current || !quiet) {
+      if (document.visibilityState !== 'visible' || busyRef.current || awayRef.current || !quiet) {
         schedule(5000 + Math.random() * 5000)
         return
       }
@@ -254,6 +293,88 @@ export default function FloatingCompanion() {
       if (timer) clearTimeout(timer)
     }
   }, [movement, reduceMotion, x, y])
+
+  // Back to its own spot after being off somewhere (a jump, a refused move).
+  const goHome = useCallback(async (duration = 0.6) => {
+    const home = positionRef.current
+    await Promise.all([
+      animate(x, home.x, { type: 'tween', duration, ease: 'easeInOut' }),
+      animate(y, home.y, { type: 'tween', duration, ease: 'easeInOut' }),
+    ])
+  }, [x, y])
+
+  // A playful companion now and then jumps to where you tap, in the way for
+  // a moment, then goes back.
+  useEffect(() => {
+    let backTimer: ReturnType<typeof setTimeout> | null = null
+    function onPointerDown(e: PointerEvent) {
+      if (companionEl.current?.contains(e.target as Node) || awayRef.current || !playfulWelcome()) return
+      const traits = traitsRef.current
+      if (!jumpsAtFinger(traits, closenessOf(affinityRef.current?.affinity), Math.random())) return
+      if (!cooledDown(readCooldowns().jump, 'jump', Date.now())) return
+      markCooldown('jump')
+      awayRef.current = true
+      const spot = clampToScreen({ x: e.clientX - SIZE / 2, y: e.clientY - SIZE / 2 })
+      setTimeout(() => {
+        setAwaySpot(spot)
+        animate(x, spot.x, transitions.springy)
+        animate(y, spot.y, transitions.springy)
+        showMessage('jumped_in')
+      }, 150)
+      backTimer = setTimeout(async () => {
+        setMessage(null)
+        await goHome()
+        setAwaySpot(null)
+        awayRef.current = false
+      }, 3500)
+    }
+    window.addEventListener('pointerdown', onPointerDown, { capture: true })
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, { capture: true })
+      if (backTimer) clearTimeout(backTimer)
+    }
+  }, [x, y, showMessage, playfulWelcome, goHome])
+
+  // On opening the app and on changing pages: sometimes a roll-in entrance,
+  // sometimes a prank (a button hidden until you tap it).
+  const firstPage = useRef(true)
+  const loaded = companion !== undefined
+  useEffect(() => {
+    // Wait for the companion (and its traits) before deciding anything.
+    if (!loaded) return
+    const onOpen = firstPage.current
+    firstPage.current = false
+    const traits = traitsRef.current
+    const now = Date.now()
+    let endPrank: (() => void) | null = null
+    let timer: ReturnType<typeof setTimeout> | null = null
+
+    if (!reduceMotion && rollsIn(traits, onOpen, Math.random()) && cooledDown(readCooldowns().rollIn, 'rollIn', now) && playfulWelcome()) {
+      markCooldown('rollIn')
+      awayRef.current = true
+      const home = positionRef.current
+      const fromRight = home.x > window.innerWidth / 2
+      x.set(fromRight ? window.innerWidth + SIZE : -SIZE * 2)
+      timer = setTimeout(async () => {
+        react('roll')
+        await animate(x, home.x, { type: 'tween', duration: 0.9, ease: 'easeOut' })
+        awayRef.current = false
+        if (Math.random() < 0.6) showMessage('rolled_in')
+      }, onOpen ? 600 : 900)
+    } else if (!onOpen && startsPrank(traits, Math.random()) && cooledDown(readCooldowns().prank, 'prank', now) && playfulWelcome()) {
+      // After the page has drawn its buttons.
+      timer = setTimeout(() => {
+        endPrank = startPrank(() => showMessage('prank_revealed'))
+        if (endPrank) markCooldown('prank')
+      }, 1500)
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
+      endPrank?.()
+    }
+  // Only on page changes; everything else is read from refs.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, loaded])
 
   function cancelLongPress() {
     if (longPressTimer.current) {
@@ -287,22 +408,63 @@ export default function FloatingCompanion() {
     cancelLongPress()
     const isTap = !movedBeyondSlop(e) && !wasLongPress.current
     pressStart.current = null
-    if (isTap) showMessage('general')
+    if (isTap) handleTap()
+  }
+
+  // Many quick taps fluster it, at night it's sleepy, a shy one flinches.
+  function handleTap() {
+    const now = Date.now()
+    tapTimes.current = tapsInWindow([...tapTimes.current, now], now)
+    if (tapTimes.current.length >= TAPS_FOR_FLUSTER) {
+      tapTimes.current = []
+      react('jiggle')
+      showMessage('tapped_a_lot')
+    } else if (new Date().getHours() < 6) {
+      showMessage('tapped_sleepy')
+    } else if (traitsRef.current.shy > 0 && Math.random() < 0.5) {
+      react('flinch')
+      showMessage('tapped_shy')
+    } else {
+      showMessage('general')
+    }
   }
 
   // Called once the companion has come to rest, after any momentum glide.
-  function handleDragSettled() {
+  // A proud or sassy one may refuse the move and walk back; a hard throw
+  // makes it dizzy.
+  async function handleDragSettled() {
+    const moved = drag.current
+    drag.current = null
+    setDragging(false)
+    // Motion also reports a settle after a plain tap: nothing to react to.
+    if (!moved) return
+    if (moved?.refused) {
+      awayRef.current = true
+      showMessage('pickup_refused')
+      await Promise.all([
+        animate(x, moved.from.x, { type: 'tween', duration: 0.7, ease: 'easeInOut' }),
+        animate(y, moved.from.y, { type: 'tween', duration: 0.7, ease: 'easeInOut' }),
+      ])
+      awayRef.current = false
+      return
+    }
     const next = clampToScreen({ x: x.get(), y: y.get() })
     setPosition(next)
-    setDragging(false)
     localStorage.setItem(POSITION_KEY, JSON.stringify(next))
+    if (moved?.thrown) {
+      react('dizzy')
+      showMessage('thrown')
+    } else if (Math.random() < 0.3) {
+      showMessage('put_down')
+    }
   }
 
   if (chatOpen) {
     return <CompanionChat isOpen={chatOpen} onClose={() => setChatOpen(false)} />
   }
 
-  const iconCenter = position.x + 28
+  const anchor = awaySpot ?? position
+  const iconCenter = anchor.x + 28
   const bubbleOnLeft = iconCenter > window.innerWidth / 2
 
   return (
@@ -318,9 +480,9 @@ export default function FloatingCompanion() {
           className="fixed z-50 rounded-2xl bg-card p-3 shadow-lg border border-primary-100 dark:border-primary-900"
           style={{
             ...(bubbleOnLeft
-              ? { right: window.innerWidth - position.x + 8, maxWidth: position.x - 16 }
-              : { left: position.x + 62, maxWidth: window.innerWidth - position.x - 70 }),
-            top: position.y - 10,
+              ? { right: window.innerWidth - anchor.x + 8, maxWidth: anchor.x - 16 }
+              : { left: anchor.x + 62, maxWidth: window.innerWidth - anchor.x - 70 }),
+            top: anchor.y - 10,
             // Grows out of the side the companion is on.
             transformOrigin: bubbleOnLeft ? 'right top' : 'left top',
           }}
@@ -338,6 +500,7 @@ export default function FloatingCompanion() {
       </AnimatePresence>
 
       <m.div
+        ref={companionEl}
         className="fixed left-0 top-0 z-50 flex h-14 w-14 touch-none select-none items-center justify-center rounded-full bg-card shadow-lg border-2 border-primary-200 dark:border-primary-800 cursor-grab active:cursor-grabbing"
         style={{ x, y }}
         initial={false}
@@ -352,18 +515,31 @@ export default function FloatingCompanion() {
         onDragStart={() => {
           cancelLongPress()
           setDragging(true)
+          awayRef.current = false
+          drag.current = {
+            from: positionRef.current,
+            refused: refusesPickup(traitsRef.current, closenessOf(affinityRef.current?.affinity), Math.random()),
+            thrown: false,
+          }
         }}
+        onDragEnd={(_, info) => { if (drag.current) drag.current.thrown = isThrow(info.velocity) }}
         onDragTransitionEnd={handleDragSettled}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={cancelLongPress}
       >
-        {avatarUrl ? (
-          <img src={avatarUrl} alt={companion?.name ?? 'Companion'} className="h-full w-full rounded-full object-cover" />
-        ) : (
-          <span className="text-xl">💬</span>
-        )}
+        <m.div
+          key={reaction?.n ?? 0}
+          className="flex h-full w-full items-center justify-center"
+          animate={reaction ? REACTIONS[reaction.kind] : undefined}
+        >
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={companion?.name ?? 'Companion'} className="h-full w-full rounded-full object-cover" />
+          ) : (
+            <span className="text-xl">💬</span>
+          )}
+        </m.div>
       </m.div>
     </>
   )

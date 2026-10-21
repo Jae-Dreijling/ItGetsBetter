@@ -6,6 +6,7 @@ import { getRandomMessage } from '../lib/supportiveMessages'
 import { getSessionCompanionId, setSessionCompanionId, subscribeSessionCompanion, pickSessionCompanion } from '../lib/sessionCompanion'
 import { EXTRA_TRIGGERS, triggerInfo, canSay, fillPlaceholders, type TriggerValues } from '../lib/companionTriggers'
 import { pickFresh, rememberLine } from '../lib/recentLines'
+import { dominantTrait, type CompanionTraits } from '../lib/companionPersonality'
 import type { Companion, CompanionMessages } from '../types'
 
 export const EMPTY_MESSAGES: CompanionMessages = {
@@ -81,11 +82,18 @@ export function useEffectiveMessages(companion: Companion | undefined): Companio
 }
 
 // What the companion says for a moment: its own lines (and its group's),
-// else the built-in lines for that trigger, else its general lines. Lines
-// said recently are avoided, and placeholders are filled in.
-export function getCompanionMessage(messages: CompanionMessages | undefined, event: CompanionEvent, name: string, values: TriggerValues = {}): string {
+// else the built-in lines that fit its strongest trait, else the built-in
+// lines for that trigger, else its general lines. Lines said recently are
+// avoided, and placeholders are filled in.
+export function getCompanionMessage(
+  messages: CompanionMessages | undefined, event: CompanionEvent, name: string, values: TriggerValues = {}, traits?: CompanionTraits,
+): string {
   const usable = (lines: string[] | undefined) => (lines ?? []).filter(l => canSay(l, values))
-  const pool = [usable(messages?.[event]), usable(triggerInfo(event)?.defaults), usable(messages?.general)].find(p => p.length > 0)
+  const info = triggerInfo(event)
+  const trait = traits ? dominantTrait(traits) : null
+  const pool = [
+    usable(messages?.[event]), usable(trait ? info?.traitDefaults?.[trait] : undefined), usable(info?.defaults), usable(messages?.general),
+  ].find(p => p.length > 0)
   if (!pool) return getRandomMessage(name)
   const line = pickFresh(pool)
   rememberLine(line)
@@ -97,6 +105,7 @@ export async function addCompanion(data: {
   avatar: Blob | null
   personality_group_id?: number | null
   messages?: Partial<CompanionMessages>
+  traits?: CompanionTraits
 }) {
   return db.companions.add({
     name: data.name,
@@ -105,6 +114,7 @@ export async function addCompanion(data: {
     is_active: true,
     personality_group_id: data.personality_group_id ?? null,
     messages: { ...EMPTY_MESSAGES, ...data.messages },
+    ...(data.traits && { traits: data.traits }),
     created_at: nowISO(),
   })
 }
@@ -115,6 +125,7 @@ export async function updateCompanion(id: number, changes: Partial<{
   messages: CompanionMessages
   personality_group_id: number | null
   movement: import('../lib/companionMotion').CompanionMovement
+  traits: CompanionTraits
 }>) {
   await db.companions.update(id, changes)
 }

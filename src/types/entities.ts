@@ -6,6 +6,7 @@ import type { CompanionMovement } from '../lib/companionMotion'
 import type { NonScaleAnswer } from '../lib/nonScale'
 import type { CravingOutcome } from '../lib/craving'
 import type { ExtraTrigger } from '../lib/companionTriggers'
+import type { CompanionTraits } from '../lib/companionPersonality'
 
 export interface UserProfile {
   id?: number
@@ -349,6 +350,8 @@ export interface Companion {
   movement?: CompanionMovement
   // The folder it's in (lib/folders). Missing or null means none.
   folder_id?: number | null
+  // Personality (lib/companionPersonality). Missing means the defaults.
+  traits?: Partial<CompanionTraits>
   created_at: string
 }
 

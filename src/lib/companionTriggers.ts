@@ -1,4 +1,5 @@
 import type { CompanionMessages } from '../types'
+import type { Trait } from './companionPersonality'
 
 // Every moment the companion can react to (COMPANION-PLAN 11a): its label in
 // the message editor, its group, the placeholders its lines can use and, for
@@ -22,13 +23,15 @@ export const EXTRA_TRIGGERS = [
   'win_added', 'letter_sealed', 'letter_opened', 'reason_added', 'walk_finished', 'non_scale_better',
   'theme_changed', 'backup_made', 'companion_chosen', 'late_night',
   'meditation_done', 'focus_session_done', 'book_finished', 'grocery_trip_done', 'recipe_added', 'reward_claimed',
+  // Handling (11b)
+  'pickup_refused', 'put_down', 'thrown', 'tapped_a_lot', 'tapped_sleepy', 'tapped_shy', 'jumped_in', 'prank_revealed', 'rolled_in',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
 export type TriggerKey = keyof CompanionMessages
 
 export const TRIGGER_GROUPS = [
-  'Everyday', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
+  'Everyday', 'Handling', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
 ] as const
 
 export interface TriggerInfo {
@@ -37,6 +40,9 @@ export interface TriggerInfo {
   group: (typeof TRIGGER_GROUPS)[number]
   placeholders?: string[]
   defaults?: string[]
+  // Built-in lines that fit a companion's strongest trait better than the
+  // general defaults (11b).
+  traitDefaults?: Partial<Record<Trait, string[]>>
 }
 
 export const TRIGGERS: TriggerInfo[] = [
@@ -55,6 +61,80 @@ export const TRIGGERS: TriggerInfo[] = [
       'Still awake? Whatever it is, it can wait until tomorrow. Rest if you can.',
       "Late-night {name}! Maybe a glass of water and then bed?",
     ],
+  },
+
+  // Handling (11b): how each companion reacts depends on its traits.
+  {
+    key: 'pickup_refused', label: 'Refuses to be picked up (walks back)', group: 'Handling',
+    defaults: ["Hey! I liked it there.", "I'll stay where I was, thanks.", 'Nope. Back I go.'],
+    traitDefaults: {
+      proud: ['Excuse me? I do not get carried around.', 'Put me down this instant. I can walk.', 'I was placed there for a reason, {name}.'],
+      sassy: ['Hands off, {name}.', "Did I say you could do that? Didn't think so.", 'Nice try. Back to my spot.'],
+    },
+  },
+  {
+    key: 'put_down', label: 'Put down somewhere new', group: 'Handling',
+    defaults: ['Ooh, new view!', "This spot's nice too.", "Okay, I'll hang out here."],
+    traitDefaults: {
+      playful: ['Again! Again!', 'Wheee, new spot!', "That was fun, let's do it again!"],
+      shy: ['Oh! Um... okay, here is fine.', "H-hi again. Didn't expect that."],
+      proud: ['Hmph. Acceptable.', 'I suppose this will do.'],
+    },
+  },
+  {
+    key: 'thrown', label: 'Thrown hard (dizzy)', group: 'Handling',
+    defaults: ['Woah... the room is spinning...', "Whoa! I'm dizzy!", '@_@ ...which way is up?'],
+    traitDefaults: {
+      playful: ['WHEEEEE! Again!', 'Best ride ever!', 'I can fly!'],
+      proud: ['Was that strictly necessary, {name}?!', 'I am NOT a ball.', 'Undignified. Utterly undignified.'],
+      sassy: ['Oh, real mature, {name}.', 'Throw me again and see what happens.', 'Rude!'],
+      shy: ['Eek! P-please be gentle...', 'Aaah! ...okay, I survived.'],
+    },
+  },
+  {
+    key: 'tapped_a_lot', label: 'Tapped many times in a row', group: 'Handling',
+    defaults: ["Okay okay, I'm here!", "Yes? Yes? YES? I'm listening!", 'Tap tap tap! What is it?'],
+    traitDefaults: {
+      sassy: ['Do you mind?!', "Poke me one more time, {name}. I dare you.", "I'm not a button!"],
+      proud: ['Must you?', 'I heard you the first time.'],
+      shy: ['Ah! Th-that tickles!', 'S-so many taps...'],
+      playful: ['Hehe, stop, that tickles!', 'Boop boop boop! My turn!'],
+    },
+  },
+  {
+    key: 'tapped_sleepy', label: 'Tapped at night (sleepy)', group: 'Handling',
+    defaults: ['*yawn* ...wha? Oh, hi, {name}.', 'Mmh... five more minutes...', "Zzz... huh? I'm awake! Mostly."],
+    traitDefaults: {
+      sassy: ["It's the middle of the night, {name}. Go to sleep. Me too."],
+      proud: ['I was resting my eyes. Not sleeping.'],
+    },
+  },
+  {
+    key: 'tapped_shy', label: 'Tapped (shy flinch)', group: 'Handling',
+    defaults: ['Oh! Hi...', 'Eep! You startled me.', 'Um... yes?'],
+  },
+  {
+    key: 'jumped_in', label: 'Jumped at your finger', group: 'Handling',
+    defaults: ["Boop! You'll have to get past me first!", 'Gotcha! Hehe.', 'Surprise! What are we tapping?'],
+    traitDefaults: {
+      sassy: ['Nope, this is mine now.', "You wanted to tap that? Too bad, I'm here."],
+    },
+  },
+  {
+    key: 'prank_revealed', label: 'Prank found (a hidden button)', group: 'Handling',
+    defaults: ['Hehe, you found it! I hid it.', 'Pranked! That was me.', 'Okay okay, I put it back. Got you though!'],
+    traitDefaults: {
+      sassy: ["Took you long enough, {name}.", 'Oh, you noticed? Shocking.'],
+      playful: ['Hahaha, your face! That was me!', 'Gotcha! Best prank ever.'],
+    },
+  },
+  {
+    key: 'rolled_in', label: 'Rolled onto the screen', group: 'Handling',
+    defaults: ['Boo! Did I scare you?', 'Ta-daa! Missed me?', "And I'm back!"],
+    traitDefaults: {
+      sassy: ['Miss me? Of course you did.', 'Make way, make way!'],
+      playful: ['Rolling rolling rolling! Hi!', 'Surprise entrance! 🎉'],
+    },
   },
 
   // Logging

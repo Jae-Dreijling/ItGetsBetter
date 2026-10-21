@@ -23,12 +23,16 @@ describe('companion export and import', () => {
     const groupId = await db.personalityGroups.add({ name: 'Cheerful', description: 'Upbeat', messages: { ...EMPTY_MESSAGES, idle: ['Yay'] }, created_at: '' }) as number
     await db.personalityGroups.add({ name: 'Unused', description: '', messages: EMPTY_MESSAGES, created_at: '' })
     await db.companions.add(companion('Built-in', { is_default: true }))
-    const lunaId = await db.companions.add(companion('Luna', { personality_group_id: groupId, avatar: new Blob(['png'], { type: 'image/png' }), movement: 'lively' })) as number
+    const lunaId = await db.companions.add(companion('Luna', { personality_group_id: groupId, avatar: new Blob(['png'], { type: 'image/png' }), movement: 'lively', traits: { proud: 2 } })) as number
     await db.gameCompanionAffinity.add({ companion_id: lunaId, affinity: 40, is_lover: true, lover_dialogue: ['Missed you'], home_region: 'canterlot', is_discovered: true, last_visit_at: null, created_at: '' })
 
     const file = await buildCompanionExport()
     expect(file.companions.map(c => c.name)).toEqual(['Luna'])
     expect(file.companions[0]).toMatchObject({ personality_group: 'Cheerful', lover_dialogue: ['Missed you'], home_region: 'canterlot', movement: 'lively' })
+    expect(file.companions[0].traits).toEqual({ playful: 1, proud: 2, shy: 0, sassy: 0 })
+    const parsed = parseCompanionFile(JSON.stringify({ ...file, companions: [{ ...file.companions[0], traits: { proud: 2, sassy: 7 } }] }))
+    if (!parsed.ok) throw new Error(parsed.error)
+    expect(parsed.file.companions[0].traits).toEqual({ playful: 1, proud: 2, shy: 0, sassy: 0 })
     expect(file.companions[0].avatar?.type).toBe('image/png')
     expect(file.personality_groups.map(g => g.name)).toEqual(['Cheerful'])
   })
