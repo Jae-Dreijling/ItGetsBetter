@@ -32,6 +32,8 @@ export const EXTRA_TRIGGERS = [
   'memory_mention', 'on_this_day',
   // Visits, banter, celebrations (11e)
   'visit_knock', 'visit_accepted', 'visit_declined', 'visit_leaving', 'banter', 'banter_reply', 'cheer',
+  // Hard days (11f)
+  'quiet_today_on', 'body_double_start', 'body_double',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
@@ -61,6 +63,18 @@ export const TRIGGERS: TriggerInfo[] = [
   { key: 'goodnight', label: 'Goodnight', group: 'Everyday' },
   { key: 'mood_low', label: 'Low mood support', group: 'Everyday' },
   { key: 'phone_free', label: 'Phone-free time', group: 'Everyday' },
+  {
+    key: 'quiet_today_on', label: '"Quiet today" switched on', group: 'Everyday',
+    defaults: ["I'll be quiet today. I'm still right here if you tap me.", 'Shh, got it. Rest easy, {name}.', "Quiet mode. I'll just sit with you."],
+  },
+  {
+    key: 'body_double_start', label: 'Focus session started (working with you)', group: 'Everyday',
+    defaults: ["Let's do this together. I'll work right here next to you.", "I'm with you, {name}. One thing at a time.", 'Focus buddies! I brought my tiny desk.'],
+  },
+  {
+    key: 'body_double', label: 'Keeping you company while you focus', group: 'Everyday',
+    defaults: ['Still here with you.', "You're doing it. Keep going, gently.", '*works quietly next to you*', 'Halfway-ish? Proud of you.'],
+  },
   {
     key: 'late_night', label: 'Still up very late', group: 'Everyday',
     defaults: [

@@ -16,6 +16,7 @@ import {
   BIG_MOMENTS, CHECK_EVERY_MS, ACCEPT_CLOSENESS, type Visit,
 } from '../lib/companionVisits'
 import type { TriggerValues } from '../lib/companionTriggers'
+import { isQuietToday } from '../lib/softDay'
 import type { Companion } from '../types'
 
 const SIZE = 48
@@ -44,7 +45,7 @@ export default function CompanionVisits() {
     function check() {
       const s = latest.current
       if (s.visit || s.knock || !s.companions || !s.current || visitsOff() || !knockCooledDown()) return
-      if (s.isPhoneFreeTime || isCalmPlace(s.path) || document.visibilityState !== 'visible') return
+      if (s.isPhoneFreeTime || isQuietToday() || isCalmPlace(s.path) || document.visibilityState !== 'visible') return
       const others = s.companions.filter(c => c.id !== s.current!.id)
       const id = pickVisitor(others.map(c => ({ id: c.id!, affinity: s.bonds?.find(b => b.companion_id === c.id)?.affinity ?? null })), Math.random)
       const companion = others.find(c => c.id === id)

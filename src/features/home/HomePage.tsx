@@ -15,6 +15,7 @@ import RunningFastLine from '../../components/today/RunningFastLine'
 import HabitPromptCard from '../../components/today/HabitPromptCard'
 import CompanionQuestionCard from '../../components/today/CompanionQuestionCard'
 import WeeklyNoteCard from '../../components/today/WeeklyNoteCard'
+import SoftDayCard from '../../components/today/SoftDayCard'
 import { openSideMenu } from '../../lib/sideMenu'
 import { isOn } from '../../lib/features'
 import { wasStarterOffered } from '../../lib/starterHabits'
@@ -67,6 +68,7 @@ export default function HomePage() {
         </div>
 
         <WelcomeBackCard />
+        <SoftDayCard />
         <HabitPromptCard />
         <WeeklyNoteCard />
         <CompanionQuestionCard />

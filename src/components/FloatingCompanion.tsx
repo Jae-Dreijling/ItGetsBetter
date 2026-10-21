@@ -7,7 +7,8 @@ import { useSessionCompanion, useEffectiveMessages, getCompanionMessage, ensureD
 import { useProfile } from '../hooks/useProfile'
 import CompanionChat from './CompanionChat'
 import { tryGetMotivationMessage } from '../hooks/useMotivationNotes'
-import { useLatestMoodScore } from '../hooks/useMood'
+import { useTodaysMoodScore } from '../hooks/useMood'
+import { isQuietToday, speaksWhenQuiet, LOW_MOOD } from '../lib/softDay'
 import { useIsPhoneFreeTime, useIsGoodnightTime } from '../hooks/useSchedule'
 import { useCompanionAffinityFor } from '../hooks/useGame'
 import { getDataAwareNudge } from '../lib/companionNudges'
@@ -77,7 +78,8 @@ export default function FloatingCompanion() {
   const effectiveMessages = useEffectiveMessages(companion)
   const affinity = useCompanionAffinityFor(companion?.id)
   const { profile } = useProfile()
-  const latestMoodScore = useLatestMoodScore()
+  // Today's mood only: a hard day yesterday shouldn't colour today.
+  const latestMoodScore = useTodaysMoodScore()
   const isPhoneFreeTime = useIsPhoneFreeTime()
   const isGoodnightTime = useIsGoodnightTime()
   const avatarUrl = useObjectUrl(companion?.avatar)
@@ -154,7 +156,7 @@ export default function FloatingCompanion() {
   // calm places (the craving flow, wiping data), not on a low-mood day.
   const playfulWelcome = useCallback(() => {
     const mood = moodScoreRef.current
-    return !isCalmPlace(pathRef.current) && !(mood != null && mood <= 2) && !busyRef.current && !isPhoneFreeTimeRef.current
+    return !isCalmPlace(pathRef.current) && !(mood != null && mood <= LOW_MOOD) && !busyRef.current && !isPhoneFreeTimeRef.current && !isQuietToday()
   }, [])
 
   useEffect(() => {
@@ -163,6 +165,8 @@ export default function FloatingCompanion() {
 
 
   const showMessage = useCallback((event: CompanionEvent, values?: TriggerValues) => {
+    // Quiet today: only answers your own taps (11f).
+    if (isQuietToday() && !speaksWhenQuiet(event)) return
     // It calls you by its nickname for you now and then (11c).
     const id = companionIdRef.current
     const bond = affinityRef.current
@@ -188,7 +192,14 @@ export default function FloatingCompanion() {
 
   const handleIdle = useCallback(async () => {
     // Phone-free time has its own repeating nudge (below) and takes over completely.
-    if (isPhoneFreeTimeRef.current) return
+    if (isPhoneFreeTimeRef.current || isQuietToday()) return
+
+    // A soft day (a low mood today): only gentle words, nothing else (11f).
+    const mood = moodScoreRef.current
+    if (mood != null && mood <= LOW_MOOD) {
+      showMessage('mood_low')
+      return
+    }
 
     // Very late at night (1 to 4 AM), now and then a gentle word.
     const hour = new Date().getHours()

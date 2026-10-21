@@ -5,6 +5,7 @@ import { db } from '../../db'
 import { closenessTier, TIER_LABELS } from '../../lib/closeness'
 import { MEMORY_TOPICS } from '../../lib/companionMemory'
 import { visitsOff, setVisitsOff } from '../../lib/companionVisits'
+import { isQuietToday, setQuietToday } from '../../lib/softDay'
 import { TRAIT_INFO, LEVEL_LABELS, traitsOf, type CompanionTraits, type TraitLevel } from '../../lib/companionPersonality'
 import { useNavigate } from 'react-router'
 import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
@@ -103,6 +104,7 @@ export default function CompanionPage() {
 
         <CompanionTransfer />
         <VisitsSwitch />
+        <QuietTodaySwitch />
 
         <button
           onClick={() => setShowCreate(!showCreate)}
@@ -417,6 +419,20 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
         {initial ? 'Save Changes' : 'Create Companion'}
       </button>
     </div>
+  )
+}
+
+// Quiet today (11f): the companion only answers your taps until tomorrow.
+function QuietTodaySwitch() {
+  const [quiet, setQuiet] = useState(() => isQuietToday())
+  return (
+    <label className="mb-4 flex cursor-pointer items-center gap-3 rounded-xl bg-card p-3.5 shadow-sm">
+      <span className="flex-1">
+        <span className="block text-sm font-semibold text-text-primary">🤫 Quiet today</span>
+        <span className="block text-xs text-muted">Your companion stays silent until tomorrow, except when you tap it. No visits either.</span>
+      </span>
+      <input type="checkbox" checked={quiet} onChange={e => { setQuietToday(e.target.checked); setQuiet(e.target.checked) }} className="h-5 w-5 accent-primary-500" />
+    </label>
   )
 }
 

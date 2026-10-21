@@ -112,6 +112,15 @@ export default function PomodoroPage() {
   const progress = total > 0 ? timeLeft / total : 1
   const isWork = mode === 'work'
 
+  // Body doubling (11f): the companion works alongside you during focus,
+  // checking in quietly every 8 minutes.
+  useEffect(() => {
+    if (!running || mode !== 'work') return
+    triggerCompanionMessage('body_double_start')
+    const id = setInterval(() => triggerCompanionMessage('body_double'), 8 * 60 * 1000)
+    return () => clearInterval(id)
+  }, [running, mode])
+
   // Countdown tick
   useEffect(() => {
     if (!running) return
