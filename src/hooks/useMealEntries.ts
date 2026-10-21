@@ -48,6 +48,8 @@ export async function addMealEntry(data: {
   if (!data.is_backfill && data.award_points !== false) {
     await awardPoints('meal_logged', id as number)
     if (wasFirstEver) triggerCompanionMessage('first_milestone')
+    // A planned meal gets its own line (markEaten).
+    else if (data.recipe_id == null) triggerCompanionMessage(data.health_score >= 4 ? 'healthy_meal' : 'meal_logged')
   }
   return id as number
 }

@@ -37,6 +37,7 @@ export async function createTrack(name: string, emoji: string, milestones: strin
     })))
     return trackId
   }).then(async trackId => {
+    triggerCompanionMessage('goal_created', { goal: name })
     await checkAutoMilestones()
     return trackId
   })
@@ -128,7 +129,10 @@ async function reach(milestone: GoalMilestone, track: GoalTrack | undefined) {
   if (!claimed) return
   await db.wins.add({ date: getLogicalDate(), text: winText(track, milestone), source: 'milestone', logged_at: nowISO() })
   if (!milestone.points_given) await awardPoints('milestone_reached', milestone.id)
-  triggerCompanionMessage('achievement_unlocked')
+  const goal = track?.name ?? 'your goal'
+  const steps = await db.goalMilestones.where('track_id').equals(milestone.track_id).toArray()
+  if (steps.every(s => s.done_at)) triggerCompanionMessage('goal_completed', { goal })
+  else triggerCompanionMessage('goal_step_reached', { goal, step: milestone.text })
 }
 
 // Ticks automatic weight steps the trend has reached (after a weigh-in and on

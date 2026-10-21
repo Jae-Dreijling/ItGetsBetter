@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { differenceInCalendarDays, parseISO } from 'date-fns'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { triggerCompanionMessage, triggerCompanionMessageIfQuiet } from '../lib/companionMessenger'
 import { CHECKS, pickCheck, type CheckKind } from '../lib/dailyCheck'
 import { isOn } from '../lib/features'
 import { getFeatureTiers } from './useFeatures'
@@ -93,6 +94,8 @@ export function useDailyCheck() {
   const markAnswered = useCallback(async () => {
     update('answered')
     await awardPoints('daily_check')
+    // Unless what you logged for the check (a weigh-in, a mood) just had its say.
+    triggerCompanionMessageIfQuiet('daily_check_answered')
   }, [update])
 
   const dismiss = useCallback(() => update('dismissed'), [update])
@@ -106,6 +109,7 @@ export function useDailyCheck() {
 
 export async function addWin(text: string) {
   await db.wins.add({ date: getLogicalDate(), text: text.trim(), source: 'daily_check', logged_at: nowISO() })
+  triggerCompanionMessage('win_added')
 }
 
 // For the notification planner: answered, skipped or already logged today.

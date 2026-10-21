@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { awardPoints } from './usePoints'
 
 export function useTodaysMood() {
@@ -38,6 +39,7 @@ export async function addMoodEntry(score: number, tags: string[]) {
     logged_at: nowISO(),
   })
   await awardPoints('mood_logged')
+  if (score >= 4) triggerCompanionMessage('mood_good')
 }
 
 export async function addMoodTag(label: string) {

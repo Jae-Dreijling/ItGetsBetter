@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { awardPoints } from './usePoints'
 
 export function useActiveMedicines() {
@@ -92,5 +93,9 @@ export async function toggleMedicineLog(medicineId: number) {
       logged_at: nowISO(),
     })
     await awardPoints('medicine_taken', medicineId)
+    // Every medicine due today is taken now.
+    const due = (await db.medicines.filter(m => m.is_active).toArray()).filter(m => isMedicineDueToday(m))
+    const taken = new Set((await db.medicineLogs.where('date').equals(today).toArray()).map(l => l.medicine_id))
+    if (due.length > 0 && due.every(m => taken.has(m.id!))) triggerCompanionMessage('medicine_all_taken')
   }
 }

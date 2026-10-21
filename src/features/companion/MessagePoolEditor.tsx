@@ -1,36 +1,11 @@
 import { useState } from 'react'
 import { Trash2, ChevronDown, ChevronRight, Upload, FileText } from 'lucide-react'
 import type { CompanionEvent } from '../../hooks/useCompanion'
+import { TRIGGERS } from '../../lib/companionTriggers'
 import type { CompanionMessages } from '../../types'
 
-const EVENT_LABELS: { key: CompanionEvent; label: string }[] = [
-  { key: 'general', label: 'General / Default' },
-  { key: 'morning_greeting', label: 'Morning Greeting' },
-  { key: 'welcome_back', label: 'Welcome Back' },
-  { key: 'achievement_unlocked', label: 'Achievement Unlocked' },
-  { key: 'habit_completed', label: 'Habit Completed' },
-  { key: 'task_completed', label: 'Task Completed' },
-  { key: 'mood_low', label: 'Low Mood Support' },
-  { key: 'fasting_goal', label: 'Fasting Goal Met' },
-  { key: 'streak_milestone', label: 'Streak Milestone' },
-  { key: 'phone_free', label: 'Phone-Free Reminder' },
-  { key: 'points_earned', label: 'Points Earned' },
-  { key: 'weight_loss', label: 'Weight Loss' },
-  { key: 'weight_gain', label: 'Weight Gain / Plateau' },
-  { key: 'exercise_logged', label: 'Exercise Logged' },
-  { key: 'water_goal_met', label: 'Water Goal Met' },
-  { key: 'sleep_logged', label: 'Sleep Logged' },
-  { key: 'personal_best', label: 'Personal Best' },
-  { key: 'level_up', label: 'Level Up' },
-  { key: 'boss_defeated', label: 'Boss Defeated' },
-  { key: 'goodnight', label: 'Goodnight' },
-  { key: 'first_milestone', label: 'First-Time Milestone' },
-  { key: 'idle', label: 'Idle / AFK' },
-  { key: 'reminder_daily_check', label: 'Daily Check Reminder' },
-  { key: 'reminder_floor', label: 'Floor Reminder' },
-  { key: 'habit_settled', label: 'Habit Settled ({habit} {done} of {total}): take on another?' },
-  { key: 'habit_built', label: 'Habit Built: stop tracking it?' },
-]
+// Every trigger, grouped (lib/companionTriggers).
+const EVENT_LABELS = TRIGGERS.map(t => ({ key: t.key as CompanionEvent, label: t.placeholders?.length ? `${t.label} ({${t.placeholders.join('} {')}})` : t.label, group: t.group }))
 
 const WRAPPING_QUOTE_CHARS = ['"', "'", '“', '”', '‘', '’']
 
@@ -347,8 +322,11 @@ export function MessagePoolEditor({ messages, onChange, showLoverImport = false,
       <ImportAllPanel onImport={importAll} showLoverHint={showLoverImport} />
 
       <div className="space-y-1 mb-4">
-        {EVENT_LABELS.map(({ key, label }) => (
+        {EVENT_LABELS.map(({ key, label, group }, i) => (
           <div key={key}>
+            {group !== EVENT_LABELS[i - 1]?.group && (
+              <p className="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">{group}</p>
+            )}
             <button
               onClick={() => setExpandedEvent(expandedEvent === key ? null : key)}
               className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-surface transition-colors"

@@ -1,15 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
+import { EMPTY_MESSAGES } from './useCompanion'
 import type { CompanionMessages } from '../types'
 
-const EMPTY_MESSAGES: CompanionMessages = {
-  general: [], morning_greeting: [], welcome_back: [], achievement_unlocked: [],
-  habit_completed: [], task_completed: [], mood_low: [], fasting_goal: [], streak_milestone: [],
-  phone_free: [], points_earned: [], weight_loss: [], weight_gain: [], exercise_logged: [],
-  water_goal_met: [], sleep_logged: [], personal_best: [], level_up: [], boss_defeated: [],
-  goodnight: [], first_milestone: [], idle: [],
-}
 
 export function usePersonalityGroups() {
   return useLiveQuery(() => db.personalityGroups.toArray())

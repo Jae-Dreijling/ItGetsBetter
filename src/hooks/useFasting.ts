@@ -41,6 +41,7 @@ export async function startFast(goalHours: number, startedAt: Date = new Date())
     goal_met: false,
     was_broken_early: false,
   })
+  triggerCompanionMessage('fast_started', { hours: goalHours })
 }
 
 export async function updateRunningFast(id: number, changes: Pick<Partial<FastingRecord>, 'goal_hours' | 'start_time'>) {
@@ -67,6 +68,8 @@ export async function endFast(fast: FastingRecord) {
   if (goalMet) {
     await awardPoints('fasting_goal_met')
     triggerCompanionMessage('fasting_goal')
+  } else {
+    triggerCompanionMessage('fast_ended_short', { hours: durationHours })
   }
   if (previousBest > 0 && durationHours > previousBest) triggerCompanionMessage('personal_best')
   return { durationHours, goalMet }

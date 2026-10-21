@@ -7,7 +7,8 @@ import { FastForward, Pause, Play, RotateCcw } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import { db } from '../../db'
 import { useReplayStops } from '../../hooks/useReplay'
-import { useSessionCompanion } from '../../hooks/useCompanion'
+import { useSessionCompanion, useEffectiveMessages } from '../../hooks/useCompanion'
+import { canSay, fillPlaceholders } from '../../lib/companionTriggers'
 import { useProfile } from '../../hooks/useProfile'
 import { pop } from '../../lib/animations'
 import {
@@ -45,6 +46,7 @@ const WALK_SECONDS = 1.5
 function Walk({ stops }: { stops: ReplayStop[] }) {
   const reduceMotion = useReducedMotion()
   const companion = useSessionCompanion()
+  const messages = useEffectiveMessages(companion)
   const { profile } = useProfile()
   const mapRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(360)
@@ -77,7 +79,12 @@ function Walk({ stops }: { stops: ReplayStop[] }) {
   }, [points])
 
   const name = profile?.display_name ?? 'friend'
-  const line = at === last ? closingLine(stops.length - 1, name) : stops[at].line
+  // The companion's own "walk finished" lines if it has them (COMPANION-PLAN 11a).
+  const ownClosing = (messages?.walk_finished ?? []).filter(l => canSay(l, { count: stops.length - 1 }))
+  const closing = ownClosing.length
+    ? fillPlaceholders(ownClosing[(stops.length + name.length) % ownClosing.length], name, { count: stops.length - 1 })
+    : closingLine(stops.length - 1, name)
+  const line = at === last ? closing : stops[at].line
 
   function follow(index: number) {
     const map = mapRef.current

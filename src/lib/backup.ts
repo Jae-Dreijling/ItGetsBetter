@@ -1,4 +1,5 @@
 import { db } from '../db'
+import { triggerCompanionMessage } from './companionMessenger'
 import { GUILD_ROOMS } from './game'
 import { BOSSES } from './bosses'
 import { mergeQuotesIntoCompanions } from './quotesMigration'
@@ -234,7 +235,9 @@ export async function createBackup(password: string): Promise<Blob> {
 // folder in the Android app). Returns where it went.
 export async function downloadBackup(password: string): Promise<string> {
   const blob = await createBackup(password)
-  return saveFile(blob, `itgetsbetter-backup-${new Date().toISOString().slice(0, 10)}.igb`)
+  const where = await saveFile(blob, `itgetsbetter-backup-${new Date().toISOString().slice(0, 10)}.igb`)
+  triggerCompanionMessage('backup_made')
+  return where
 }
 
 export async function restoreBackup(file: Blob, password: string): Promise<void> {

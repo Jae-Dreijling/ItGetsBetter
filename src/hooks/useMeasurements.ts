@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import type { MeasurementEntry } from '../types'
 
 export function useLatestMeasurement() {
@@ -32,4 +33,5 @@ export async function addMeasurement(
     wrists_cm: data.wrists_cm ?? null,
     logged_at: nowISO(),
   })
+  triggerCompanionMessage('measurement_logged')
 }

@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 
 export function useGroceryLists() {
   return useLiveQuery(() => db.groceryLists.toArray())
@@ -43,6 +44,10 @@ export async function toggleGroceryItem(id: number) {
   const item = await db.groceryItems.get(id)
   if (item) {
     await db.groceryItems.update(id, { is_checked: !item.is_checked })
+    // The last item of a shopping trip (not a saved list) ticked off.
+    const list = await db.groceryLists.get(item.list_id)
+    const items = await db.groceryItems.where('list_id').equals(item.list_id).toArray()
+    if (!item.is_checked && list && !list.is_template && items.every(i => i.is_checked)) triggerCompanionMessage('grocery_trip_done')
   }
 }
 

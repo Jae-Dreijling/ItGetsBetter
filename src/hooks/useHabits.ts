@@ -4,6 +4,7 @@ import { getLogicalDate, nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
 import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { shouldAdvance, getNextValue } from '../lib/progression'
+import { floorHabits, floorProgress } from '../lib/floor'
 import type { HabitFrequency, Weekday } from '../types'
 
 export function useActiveHabits() {
@@ -130,7 +131,20 @@ export async function toggleHabitCompletion(habitId: number, cantFail: boolean =
     })
     await awardPoints(cantFail ? 'habit_cant_fail' : 'habit_completed', id as number)
     if (wasFirstEver) triggerCompanionMessage('first_milestone')
+    else await reactToHabitDone(habitId, cantFail)
   }
+}
+
+// The biggest thing this tick finished: the floor, all of today's habits,
+// or the small version of one.
+async function reactToHabitDone(habitId: number, cantFail: boolean) {
+  const today = getLogicalDate()
+  const habits = (await db.habits.filter(h => h.is_active).toArray()).filter(isTodayScheduled)
+  const done = new Set((await db.habitCompletions.where('date').equals(today).toArray()).map(c => c.habit_id))
+  const floor = floorHabits(habits)
+  if (floor.some(h => h.id === habitId) && floorProgress(floor, done).complete) triggerCompanionMessage('floor_done')
+  else if (habits.length > 1 && habits.every(h => done.has(h.id!))) triggerCompanionMessage('habits_all_done')
+  else if (cantFail) triggerCompanionMessage('cant_fail_used', { habit: (await db.habits.get(habitId))?.title ?? 'it' })
 }
 
 export async function checkProgressionAdvancements() {

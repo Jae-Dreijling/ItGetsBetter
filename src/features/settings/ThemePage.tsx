@@ -2,6 +2,7 @@ import { Check } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
+import { triggerCompanionMessage } from '../../lib/companionMessenger'
 import { COLOR_THEMES, seasonFor, type ColorThemeId, type ColorThemeSetting } from '../../lib/themes'
 
 const SEASON_LABELS: Record<ReturnType<typeof seasonFor>, string> = {
@@ -14,7 +15,9 @@ export default function ThemePage() {
   const season = seasonFor(new Date())
 
   async function choose(setting: ColorThemeSetting) {
-    if (profile?.id) await updateProfile(profile.id, { color_theme: setting })
+    if (!profile?.id || setting === current) return
+    await updateProfile(profile.id, { color_theme: setting })
+    triggerCompanionMessage('theme_changed')
   }
 
   return (

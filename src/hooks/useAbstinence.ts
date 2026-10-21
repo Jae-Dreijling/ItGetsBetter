@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import type { AbstinenceCounter, AbstinenceEvent } from '../types'
 
 export type CounterInput = Pick<AbstinenceCounter, 'name' | 'emoji' | 'started_at' | 'why' | 'cost_per_day'>
@@ -63,6 +64,8 @@ export async function deleteCounter(id: number) {
 
 export async function logEvent(counterId: number, kind: AbstinenceEvent['kind'], context: string | null = null, at = nowISO()) {
   await db.abstinenceEvents.add({ counter_id: counterId, kind, at, context })
+  const thing = (await db.abstinenceCounters.get(counterId))?.name ?? 'it'
+  triggerCompanionMessage(kind === 'slip' ? 'slip_logged' : 'craving_passed', { thing })
 }
 
 export async function deleteEvent(id: number) {

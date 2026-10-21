@@ -14,11 +14,12 @@ export async function getDataAwareNudge(name: string): Promise<string | null> {
   const tiers = await getFeatureTiers()
 
   if (isSpotlight(tiers, 'tasks')) {
-    const overdueTasks = await db.tasks
+    const waitingTasks = await db.tasks
       .filter(t => !t.is_completed && !!t.due_date && (t.due_date as string) < today)
       .count()
-    if (overdueTasks > 0) {
-      return `${name}, you have ${overdueTasks} overdue ${overdueTasks === 1 ? 'task' : 'tasks'} whenever you're ready for them.`
+    if (waitingTasks > 0) {
+      // Rulebook 5.2: no "overdue", no counting what's late.
+      return `${name}, a few tasks are waiting on your list, whenever you're ready for them.`
     }
   }
 

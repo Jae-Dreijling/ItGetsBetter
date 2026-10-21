@@ -20,7 +20,9 @@ export async function finishCraving(data: Omit<CravingEvent, 'id' | 'date' | 'lo
   }
   const paidToday = await db.pointsTransactions.where('date').equals(today).filter(t => t.source_type === 'craving_checked').count()
   if (paidToday < MAX_POINTS_PER_DAY) await awardPoints('craving_checked')
-  if (data.outcome !== 'had_it') triggerCompanionMessage('achievement_unlocked')
+  if (data.outcome === 'passed') triggerCompanionMessage('craving_passed')
+  else if (data.outcome === 'portion') triggerCompanionMessage('craving_portion')
+  else if (data.outcome === 'had_it') triggerCompanionMessage('craving_had_it')
 }
 
 function winText(outcome: CravingOutcome, trigger: string | null): string {

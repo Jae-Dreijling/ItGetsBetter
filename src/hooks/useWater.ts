@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { awardPoints } from './usePoints'
 
 const WATER_GOAL_ML = 2000
@@ -33,6 +34,8 @@ export async function addWaterEntry(amount_ml: number) {
 
   if (beforeTotal < WATER_GOAL_ML && beforeTotal + amount_ml >= WATER_GOAL_ML) {
     await awardPoints('water_goal_met')
+  } else {
+    triggerCompanionMessage('water_logged')
   }
 }
 

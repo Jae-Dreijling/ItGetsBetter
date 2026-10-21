@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { copyWeekItems, itemNutrition, shiftDate } from '../lib/mealPlan'
 import { planImport, type ImportPlan, type ImportRecipe, type MealPlanFile } from '../lib/mealPlanImport'
 import { addMealEntry } from './useMealEntries'
@@ -24,7 +25,9 @@ export async function saveRecipe(data: RecipeInput, id?: number): Promise<number
     await db.recipes.update(id, data)
     return id
   }
-  return await db.recipes.add({ ...data, created_at: nowISO() }) as number
+  const newId = await db.recipes.add({ ...data, created_at: nowISO() }) as number
+  triggerCompanionMessage('recipe_added', { recipe: data.name })
+  return newId
 }
 
 // Removes the recipe and its plans. Meals already eaten stay in the meal log.
@@ -82,6 +85,7 @@ export async function markEaten(itemId: number) {
     meal_entry_id: entryId,
     points_given: item.points_given || !isBackfill,
   })
+  if (!isBackfill) triggerCompanionMessage('planned_meal_eaten', { meal: recipe.name })
 }
 
 // Undo for a mis-tap: removes the meal log again. Points already earned stay.

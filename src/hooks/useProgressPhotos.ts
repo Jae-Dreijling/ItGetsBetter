@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { compressImage } from '../lib/compressImage'
 
 export function useProgressPhotos() {
@@ -23,6 +24,7 @@ export async function addProgressPhoto(file: File, poseType: string, date?: stri
     pose_type: poseType,
     logged_at: nowISO(),
   })
+  triggerCompanionMessage('photo_taken')
 }
 
 export async function deleteProgressPhoto(id: number) {

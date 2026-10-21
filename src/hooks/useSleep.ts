@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { awardPoints } from './usePoints'
 
 export function useTodaysSleep() {
@@ -31,4 +32,5 @@ export async function addSleepEntry(data: {
     logged_at: nowISO(),
   })
   await awardPoints('sleep_logged')
+  if (data.hours_slept >= 7 && !data.date) triggerCompanionMessage('good_sleep', { hours: data.hours_slept })
 }

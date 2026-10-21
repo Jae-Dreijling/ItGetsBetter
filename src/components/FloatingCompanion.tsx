@@ -11,6 +11,7 @@ import { useIsPhoneFreeTime, useIsGoodnightTime } from '../hooks/useSchedule'
 import { useCompanionAffinityFor } from '../hooks/useGame'
 import { getDataAwareNudge } from '../lib/companionNudges'
 import { registerCompanionMessageHandler } from '../lib/companionMessenger'
+import type { TriggerValues } from '../lib/companionTriggers'
 import { startIdleTimer } from '../lib/idleTimer'
 
 const POSITION_KEY = 'igb_companion_position'
@@ -106,8 +107,8 @@ export default function FloatingCompanion() {
     }
   }, [companion?.avatar])
 
-  const showMessage = useCallback((event: CompanionEvent) => {
-    const msg = getCompanionMessage(messagesRef.current, event, nameRef.current)
+  const showMessage = useCallback((event: CompanionEvent, values?: TriggerValues) => {
+    const msg = getCompanionMessage(messagesRef.current, event, nameRef.current, values)
     setMessage(msg)
     if (messageTimer.current) clearTimeout(messageTimer.current)
     messageTimer.current = setTimeout(() => setMessage(null), 5000)
@@ -127,6 +128,13 @@ export default function FloatingCompanion() {
   const handleIdle = useCallback(async () => {
     // Phone-free time has its own repeating nudge (below) and takes over completely.
     if (isPhoneFreeTimeRef.current) return
+
+    // Very late at night (1 to 4 AM), now and then a gentle word.
+    const hour = new Date().getHours()
+    if (hour >= 1 && hour < 4 && Math.random() < 0.4) {
+      showMessage('late_night')
+      return
+    }
 
     // One-time wind-down nudge in the 30 minutes before phone-free kicks in.
     if (isGoodnightTimeRef.current && Math.random() < 0.6) {

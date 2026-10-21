@@ -20,6 +20,7 @@ import { backupIfDue } from './lib/autoBackup'
 import { applyColorTheme, resolveColorTheme } from './lib/themes'
 import InstallPrompt from './components/InstallPrompt'
 import { triggerCompanionMessage } from './lib/companionMessenger'
+import { appOpenMoment } from './lib/appOpenMoment'
 import PointsToast from './components/PointsToast'
 import AppShell from './components/layout/AppShell'
 import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
@@ -264,7 +265,10 @@ export default function App() {
       ensureDefaultCompanion()
       ensureDefaultPersonalityGroups()
       checkLevelUpAndClassChange()
-      setTimeout(() => {
+      setTimeout(async () => {
+        // A birthday or a new abstinence milestone comes first.
+        const moment = await appOpenMoment()
+        if (moment) return triggerCompanionMessage(moment.event, moment.values)
         const hour = new Date().getHours() + new Date().getMinutes() / 60
         const isMorningWindow = hour >= 3 && hour < 11.5
         if (isMorningWindow && Math.random() < 0.7) {

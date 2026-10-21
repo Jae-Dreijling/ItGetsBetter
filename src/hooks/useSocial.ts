@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { requestReschedule } from '../lib/notifications/native'
 import type { Person, SocialContact } from '../types'
 
@@ -28,7 +29,10 @@ export function useContacts(personId?: number) {
 export async function savePerson(data: PersonInput, id?: number): Promise<number> {
   let saved = id
   if (id !== undefined) await db.people.update(id, data)
-  else saved = await db.people.add({ ...data, archived: false, created_at: nowISO() }) as number
+  else {
+    saved = await db.people.add({ ...data, archived: false, created_at: nowISO() }) as number
+    triggerCompanionMessage('person_added', { person: data.name })
+  }
   requestReschedule()
   return saved!
 }
@@ -48,6 +52,8 @@ export async function deletePerson(id: number) {
 
 export async function logContact(personId: number, kind: SocialContact['kind'], date = getLogicalDate()) {
   await db.socialContacts.add({ person_id: personId, kind, date, logged_at: nowISO() })
+  const person = (await db.people.get(personId))?.name ?? 'them'
+  triggerCompanionMessage(kind === 'saw' ? 'saw_someone' : 'talked_to_someone', { person })
   requestReschedule()
 }
 

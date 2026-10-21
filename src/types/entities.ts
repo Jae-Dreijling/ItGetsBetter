@@ -5,6 +5,7 @@ import type { WeightDisplay } from '../lib/weightTrend'
 import type { CompanionMovement } from '../lib/companionMotion'
 import type { NonScaleAnswer } from '../lib/nonScale'
 import type { CravingOutcome } from '../lib/craving'
+import type { ExtraTrigger } from '../lib/companionTriggers'
 
 export interface UserProfile {
   id?: number
@@ -305,7 +306,9 @@ export interface MotivationNote {
   created_at: string
 }
 
-export interface CompanionMessages {
+// The triggers added in step 11a are optional (lib/companionTriggers):
+// companions made before simply don't have them.
+export interface CompanionMessages extends Partial<Record<ExtraTrigger, string[]>> {
   general: string[]
   morning_greeting: string[]
   welcome_back: string[]
@@ -332,10 +335,6 @@ export interface CompanionMessages {
   // companions may not have these yet; code falls back to built-in lines.
   reminder_daily_check?: string[]
   reminder_floor?: string[]
-  // Building habits up (lib/habitBuildUp). Placeholders: {name}, {habit},
-  // {done}, {total}. Older companions may not have these yet.
-  habit_settled?: string[]
-  habit_built?: string[]
 }
 
 export interface Companion {

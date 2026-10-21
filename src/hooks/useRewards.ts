@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import type { Reward, RewardCategory, RewardType } from '../types/entities'
 
 export function useAvailableRewards() {
@@ -81,6 +82,7 @@ export async function claimReward(rewardId: number, pointCost: number, note?: st
     claimed_at: nowISO(),
     note: note || null,
   })
+  triggerCompanionMessage('reward_claimed', { reward: reward.name })
 
   if (reward.type === 'one_time') {
     await db.rewards.update(rewardId, { is_available: false, is_savings_goal: false })

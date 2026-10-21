@@ -66,9 +66,11 @@ export async function addWeightEntry(
     const showsWeighIns = (profile?.weight_display ?? 'every') === 'every'
     if (!previous) {
       triggerCompanionMessage('first_milestone')
-    } else if (showsWeighIns) {
-      if (value_kg < previous.value_kg) triggerCompanionMessage('weight_loss')
-      else if (value_kg > previous.value_kg) triggerCompanionMessage('weight_gain')
+    } else if (showsWeighIns && value_kg !== previous.value_kg) {
+      triggerCompanionMessage(value_kg < previous.value_kg ? 'weight_loss' : 'weight_gain')
+    } else {
+      // Numbers hidden (or the same): a neutral thank-you, no direction.
+      triggerCompanionMessage('weigh_in_logged')
     }
     if (showsWeighIns && historicalLowest && value_kg < historicalLowest.value_kg) {
       triggerCompanionMessage('personal_best')

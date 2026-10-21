@@ -24,5 +24,5 @@ export async function saveNonScaleCheck(answers: Record<string, NonScaleAnswer>,
     .filter(t => t.source_type === 'non_scale_check')
     .count()
   if (!paidRecently) await awardPoints('non_scale_check')
-  triggerCompanionMessage('achievement_unlocked')
+  triggerCompanionMessage(Object.values(answers).includes('better') ? 'non_scale_better' : 'achievement_unlocked')
 }

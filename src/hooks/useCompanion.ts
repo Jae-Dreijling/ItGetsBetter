@@ -4,6 +4,8 @@ import { db } from '../db'
 import { nowISO } from '../lib/date'
 import { getRandomMessage } from '../lib/supportiveMessages'
 import { getSessionCompanionId, setSessionCompanionId, subscribeSessionCompanion, pickSessionCompanion } from '../lib/sessionCompanion'
+import { EXTRA_TRIGGERS, triggerInfo, canSay, fillPlaceholders, type TriggerValues } from '../lib/companionTriggers'
+import { pickFresh, rememberLine } from '../lib/recentLines'
 import type { Companion, CompanionMessages } from '../types'
 
 export const EMPTY_MESSAGES: CompanionMessages = {
@@ -31,8 +33,7 @@ export const EMPTY_MESSAGES: CompanionMessages = {
   idle: [],
   reminder_daily_check: [],
   reminder_floor: [],
-  habit_settled: [],
-  habit_built: [],
+  ...Object.fromEntries(EXTRA_TRIGGERS.map(key => [key, []])),
 }
 
 export type CompanionEvent = keyof CompanionMessages
@@ -79,22 +80,16 @@ export function useEffectiveMessages(companion: Companion | undefined): Companio
   }, [companion?.id, companion?.personality_group_id, companion?.messages])
 }
 
-export function getCompanionMessage(messages: CompanionMessages | undefined, event: CompanionEvent, name: string): string {
-  if (!messages) return getRandomMessage(name)
-
-  const pool = messages[event]
-  if (pool && pool.length > 0) {
-    const msg = pool[Math.floor(Math.random() * pool.length)]
-    return msg.replace('{name}', name)
-  }
-
-  const general = messages.general
-  if (general && general.length > 0) {
-    const msg = general[Math.floor(Math.random() * general.length)]
-    return msg.replace('{name}', name)
-  }
-
-  return getRandomMessage(name)
+// What the companion says for a moment: its own lines (and its group's),
+// else the built-in lines for that trigger, else its general lines. Lines
+// said recently are avoided, and placeholders are filled in.
+export function getCompanionMessage(messages: CompanionMessages | undefined, event: CompanionEvent, name: string, values: TriggerValues = {}): string {
+  const usable = (lines: string[] | undefined) => (lines ?? []).filter(l => canSay(l, values))
+  const pool = [usable(messages?.[event]), usable(triggerInfo(event)?.defaults), usable(messages?.general)].find(p => p.length > 0)
+  if (!pool) return getRandomMessage(name)
+  const line = pickFresh(pool)
+  rememberLine(line)
+  return fillPlaceholders(line, name, values)
 }
 
 export async function addCompanion(data: {

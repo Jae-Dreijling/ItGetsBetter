@@ -4,6 +4,7 @@ import { Settings, RotateCcw, X, Play } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { playSound, SOUND_OPTIONS, type SoundId } from '../../lib/sounds'
+import { triggerCompanionMessage } from '../../lib/companionMessenger'
 
 const SK = {
   work: 'igb_pomo_work',
@@ -125,6 +126,7 @@ export default function PomodoroPage() {
     navigator.vibrate?.(400)
     if (mode === 'work') {
       playSound(sounds.workEnd)
+      triggerCompanionMessage('focus_session_done')
       const next = doneSessions + 1
       setDoneSessions(next)
       const nextMode: Mode = next % settings.sessionCount === 0 ? 'long' : 'short'

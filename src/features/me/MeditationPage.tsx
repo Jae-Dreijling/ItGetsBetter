@@ -4,6 +4,7 @@ import { Settings, X, Play } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { playSound, SOUND_OPTIONS, type SoundId } from '../../lib/sounds'
+import { triggerCompanionMessage } from '../../lib/companionMessenger'
 
 // ─── Settings ────────────────────────────────────────────────────────────────
 
@@ -137,6 +138,7 @@ export default function MeditationPage() {
       playSound(settings.endSound)
       setRunning(false)
       setPhase('done')
+      triggerCompanionMessage('meditation_done', { minutes: durationMins })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft])

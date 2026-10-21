@@ -7,6 +7,7 @@ import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useCompanions, useSessionCompanion, addCompanion, updateCompanion, deleteCompanion, setCompanionActive } from '../../hooks/useCompanion'
 import { setSessionCompanionId } from '../../lib/sessionCompanion'
+import { triggerCompanionMessage } from '../../lib/companionMessenger'
 import { usePersonalityGroups } from '../../hooks/usePersonalityGroups'
 import { getCompanionHomeRegion, setCompanionHomeRegion, getCompanionAffinityRecord, updateLoverDialogue } from '../../lib/game'
 import { MessagePoolEditor } from './MessagePoolEditor'
@@ -56,7 +57,12 @@ export default function CompanionPage() {
         isCurrent={current?.id === c.id}
         canDeactivate={activeCount > 1 || !c.is_active}
         canDelete={(companions?.length ?? 0) > 1}
-        onMakeCurrent={() => setSessionCompanionId(c.id!)}
+        onMakeCurrent={() => {
+          if (current?.id === c.id) return
+          setSessionCompanionId(c.id!)
+          // After the switch, so the newly picked companion says it.
+          setTimeout(() => triggerCompanionMessage('companion_chosen'), 400)
+        }}
         onToggleActive={next => {
           setCompanionActive(c.id!, next)
           // A switched-off companion shouldn't keep talking: pick another.

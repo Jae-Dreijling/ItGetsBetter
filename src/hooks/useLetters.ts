@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getLogicalDate, nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 import { isReady } from '../lib/letters'
 import type { FutureLetter } from '../types'
 
@@ -20,10 +21,12 @@ export function useReadyLetterCount() {
 
 export async function writeLetter(text: string, unlock: FutureLetter['unlock']) {
   await db.futureLetters.add({ text: text.trim(), unlock, opened_at: null, created_at: nowISO() })
+  triggerCompanionMessage('letter_sealed')
 }
 
 export async function openLetter(id: number) {
   await db.futureLetters.update(id, { opened_at: nowISO() })
+  triggerCompanionMessage('letter_opened')
 }
 
 export async function deleteLetter(id: number) {

@@ -55,6 +55,7 @@ export async function finishBook(id: number, rating: number, notes: string | nul
     finished_at: getLogicalDate(),
   })
   if (wasFirstEver) triggerCompanionMessage('first_milestone')
+  else triggerCompanionMessage('book_finished', { book: (await db.books.get(id))?.title ?? 'your book' })
 }
 
 

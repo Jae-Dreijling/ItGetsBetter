@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
+import { triggerCompanionMessage } from '../lib/companionMessenger'
 
 const COMPANION_CATS_KEY = 'igb_vault_companion_cats'
 
@@ -31,6 +32,7 @@ export function useMotivationNotes(category?: string) {
 
 export async function addMotivationNote(category: string, text: string, photo: Blob | null = null) {
   await db.motivationNotes.add({ category, text, photo, created_at: nowISO() })
+  triggerCompanionMessage('reason_added')
 }
 
 export async function deleteMotivationNote(id: number) {

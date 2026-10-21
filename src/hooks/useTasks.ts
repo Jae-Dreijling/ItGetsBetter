@@ -89,6 +89,18 @@ export async function toggleTask(id: number) {
   if (completing) {
     await awardPoints('task_completed', id)
     if (wasFirstEver) triggerCompanionMessage('first_milestone')
+    else await reactToTaskDone(task)
+  }
+}
+
+// A finished project, or nothing open at all any more.
+async function reactToTaskDone(task: { project_id: number | null; parent_task_id: number | null }) {
+  const open = await db.tasks.filter(t => !t.is_completed && t.parent_task_id === null).toArray()
+  if (task.parent_task_id !== null) return
+  if (open.length === 0) triggerCompanionMessage('tasks_all_done')
+  else if (task.project_id !== null && !open.some(t => t.project_id === task.project_id)) {
+    const project = await db.projects.get(task.project_id)
+    if (project) triggerCompanionMessage('project_done', { project: project.name })
   }
 }
 

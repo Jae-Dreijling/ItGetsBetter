@@ -14,6 +14,7 @@ export async function checkAndUnlockAchievements(): Promise<string[]> {
   const existing = await db.achievements.toArray()
   const existingIds = new Set(existing.map(a => a.trigger_type + ':' + a.trigger_value))
   const newlyUnlocked: string[] = []
+  let showedUp = 0
 
   for (const def of ACHIEVEMENT_LIBRARY) {
     const key = def.trigger_type + ':' + def.trigger_value
@@ -30,10 +31,13 @@ export async function checkAndUnlockAchievements(): Promise<string[]> {
         unlocked_at: nowISO(),
       })
       newlyUnlocked.push(def.name)
+      if (def.trigger_type === 'app_open_days') showedUp = def.trigger_value
     }
   }
 
-  if (newlyUnlocked.length > 0) triggerCompanionMessage('achievement_unlocked')
+  // Days you opened the app get their own line: a total, never a streak.
+  if (showedUp) triggerCompanionMessage('streak_milestone', { days: showedUp })
+  else if (newlyUnlocked.length > 0) triggerCompanionMessage('achievement_unlocked')
 
   return newlyUnlocked
 }
