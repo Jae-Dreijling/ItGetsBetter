@@ -21,6 +21,10 @@ import {
 import { startPrank } from '../lib/companionPranks'
 import { useObjectUrl } from '../hooks/useObjectUrl'
 import { closenessTier } from '../lib/closeness'
+import { memoryValues } from '../lib/companionMemory'
+import { onThisDay } from '../lib/onThisDay'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../db'
 import { nicknameFor, speakingName } from '../lib/nicknames'
 
 const POSITION_KEY = 'igb_companion_position'
@@ -125,6 +129,12 @@ export default function FloatingCompanion() {
   const affinityRef = useRef(affinity)
   const traitsRef = useRef(traitsOf(companion))
   const companionIdRef = useRef(companion?.id)
+  const memories = useLiveQuery(
+    async () => (companion?.id === undefined ? [] : db.companionMemories.where('companion_id').equals(companion.id).toArray()),
+    [companion?.id],
+  )
+  const memoriesRef = useRef<Record<string, string>>({})
+  useEffect(() => { memoriesRef.current = memoryValues(memories ?? []) }, [memories])
   const pathRef = useRef(location.pathname)
   const positionRef = useRef(position)
   useEffect(() => { messagesRef.current = effectiveMessages }, [effectiveMessages])
@@ -158,7 +168,8 @@ export default function FloatingCompanion() {
     const bond = affinityRef.current
     const nickname = id === undefined ? null : nicknameFor(messagesRef.current, traitsRef.current, closenessTier(bond?.affinity, bond?.is_lover), id)
     const name = speakingName(nameRef.current, nickname, Math.random())
-    const msg = getCompanionMessage(messagesRef.current, event, name, { nickname: nickname ?? nameRef.current, ...values }, traitsRef.current)
+    // What it remembers about you can turn up in any line ({food}, ...).
+    const msg = getCompanionMessage(messagesRef.current, event, name, { ...memoriesRef.current, nickname: nickname ?? nameRef.current, ...values }, traitsRef.current)
     setMessage(msg)
     if (messageTimer.current) clearTimeout(messageTimer.current)
     messageTimer.current = setTimeout(() => setMessage(null), 5000)
@@ -190,6 +201,19 @@ export default function FloatingCompanion() {
     if (isGoodnightTimeRef.current && Math.random() < 0.6) {
       showMessage('goodnight')
       return
+    }
+
+    // Something it remembers about you, or a win from this day in the past.
+    if (Math.random() < 0.25) {
+      const past = await onThisDay()
+      if (past) {
+        showMessage('on_this_day', past)
+        return
+      }
+      if (Object.keys(memoriesRef.current).length > 0) {
+        showMessage('memory_mention')
+        return
+      }
     }
 
     if (Math.random() < 0.2) {

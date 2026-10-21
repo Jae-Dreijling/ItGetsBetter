@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone, NonScaleCheck, CravingEvent, FutureLetter, Folder } from './types'
+import type { UserProfile, WeightEntry, MealEntry, MeasurementEntry, AppOpenLog, Label, Habit, HabitCompletion, Task, Project, WaterEntry, ExerciseEntry, MoodEntry, MoodTag, SleepEntry, Medicine, MedicineLog, PointsTransaction, Reward, RewardClaim, Achievement, ProgressPhoto, GroceryList, GroceryItem, Book, Companion, MotivationNote, GameState, GameQuest, GameCompanionAffinity, GameCustomQuestion, FastingRecord, PersonalityGroup, Win, Recipe, MealPlanItem, AbstinenceCounter, AbstinenceEvent, Person, SocialContact, GoalTrack, GoalMilestone, NonScaleCheck, CravingEvent, FutureLetter, Folder, CompanionMemory } from './types'
 import { mergeQuotesIntoCompanions } from './lib/quotesMigration'
 import { autoFromText } from './lib/goals'
 
@@ -57,6 +57,7 @@ export class ItGetsBetterDB extends Dexie {
   cravingEvents!: EntityTable<CravingEvent, 'id'>
   futureLetters!: EntityTable<FutureLetter, 'id'>
   folders!: EntityTable<Folder, 'id'>
+  companionMemories!: EntityTable<CompanionMemory, 'id'>
 
   // The name is only overridden in tests, to run upgrades on a separate database.
   constructor(name = 'ItGetsBetter') {
@@ -607,6 +608,11 @@ export class ItGetsBetterDB extends Dexie {
     // items without a folder_id simply have no folder.
     this.version(26).stores({
       folders: '++id, area',
+    })
+
+    // Each companion's own memories of you (step 11d). New table only.
+    this.version(27).stores({
+      companionMemories: '++id, companion_id',
     })
 
     this.on('populate', () => {

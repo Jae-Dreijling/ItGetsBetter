@@ -106,6 +106,7 @@ export async function addCompanion(data: {
   personality_group_id?: number | null
   messages?: Partial<CompanionMessages>
   traits?: CompanionTraits
+  about?: Record<string, string>
 }) {
   return db.companions.add({
     name: data.name,
@@ -115,6 +116,7 @@ export async function addCompanion(data: {
     personality_group_id: data.personality_group_id ?? null,
     messages: { ...EMPTY_MESSAGES, ...data.messages },
     ...(data.traits && { traits: data.traits }),
+    ...(data.about && { about: data.about }),
     created_at: nowISO(),
   })
 }
@@ -126,6 +128,7 @@ export async function updateCompanion(id: number, changes: Partial<{
   personality_group_id: number | null
   movement: import('../lib/companionMotion').CompanionMovement
   traits: CompanionTraits
+  about: Record<string, string>
 }>) {
   await db.companions.update(id, changes)
 }

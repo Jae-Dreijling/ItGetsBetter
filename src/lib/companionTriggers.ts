@@ -1,5 +1,6 @@
 import type { CompanionMessages } from '../types'
 import type { Trait } from './companionPersonality'
+import { MEMORY_MENTIONS, MEMORY_TOPICS } from './companionMemory'
 
 // Every moment the companion can react to (COMPANION-PLAN 11a): its label in
 // the message editor, its group, the placeholders its lines can use and, for
@@ -27,13 +28,15 @@ export const EXTRA_TRIGGERS = [
   'pickup_refused', 'put_down', 'thrown', 'tapped_a_lot', 'tapped_sleepy', 'tapped_shy', 'jumped_in', 'prank_revealed', 'rolled_in',
   // Nicknames the companion picks for you, per closeness (11c)
   'nickname_friend', 'nickname_close', 'nickname_lover',
+  // Memory (11d)
+  'memory_mention', 'on_this_day',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
 export type TriggerKey = keyof CompanionMessages
 
 export const TRIGGER_GROUPS = [
-  'Everyday', 'Handling', 'Nicknames for you', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
+  'Everyday', 'Handling', 'Nicknames for you', 'Memory', 'Logging', 'Habits & tasks', 'Goals & progress', 'Abstinence & cravings', 'People', 'Motivation', 'App & tools', 'Game', 'Reminders',
 ] as const
 
 export interface TriggerInfo {
@@ -156,6 +159,16 @@ export const TRIGGERS: TriggerInfo[] = [
     key: 'nickname_lover', label: 'Nicknames as lovers (Journey)', group: 'Nicknames for you',
     defaults: ['love', 'darling', 'sweetheart'],
     traitDefaults: { playful: ['cutie', 'my heart'], proud: ['my beloved', 'my treasure'], shy: ['m-my love', 'sweetheart'], sassy: ['babe', 'gorgeous'] },
+  },
+
+  // Memory (11d)
+  {
+    key: 'memory_mention', label: 'Mentions something it remembers about you', group: 'Memory',
+    placeholders: MEMORY_TOPICS.map(t => t.key), defaults: MEMORY_MENTIONS,
+  },
+  {
+    key: 'on_this_day', label: 'On this day (a win from before)', group: 'Memory', placeholders: ['when', 'text'],
+    defaults: ['{when} today you wrote this win: “{text}”', 'Remember this, {name}? {when}: “{text}”', 'On this day, {when}: “{text}”. Look how far you are now.'],
   },
 
   // Logging

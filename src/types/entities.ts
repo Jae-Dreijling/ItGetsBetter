@@ -352,6 +352,19 @@ export interface Companion {
   folder_id?: number | null
   // Personality (lib/companionPersonality). Missing means the defaults.
   traits?: Partial<CompanionTraits>
+  // Its own favourites ("About me"), by memory topic (lib/companionMemory).
+  about?: Record<string, string>
+  created_at: string
+}
+
+// Something one companion remembers about you (lib/companionMemory). Only
+// that companion knows it.
+export interface CompanionMemory {
+  id?: number
+  companion_id: number
+  // A memory topic, e.g. 'food'.
+  topic: string
+  answer: string
   created_at: string
 }
 

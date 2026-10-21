@@ -3,6 +3,7 @@ import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db'
 import { closenessTier, TIER_LABELS } from '../../lib/closeness'
+import { MEMORY_TOPICS } from '../../lib/companionMemory'
 import { TRAIT_INFO, LEVEL_LABELS, traitsOf, type CompanionTraits, type TraitLevel } from '../../lib/companionPersonality'
 import { useNavigate } from 'react-router'
 import { Plus, Trash2, Pencil, Camera, Sparkles } from 'lucide-react'
@@ -237,6 +238,10 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
   })
   const personalityGroups = usePersonalityGroups()
   const [traits, setTraits] = useState<CompanionTraits>(traitsOf(initial))
+  const [about, setAbout] = useState<Record<string, string>>(initial?.about ?? {})
+  const [showAbout, setShowAbout] = useState(false)
+  // Only filled-in favourites are kept.
+  const aboutToSave = Object.fromEntries(Object.entries(about).map(([k, v]) => [k, v.trim()]).filter(([, v]) => v))
 
   useEffect(() => {
     if (initial?.id) {
@@ -261,10 +266,10 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
     if (!name.trim()) return
     let savedId: number
     if (initial?.id) {
-      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits })
+      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, about: aboutToSave })
       savedId = initial.id
     } else {
-      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits }) as number
+      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, about: aboutToSave }) as number
     }
     await setCompanionHomeRegion(savedId, homeRegion)
     await updateLoverDialogue(savedId, loverDialogue)
@@ -347,6 +352,29 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Its own favourites, for answering yours (lib/companionMemory) */}
+      <div className="mb-4">
+        <button type="button" onClick={() => setShowAbout(!showAbout)} className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted">
+          About {name.trim() || 'this companion'} (optional)
+          <span>{showAbout ? '−' : '+'}</span>
+        </button>
+        {showAbout && (
+          <div className="mt-2 space-y-1.5">
+            <p className="text-xs text-muted">Its own favourites. When it asks for yours, it answers with its own.</p>
+            {MEMORY_TOPICS.map(t => (
+              <label key={t.key} className="flex items-center gap-2 text-sm text-text-primary">
+                <span className="w-36 shrink-0 text-xs text-muted">{t.label}</span>
+                <input
+                  value={about[t.key] ?? ''}
+                  onChange={e => setAbout({ ...about, [t.key]: e.target.value })}
+                  className="min-w-0 flex-1 rounded-lg border border-primary-100 bg-surface px-2.5 py-1.5 text-sm text-text-primary focus:border-primary-400 focus:outline-none dark:border-primary-900"
+                />
+              </label>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Personality group */}

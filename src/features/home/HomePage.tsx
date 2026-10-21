@@ -14,6 +14,7 @@ import ReadyLetterLine from '../../components/today/ReadyLetterLine'
 import RunningFastLine from '../../components/today/RunningFastLine'
 import HabitPromptCard from '../../components/today/HabitPromptCard'
 import CompanionQuestionCard from '../../components/today/CompanionQuestionCard'
+import WeeklyNoteCard from '../../components/today/WeeklyNoteCard'
 import { openSideMenu } from '../../lib/sideMenu'
 import { isOn } from '../../lib/features'
 import { wasStarterOffered } from '../../lib/starterHabits'
@@ -67,6 +68,7 @@ export default function HomePage() {
 
         <WelcomeBackCard />
         <HabitPromptCard />
+        <WeeklyNoteCard />
         <CompanionQuestionCard />
         <ReadyLetterLine />
         <RunningFastLine />

@@ -55,8 +55,8 @@ export const RESET_AREAS: ResetArea[] = [
   },
   {
     id: 'companions', name: 'Companions', emoji: '💬',
-    removes: 'every companion and personality group you made or changed; the built-in companion and the default groups come back',
-    tables: ['companions', 'personalityGroups', 'gameCompanionAffinity'],
+    removes: 'every companion and personality group you made or changed, and what they remember about you; the built-in companion and the default groups come back',
+    tables: ['companions', 'personalityGroups', 'gameCompanionAffinity', 'companionMemories'],
     folders: 'companions',
     storage: [SEEDED_KEY, 'igb_session_companion_id'],
     reloadAfter: true,

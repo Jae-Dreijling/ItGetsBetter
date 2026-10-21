@@ -28,6 +28,9 @@ export interface CompanionFileEntry {
   folder?: string | null
   // Personality (lib/companionPersonality); optional, missing means the defaults.
   traits?: CompanionTraits
+  // Its own favourites by memory topic (lib/companionMemory); optional. What
+  // it remembers about you stays personal and is never exported.
+  about?: Record<string, string>
 }
 
 export interface CompanionFile {
@@ -94,6 +97,7 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
         movement: c.movement ?? 'calm',
         folder: folderOf(c.folder_id)?.name ?? null,
         traits: traitsOf(c),
+        about: c.about ?? {},
       }
     })),
   }
@@ -128,6 +132,7 @@ export function parseCompanionFile(raw: string): ParsedCompanions {
         movement: c.movement === 'still' || c.movement === 'lively' ? c.movement : 'calm',
         folder: typeof c.folder === 'string' && c.folder.trim() ? c.folder.trim() : null,
         traits: cleanTraits(c.traits),
+        about: isObj(c.about) ? Object.fromEntries(Object.entries(c.about).filter((e): e is [string, string] => typeof e[1] === 'string' && e[1].trim() !== '')) : undefined,
       }
     })
   if (companions.length === 0) return { ok: false, error: 'This file has no companions in it.' }
@@ -213,6 +218,7 @@ export async function applyCompanionImport(plan: CompanionImportPlan): Promise<n
         movement: c.movement ?? 'calm',
         folder_id: c.folder ? folderId.get(key(c.folder)) ?? null : null,
         ...(c.traits && { traits: c.traits }),
+        ...(c.about && Object.keys(c.about).length > 0 && { about: c.about }),
         created_at: nowISO(),
       }) as number
       if (c.lover_dialogue.length > 0 || c.home_region) {
