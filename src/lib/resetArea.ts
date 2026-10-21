@@ -63,7 +63,7 @@ export const RESET_AREAS: ResetArea[] = [
   },
 ]
 
-function storageKeysFor(patterns: string[]): string[] {
+export function storageKeysFor(patterns: string[]): string[] {
   const keys: string[] = []
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i)
