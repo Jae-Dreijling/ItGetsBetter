@@ -3,6 +3,7 @@ import { format } from 'date-fns'
 import { saveCounter, logEvent, useCounterEvents, useNow } from '../../hooks/useAbstinence'
 import { abstinenceStats, slipMessage, SLIP_CONTEXTS } from '../../lib/abstinence'
 import type { AbstinenceCounter } from '../../types'
+import ReasonCard from '../../components/ReasonCard'
 
 const EMOJIS = ['🌿', '🍫', '🍔', '🍷', '🚭', '📱', '🎮', '🛒', '☕', '🎲']
 const inputClass = 'w-full rounded-lg border border-primary-100 bg-surface px-3 py-2.5 text-text-primary placeholder:text-muted focus:border-primary-400 focus:outline-none dark:border-primary-900'
@@ -149,6 +150,7 @@ export function CravingHelper({ counter, onDone, onSlip }: { counter: Abstinence
           <p className="text-sm text-text-primary">{counter.why}</p>
         </div>
       )}
+      {!counter.why && <ReasonCard seed={`abstinence:${startedAt}`} />}
       <p className="text-sm text-muted">Cravings usually peak and fade within minutes. Breathe, get some water, move a little. You don't have to decide anything yet.</p>
       <div className="text-center">
         <p className="text-4xl font-bold tabular-nums text-text-primary">{mm}:{ss}</p>

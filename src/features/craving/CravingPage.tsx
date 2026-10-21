@@ -10,6 +10,7 @@ import { useNow } from '../../hooks/useAbstinence'
 import { useFeatureTiers } from '../../hooks/useFeatures'
 import { isOn } from '../../lib/features'
 import { TRIGGERS, WAIT_MS, OUTCOME_TEXT, insteadList, triggerCounts, type CravingOutcome } from '../../lib/craving'
+import ReasonCard from '../../components/ReasonCard'
 
 type Step = 'hungry' | 'name' | 'wait' | 'decide' | 'done'
 
@@ -142,6 +143,7 @@ function Wait({ trigger, instead, onPick, onReady }: { trigger: string | null; i
     <div className="space-y-3">
       <p className="text-lg font-semibold text-text-primary">Give it ten minutes{trigger && trigger !== 'something else' ? ` (${trigger})` : ''}.</p>
       <p className="text-sm text-muted">Cravings rise and fall like a wave. Pick something to do meanwhile; you don't have to decide anything yet.</p>
+      <ReasonCard prefer={['weight', 'health']} seed={`craving:${startedAt}`} />
       <div className="text-center">
         <p className="text-4xl font-bold tabular-nums text-text-primary">{mm}:{ss}</p>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface">

@@ -9,6 +9,7 @@ import PageContainer from '../../components/layout/PageContainer'
 import { useTodaysMood, useMoodHistory, useMoodTags, addMoodEntry, addMoodTag, deleteMoodTag } from '../../hooks/useMood'
 import DeleteEntryButton from '../../components/DeleteEntryButton'
 import { deleteEntry } from '../../lib/deleteEntry'
+import ReasonCard from '../../components/ReasonCard'
 
 
 export default function MoodPage() {
@@ -71,6 +72,9 @@ export default function MoodPage() {
                   <span key={tag} className="rounded-full bg-surface px-2.5 py-0.5 text-xs text-muted">{tag}</span>
                 ))}
               </div>
+            )}
+            {latestMood.score <= 2 && (
+              <ReasonCard prefer={['general', 'health']} seed={`mood:${latestMood.date}`} intro="Something to hold onto" className="mt-3 text-left" />
             )}
           </div>
         )}
