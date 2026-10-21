@@ -32,8 +32,9 @@ export default function AppShell() {
       </Suspense>
       <BottomTabs />
       {/* Lives in the app layout, so it never covers first-time setup or the
-          feature picker, and stays mounted while navigating between pages. */}
-      <FloatingCompanion />
+          feature picker, and stays mounted while navigating between pages.
+          The progress walk has its own companion on the trail. */}
+      {location.pathname !== '/me/replay' && <FloatingCompanion />}
     </div>
   )
 }
