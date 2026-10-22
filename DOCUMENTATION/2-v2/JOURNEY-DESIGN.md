@@ -41,6 +41,10 @@ Everything is made on the phone with simple, old techniques: tiny, offline, and 
 
 The game mode opens here. It holds the portals, the Guild Hall rooms (moved in from today's Journey), your party picker, the quest board, the companions who are around (their closeness, visits, Lovers), collections, and the well and other things real life fills. A new world's portal opens with a key.
 
+### Homes (added 2026-10-22)
+
+The hub is **your home**: you upgrade it slowly (rooms, furniture, decorations) and invite companions over for activities and sleepovers (adults only). Every companion has a home in its own world (some shared, like the Obey Me brothers' House of Lamentation), and you can only visit it once you've **freed** it: discovered its region and defeated that region's boss. Travelers (companions whose world isn't in the game yet) have no home to visit and turn up in public places like an inn or café. Details: [COMPANION-SOCIETY](COMPANION-SOCIETY.md#homes-added-2026-10-22).
+
 ### Worlds behind the portals
 
 Each world has a region map to explore, its own story chapters, encounters and a boss or two. **Equestria comes first** (today's Ponyville and Nightmare Moon move into it); the Devildom, South Park and the Citadel follow one at a time. A world's companions feel most at home there and have extra lines in their own world.

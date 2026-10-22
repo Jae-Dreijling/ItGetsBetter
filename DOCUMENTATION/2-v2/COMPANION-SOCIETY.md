@@ -68,6 +68,17 @@ Companions invite you to do things, and the society keeps its own calendar and f
 - **Roleplay with real life:** you say yes, and when the time comes you do the activity yourself in real life (game on your own, make an iced coffee, watch a film). The app plays a small cutscene of the two of you (or the group) doing it, and it lands in the feed and in the companion's memories ("Remember our game night?"). Real-life links count where they fit (a walk logs as a walk).
 - **Rulebook:** saying no or "maybe later" is always fine and in character; a plan you miss is never a problem ("We'll go another time!"), nothing is counted against you, and plans pause on a hard day except for gentle ones (a quiet tea together). Reminders for a plan are optional and gentle, like the other notifications.
 
+## Homes (added 2026-10-22)
+
+Every companion lives somewhere, and you can visit them at home, once their home is free:
+
+- **Their own homes, from canon by default.** Some share: the seven Obey Me brothers live together in the House of Lamentation; Diavolo in the Demon Lord's Castle; Simeon, Luke and Solomon in Purgatory Hall; Celestia and Luna in Canterlot Castle; Twilight and Spike in her castle; the Smiths (Rick, Morty, Summer, Beth, Jerry) in one house; Stan and Randy in the Marsh house. Others live alone: Fluttershy's cottage, Rarity's boutique, Applejack's farm, Pinkie at Sugarcube Corner, Rainbow Dash's cloud house, Cadance in the Crystal Empire, Discord in his own chaos realm; each South Park kid at their family's house.
+- **Adults can move in together** when they get along well (a high relationship score), and move apart again if they fall out. Minors always live with their canon family; they never move in with someone else.
+- **Visiting a home needs it to be freed:** its region must be discovered on the Journey map and that region's big boss defeated. Until then the home is shown as "not reachable yet" (never as something you failed at).
+- **Travelers have no home to visit.** A companion whose world isn't in the game yet (the existing "traveler" home region) only turns up in places you already know: visiting another companion, or at a public inn or café. When its world is added later, it gets a home like the others.
+- **Your own home:** you have a home too (the Journey hub), which you upgrade slowly (rooms, furniture, decorations, paid with what real life earns). You can invite companions over for activities (game night, movie night, cooking, a picnic in your garden) and **sleepovers**. Sleepovers are for adults only; minors come to daytime and evening activities.
+- Visiting someone's home or having them over uses the same visit, plan and activity system as the rest of the society (invitations, cutscenes, the feed, memories).
+
 ## The ideas, one by one
 
 | # | Idea | Possible? | How it fits |
@@ -81,9 +92,9 @@ Companions invite you to do things, and the society keeps its own calendar and f
 | 7 | **Games between companions** (rock-paper-scissors, races, cards, trivia, arm wrestling; cooperative tower or puzzle) with consequences | Yes | Short scenes that play themselves with a weighted result; winners cheer, Fiery ones demand a rematch, Caring ones console. No betting. |
 | 8 | **Gifts and belongings between companions** (also borrowing and returning) | Yes | Small items per character (books from Brainy ones, odd things from Chaotic ones); recorded in the feed. |
 | 9 | **Locations** (living room, garden, café, library, park, music room, game room, workshop…) | Yes, in the hub | The hub's rooms (today's Guild Hall rooms grow into these). Two friends can "leave for the café" and come back later. |
-| 10 | **Social reactions to you** (two wave together, one introduces a visitor, shows off a gift, asks you to choose an activity) | Yes, carefully | Only occasional and only good news; "what happened while you were away" is told as their fun, never as something you missed. |
+| 10 | **Social reactions to you** (every one of them, see the checklist below) | Yes, all of them; the user especially likes these | Short and happy; "what happened while you were away" is told as their fun, never as something you missed. |
 | 11 | **A social feed** (activity log, friendship overview, recent visitors, memories, collection of interactions seen) | Yes | A page (and a corner of the hub). What happened while the app was closed is worked out when you open it, a few items at most. |
-| 12 | **Mischief and disagreements** with resolutions (apology, handshake, a mediator, a game, a gift) | Yes, decided: light plus occasional real drama | Real drama runs over a day or two and always resolves; never involves you, never needs you. Chosen by relationship, category clashes and canon dynamics. |
+| 12 | **Mischief and disagreements** with resolutions (apology, handshake, a mediator, a game, a gift) | Yes, decided: light plus occasional real drama | Real drama runs over a day or two and doesn't always resolve (they can become enemies); about you only in the flattering ways above, never something you need to fix. Chosen by relationship, category clashes and canon dynamics. |
 | 13 | **Hidden and rare interactions**, a discovery collection | Yes | Unique pair or trio interactions, birthday specials, rivals cooperating; the collection shows which you've seen. |
 | 14 | **Socially aware visitor picking** | Yes, easy | Friends of whoever is on screen come more often; recently seen ones less; ones with something new to show a bit more. Still random enough to surprise. |
 | 15 | **Roles in group activities** (organiser, enthusiast, reluctant one, troublemaker) | Yes | Picked when an activity starts, from categories; one activity template gives many variations. |
@@ -104,4 +115,43 @@ What changes from the source: no limbs or body animations (movement and emoji pr
 | S6 | **Group activities in the hub's rooms** (tea party, movie night, group nap, talent show) with roles, **up to 7 at once**, friend groups found together | L | With JOURNEY-DESIGN J2 (the hub) |
 | S7 | **Real drama arcs (not always resolved: companions can become enemies) and romance between companions** (adults with adults, minors with minors and innocent only), couples that include you, **jealousy and protectiveness over you** (above) | L | Needs S2, S4 |
 | S8 | **Rare and unique interactions, discovery collection, social milestones, weekly and seasonal events** | L, ongoing | Content grows over time |
+| S10 | **Homes**: everyone's home (shared or alone), moving in together (adults), visiting homes once their region is freed in the Journey, travelers only in public places, your own home to upgrade, with sleepovers (adults) and activities | L | Needs the Journey hub (J2) and regions with bosses (J7); your home is the hub |
 | S9 | **Plans with you** (above): invitations from one companion or a friend group, their own plans, a calendar, the feed as a little social network, roleplay cutscenes when you do the activity in real life | L | Needs S2 (relationships) and S5 (feed); dates only between adults |
+
+## Every idea from the source, checked
+
+All of it is taken into consideration (the user asked for everything to count). ✓ = fits as described; the notes say where.
+
+**1. Relationships:** ✓ best friends ✓ friends ✓ rivals ✓ enemies ✓ crushes (age rules) ✓ partners (age rules) ✓ siblings ✓ mentor and student ✓ acquaintances ✓ celebrity and fan; ✓ predefined, random or unlocked; ✓ a meeting with greeting, sitting together, one getting distracted and leaving, waving goodbye; ✓ rivals rolling their eyes and walking off (S2, S3, S4).
+
+**2. Group activities:** ✓ tea party ✓ picnic ✓ board games ✓ dance party ✓ movie night ✓ group nap ✓ storytelling ✓ music session ✓ exercise session ✓ photography ✓ hide-and-seek ✓ talent show ✓ group celebration ✓ gossip session ✓ crafting; ✓ spontaneous (a companion invites a friend who is around); ✓ per personality (shy watches, energetic starts the dance, sleepy falls asleep in the movie, competitive tries to win, mischievous cheats, helpful cleans up) (S3 small, S6 in the hub).
+
+**3. Visits:** ✓ casual ✓ to see a friend ✓ group ✓ surprise ✓ activity invitation ✓ sleepover (adults) ✓ following a friend around ✓ goodbye visit; arrivals: ✓ from the side ✓ dropping from the top ✓ carrying a bag (emoji) ✓ peeking over the edge ✓ with a friend ✓ running to a favourite ✓ knocking on a tiny door; departures: ✓ waving ✓ falling asleep and fading ✓ walking off ✓ leaving with a friend ✓ being carried away by another ✓ running off after a playful argument; ✓ visit history (S3, S5).
+
+**4. Social personality:** ✓ sociability ✓ energy ✓ independence ✓ affection ✓ mischief ✓ shyness ✓ curiosity ✓ competitiveness ✓ sleepiness ✓ generosity, worked out from the 7 traits, movement and the category; ✓ chances, never certainties.
+
+**5. Growth over time:** ✓ strangers → acquaintances → friends → close friends → best friends ✓ scores per interaction (greeting, conversation, game, gift, group activity, disagreement, repeated time together) ✓ unlocks per level (sitting together, gifts, special greetings, unique animations) ✓ passive, never a chore; shared memories: ✓ first meeting ✓ first group activity ✓ becoming best friends ✓ winning a competition ✓ a special gift ✓ a seasonal event ✓ "Remember when we had that picnic?"; milestones: ✓ first friendship ✓ first gathering ✓ five activities ✓ ten visits ✓ three at one event ✓ best friends; rewards: ✓ animations ✓ lines ✓ decorations ✓ social titles ✓ activities ✓ visitor behaviours (S2, S5, S8).
+
+**6. Calendar and routines:** ✓ morning stretching and greetings ✓ late-morning chatting and games ✓ afternoon group activities and competitions ✓ evening quiet talks and music ✓ night sleeping and late visitors; daily: ✓ morning greetings ✓ afternoon game time ✓ evening gathering ✓ night sleepover; weekly: ✓ friendship day ✓ talent show ✓ tournament ✓ visiting day ✓ special gathering; seasonal: ✓ winter ✓ spring picnics ✓ summer parties ✓ autumn ✓ birthdays and anniversaries (S6, S8, S9).
+
+**7. Games between companions:** ✓ rock-paper-scissors ✓ racing ✓ cards ✓ chess (decorative) ✓ dance competition ✓ trivia ✓ hide-and-seek ✓ treasure hunt ✓ arm wrestling ✓ obstacle course; cooperative: ✓ tower ✓ puzzle ✓ collecting ✓ exploring ✓ catching falling things ✓ decorating; consequences: ✓ winners celebrate ✓ losers are disappointed ✓ rematch demands ✓ generous ones congratulate ✓ friends console (S4).
+
+**8. Gifts and belongings:** ✓ flowers ✓ snacks ✓ books ✓ toys ✓ hats ✓ decorations ✓ handmade gifts ✓ collectibles; ✓ the whole give-and-react flow ✓ gifts that fit the giver (books from Brainy, odd things from Chaotic) ✓ borrowing and returning (S4).
+
+**9. Locations:** ✓ living room ✓ garden ✓ café ✓ library ✓ park ✓ beach ✓ playground ✓ bedroom ✓ music room ✓ game room ✓ workshop ✓ picnic area, with their activities; ✓ two friends leaving for the café and coming back later (S6, homes).
+
+**10. Social reactions to you:** ✓ two companions wave at you together ✓ one brings another over to meet you ✓ one shows off a gift it received ✓ a group celebrates when you open the app (now and then, not every time) ✓ one introduces a new visitor ✓ one looks a little disappointed when its game is interrupted (then shrugs it off; never a guilt trip) ✓ one asks you to choose between two activities ✓ a small summary of what happened while you were away (their fun, never "you missed"); ✓ background behaviour versus things you start by tapping (S3, S5).
+
+**11. Social feed:** ✓ the activity log with times ✓ portraits ✓ short descriptions ✓ replaying an interaction ✓ friendship overview ✓ recent visitors ✓ group activity history ✓ memories ✓ collection of interactions seen (S5, S9).
+
+**12. Mischief and disagreements:** ✓ stealing a seat ✓ arguing over a toy ✓ interrupting a conversation ✓ trying to impress and failing ✓ pranks ✓ rivals competing for attention ✓ jealousy when a best friend spends time with someone else ✓ trying to join and being ignored at first ✓ disagreeing about which game ✓ knocking over what another built; resolutions: ✓ apology ✓ handshake ✓ a third one mediating ✓ settling it with a game ✓ a gift ✓ walking away and coming back later ✓ (added) sometimes not resolving at all: enemies (S4, S7).
+
+**13. Hidden and rare:** ✓ special greetings per pair ✓ a rival always challenging the same one to a race ✓ synchronised pairs ✓ falling asleep when a particular friend appears ✓ three particular companions together ✓ a rare visitor after many visits ✓ unlocked at best friends ✓ birthday celebrations ✓ five-companion group moments ✓ a shy one starting a dance party ✓ rivals cooperating ✓ a sleepy one suddenly full of energy ✓ a discovery collection (S8).
+
+**14. Visitor picking:** ✓ base chance ✓ friendship with who's on screen ✓ time since last seen ✓ something new to show ✓ fits the activity going on ✓ special events ✓ not too often; ✓ controlled unpredictability (S3).
+
+**15. Roles in groups:** ✓ organiser ✓ enthusiast ✓ reluctant one ✓ troublemaker, picked when an activity starts (S6).
+
+**16. How to build it:** ✓ companion profiles ✓ relationship manager ✓ activity scheduler ✓ interaction system ✓ events and memory ✓ social interface; ✓ data-driven ✓ templates ✓ a state machine (idle, wandering, observing, approaching, socialising, playing, sleeping, visiting, leaving, reacting) ✓ store only what matters ✓ three content layers.
+
+**17 and 18. Priorities and the first version:** followed in the build order above (relationships and pair interactions first, then groups, the feed, growth and unique moments).
