@@ -263,89 +263,81 @@ const MONTHLY_TEMPLATES: QuestTemplate[] = [
   { title: 'Steady', description: 'Log your weight 3 times this month.', objective_type: 'log_weight', objective_target: 3, gold_reward_full: 40, gold_reward_safe: 20 },
 ]
 
-function addDays(date: string, days: number): string {
-  const d = new Date(date)
-  d.setDate(d.getDate() + days)
-  return d.toISOString().split('T')[0]
+// Quest periods are calendar weeks (Monday to Sunday) and calendar months.
+// Dates are worked out at noon UTC so the local time zone can't shift a day.
+function shiftDays(date: string, days: number): string {
+  const d = new Date(`${date}T12:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
 }
 
-function endOfMonth(date: string): string {
-  const d = new Date(date)
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0]
+export function questPeriod(today: string, weekly: boolean): { start: string; end: string } {
+  if (weekly) {
+    const weekday = (new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7 // Monday = 0
+    const start = shiftDays(today, -weekday)
+    return { start, end: shiftDays(start, 6) }
+  }
+  const [y, m] = today.split('-').map(Number)
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate()
+  return { start: `${today.slice(0, 7)}-01`, end: `${today.slice(0, 7)}-${String(last).padStart(2, '0')}` }
 }
 
-export async function generateQuestsIfNeeded(): Promise<void> {
+export const QUESTS_PER_PERIOD = 3
+
+// Keeps the board fresh, so it never needs a tap: quests whose week or month
+// is over are closed, and each new week and month gets its three quests.
+// Finished quests count for their own week or month, so finishing early
+// doesn't bring extra ones; new ones come with the next week or month.
+// Runs when the app opens and when the Journey opens; calls at the same time
+// share one run, so no quest is added twice.
+let generating: Promise<void> | null = null
+export function generateQuestsIfNeeded(): Promise<void> {
+  generating ??= fillQuestBoard().finally(() => { generating = null })
+  return generating
+}
+
+async function fillQuestBoard(): Promise<void> {
   const state = await getGameState()
   if (!state?.activated) return
 
   const today = getLogicalDate()
-  const activeQuests = await db.gameQuests.where('status').equals('active').toArray()
+  const all = await db.gameQuests.toArray()
 
-  // Expire quests past their end date
-  const expired = activeQuests.filter(q => q.end_date < today)
-  for (const q of expired) {
-    await db.gameQuests.update(q.id!, {
-      status: 'expired',
-      narrative_result: getExpiredNarrative(q.title),
-    })
+  for (const q of all.filter(q => q.status === 'active' && q.end_date < today)) {
+    await db.gameQuests.update(q.id!, { status: 'expired', narrative_result: getExpiredNarrative(q.title) })
   }
 
-  const stillActive = activeQuests.filter(q => q.end_date >= today)
-  const activeWeekly = stillActive.filter(q => q.is_weekly)
-  const activeMonthly = stillActive.filter(q => !q.is_weekly)
-  const activeObjectives = new Set(stillActive.map(q => q.objective_type))
   // New quests are only about features that are on (Rulebook 2.4).
   const tiers = await getFeatureTiers()
-  const isPossible = (t: { objective_type: GameQuestObjective }) =>
-    !activeObjectives.has(t.objective_type) && isQuestObjectiveOn(tiers, t.objective_type)
+  const running = all.filter(q => q.status === 'active' && q.end_date >= today)
+  const objectives = new Set(running.map(q => q.objective_type))
 
-  // Fill weekly slots (max 3)
-  if (activeWeekly.length < 3) {
-    const available = WEEKLY_TEMPLATES.filter(isPossible)
-    const shuffled = [...available].sort(() => Math.random() - 0.5)
-    const needed = 3 - activeWeekly.length
-    for (const t of shuffled.slice(0, needed)) {
+  for (const weekly of [true, false]) {
+    const period = questPeriod(today, weekly)
+    // This period's quests: still running, or finished within it.
+    const taken = all.filter(q => q.is_weekly === weekly && (
+      (q.status === 'active' && q.end_date >= today) || (q.status === 'claimed' && q.end_date >= period.start)
+    )).length
+    const templates = (weekly ? WEEKLY_TEMPLATES : MONTHLY_TEMPLATES)
+      .filter(t => !objectives.has(t.objective_type) && isQuestObjectiveOn(tiers, t.objective_type))
+    const shuffled = [...templates].sort(() => Math.random() - 0.5)
+    for (const t of shuffled.slice(0, Math.max(0, QUESTS_PER_PERIOD - taken))) {
       await db.gameQuests.add({
         title: t.title,
         description: t.description,
         tier: 'routine',
-        is_weekly: true,
+        is_weekly: weekly,
         objective_type: t.objective_type,
         objective_target: t.objective_target,
-        start_date: today,
-        end_date: addDays(today, 6),
+        start_date: period.start,
+        end_date: period.end,
         is_safe_mode: false,
         gold_reward: t.gold_reward_full,
         status: 'active',
         narrative_result: null,
         created_at: nowISO(),
       })
-      activeObjectives.add(t.objective_type)
-    }
-  }
-
-  // Fill monthly slots (max 6, generate up to 3 at once)
-  if (activeMonthly.length < 3) {
-    const available = MONTHLY_TEMPLATES.filter(isPossible)
-    const shuffled = [...available].sort(() => Math.random() - 0.5)
-    const needed = Math.min(3, 6 - activeMonthly.length)
-    for (const t of shuffled.slice(0, needed)) {
-      await db.gameQuests.add({
-        title: t.title,
-        description: t.description,
-        tier: 'routine',
-        is_weekly: false,
-        objective_type: t.objective_type,
-        objective_target: t.objective_target,
-        start_date: today,
-        end_date: endOfMonth(today),
-        is_safe_mode: false,
-        gold_reward: t.gold_reward_full,
-        status: 'active',
-        narrative_result: null,
-        created_at: nowISO(),
-      })
-      activeObjectives.add(t.objective_type)
+      objectives.add(t.objective_type)
     }
   }
 }

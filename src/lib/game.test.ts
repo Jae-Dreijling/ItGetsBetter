@@ -1,7 +1,49 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { db } from '../db'
 import { clearDb } from '../test/dbHelpers'
-import { updateLoverDialogue, setLoverStatus, getCompanionAffinityRecord } from './game'
+import { updateLoverDialogue, setLoverStatus, getCompanionAffinityRecord, questPeriod, generateQuestsIfNeeded } from './game'
+
+describe('quest board', () => {
+  beforeEach(async () => {
+    await clearDb()
+    await db.gameState.add({ activated: true, activated_at: null, sparks: 0, gold: 0, current_region: 'ponyville', risk_action_count: 0, last_risk_at: null })
+  })
+  afterEach(() => { vi.useRealTimers() })
+  // Midday, so the 3 AM day boundary doesn't matter.
+  const on = (date: string) => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date(`${date}T12:00:00`)) }
+
+  it('periods are calendar weeks (Monday to Sunday) and whole months, in any time zone', () => {
+    expect(questPeriod('2026-10-22', true)).toEqual({ start: '2026-10-19', end: '2026-10-25' })
+    expect(questPeriod('2026-10-25', true)).toEqual({ start: '2026-10-19', end: '2026-10-25' })
+    expect(questPeriod('2026-10-26', true)).toEqual({ start: '2026-10-26', end: '2026-11-01' })
+    expect(questPeriod('2026-10-22', false)).toEqual({ start: '2026-10-01', end: '2026-10-31' })
+    expect(questPeriod('2028-02-10', false)).toEqual({ start: '2028-02-01', end: '2028-02-29' })
+  })
+
+  it('fills the board by itself, no extra quests after finishing early, new ones next week', async () => {
+    on('2026-10-22')
+    await Promise.all([generateQuestsIfNeeded(), generateQuestsIfNeeded()])
+    let quests = await db.gameQuests.toArray()
+    expect(quests.filter(q => q.is_weekly)).toHaveLength(3)
+    expect(quests.filter(q => !q.is_weekly)).toHaveLength(3)
+    expect(quests.find(q => q.is_weekly)).toMatchObject({ start_date: '2026-10-19', end_date: '2026-10-25' })
+    expect(quests.find(q => !q.is_weekly)).toMatchObject({ start_date: '2026-10-01', end_date: '2026-10-31' })
+
+    // Finishing one this week doesn't bring a new one until Monday.
+    const done = quests.find(q => q.is_weekly)!
+    await db.gameQuests.update(done.id!, { status: 'claimed' })
+    await generateQuestsIfNeeded()
+    expect(await db.gameQuests.where('status').equals('active').count()).toBe(5)
+
+    // Next Monday: last week's open quests close, three new weekly ones arrive.
+    on('2026-10-26')
+    await generateQuestsIfNeeded()
+    quests = await db.gameQuests.toArray()
+    expect(quests.filter(q => q.is_weekly && q.status === 'expired')).toHaveLength(2)
+    expect(quests.filter(q => q.is_weekly && q.status === 'active').map(q => q.start_date)).toEqual(['2026-10-26', '2026-10-26', '2026-10-26'])
+    expect(quests.filter(q => !q.is_weekly && q.status === 'active')).toHaveLength(3)
+  })
+})
 
 describe('updateLoverDialogue', () => {
   beforeEach(clearDb)

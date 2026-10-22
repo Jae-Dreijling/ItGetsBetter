@@ -27,6 +27,7 @@ import FirstLaunchSetup from './features/setup/FirstLaunchSetup'
 import FeaturePicker from './features/setup/FeaturePicker'
 import HomePage from './features/home/HomePage'
 import { checkAutoMilestones } from './hooks/useGoals'
+import { generateQuestsIfNeeded } from './lib/game'
 
 const loadLogHubPage = () => import('./features/log/LogHubPage')
 const LogHubPage = lazy(loadLogHubPage)
@@ -266,6 +267,8 @@ export default function App() {
       }
       checkProgressionAdvancements()
       checkAutoMilestones()
+      // A new week or month brings new Journey quests.
+      generateQuestsIfNeeded()
       // Left over from v1's "current focus" card, which 2.0's spotlight replaced.
       localStorage.removeItem('igb_current_focus')
       ensureDefaultCompanion()

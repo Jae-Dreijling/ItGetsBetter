@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { Sparkles, Coins, RefreshCw, CheckCircle2, Clock, ShieldCheck, Zap, Home, Swords, Heart, Map as MapIcon } from 'lucide-react'
+import { Sparkles, Coins, CheckCircle2, Clock, ShieldCheck, Zap, Home, Swords, Heart, Map as MapIcon } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { triggerCompanionMessage } from '../../lib/companionMessenger'
-import { useGameState, useActiveQuests, useCustomQuestions, useQuestProgress, useCompanionAffinities, useCompanions } from '../../hooks/useGame'
+import { useGameState, useActiveQuests, useFinishedQuests, useCustomQuestions, useQuestProgress, useCompanionAffinities, useCompanions } from '../../hooks/useGame'
 import {
   beg, canBegToday,
   getPerformQuestion, submitPerformAnswer, canPerformToday, getPerformsToday,
@@ -524,6 +524,7 @@ export default function JourneyPage() {
   const navigate = useNavigate()
   const gameState = useGameState()
   const activeQuests = useActiveQuests()
+  const finished = useFinishedQuests()
   const customQuestions = useCustomQuestions()
   const affinities = useCompanionAffinities()
   const companions = useCompanions()
@@ -532,13 +533,14 @@ export default function JourneyPage() {
   const [begResult, setBegResult] = useState<number | null>(null)
   const [begging, setBegging] = useState(false)
   const [claimMsg, setClaimMsg] = useState<string | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
   const [visitor, setVisitor] = useState<VisitorInfo | null>(null)
   const [showVisitSheet, setShowVisitSheet] = useState(false)
   const [fortune, setFortune] = useState<StoredFortune | null>(null)
 
   useEffect(() => {
     triggerCompanionMessage('welcome_back')
+    // A new week or month may have started since the app opened.
+    generateQuestsIfNeeded()
   }, [])
 
   // Ensure row, roll for encounter, then check for daily visitor
@@ -574,12 +576,6 @@ export default function JourneyPage() {
     const earned = await beg()
     setBegResult(earned)
     setBegging(false)
-  }
-
-  async function handleRefreshQuests() {
-    setRefreshing(true)
-    await generateQuestsIfNeeded()
-    setRefreshing(false)
   }
 
   function handleClaimed() {
@@ -766,22 +762,20 @@ export default function JourneyPage() {
 
         {/* Weekly quests */}
         <div className="mb-5">
+          {finished && finished.total > 0 && (
+            <p className="mb-3 rounded-xl bg-card px-4 py-2.5 text-sm text-text-primary shadow-sm">
+              🏆 {finished.total} {finished.total === 1 ? 'quest' : 'quests'} finished so far
+            </p>
+          )}
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-muted uppercase tracking-wide">
-              Weekly Quests ({weekly.length}/3)
+              This week's quests
             </h3>
-            <button
-              onClick={handleRefreshQuests}
-              disabled={refreshing}
-              className="flex items-center gap-1 text-xs text-primary-500"
-            >
-              <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
+            {!!finished?.week && <span className="text-xs font-medium text-primary-500">✓ {finished.week} done</span>}
           </div>
           {weekly.length === 0 ? (
             <p className="rounded-xl bg-card px-4 py-6 text-center text-sm text-muted shadow-sm">
-              No weekly quests yet. Tap Refresh to generate some.
+              {finished?.week ? "All of this week's quests are done! New ones arrive on Monday." : 'New quests arrive on Monday.'}
             </p>
           ) : (
             <div className="space-y-3">
@@ -794,12 +788,15 @@ export default function JourneyPage() {
 
         {/* Monthly quests */}
         <div className="mb-5">
-          <h3 className="mb-3 text-sm font-semibold text-muted uppercase tracking-wide">
-            Monthly Quests ({monthly.length}/6)
-          </h3>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-muted uppercase tracking-wide">
+              This month's quests
+            </h3>
+            {!!finished?.month && <span className="text-xs font-medium text-primary-500">✓ {finished.month} done</span>}
+          </div>
           {monthly.length === 0 ? (
             <p className="rounded-xl bg-card px-4 py-6 text-center text-sm text-muted shadow-sm">
-              No monthly quests yet. Tap Refresh above to generate some.
+              {finished?.month ? "All of this month's quests are done! New ones arrive on the 1st." : 'New quests arrive on the 1st of the month.'}
             </p>
           ) : (
             <div className="space-y-3">

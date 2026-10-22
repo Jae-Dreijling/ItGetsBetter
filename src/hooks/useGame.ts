@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
-import { getQuestProgress } from '../lib/game'
+import { getQuestProgress, questPeriod } from '../lib/game'
+import { getLogicalDate } from '../lib/date'
 import type { GameQuest } from '../types'
 
 export function useGameState() {
@@ -13,6 +14,20 @@ export function useActiveQuests() {
   )
 }
 
+// Finished quests: all time, this week's and this month's.
+export function useFinishedQuests() {
+  return useLiveQuery(async () => {
+    const today = getLogicalDate()
+    const week = questPeriod(today, true)
+    const month = questPeriod(today, false)
+    const claimed = await db.gameQuests.where('status').equals('claimed').toArray()
+    return {
+      total: claimed.length,
+      week: claimed.filter(q => q.is_weekly && q.end_date >= week.start).length,
+      month: claimed.filter(q => !q.is_weekly && q.end_date >= month.start).length,
+    }
+  })
+}
 
 export function useCustomQuestions() {
   return useLiveQuery(() => db.gameCustomQuestions.toArray())
