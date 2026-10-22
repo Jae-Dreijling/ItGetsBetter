@@ -30,6 +30,7 @@ Mostly existing systems taken a step further. Little new data.
 
 | # | Item | Size | Why here |
 |---|---|---|---|
+| 2.0 | **Age groups and minors' safety** (COMPANION-SOCIETY S0): minors never become Lovers or get lover lines; their top levels are Family and Bestie; your family word in the profile | M | **First**, before anything else with romance: today any companion can become a Lover |
 | 2.1 | **Several companions on a hard day** (more than one may knock) | S | Only limits in `companionVisits` change |
 | 2.2 | **Group cheers from every switched-on companion** (a small row of avatars cheering on big moments) | S–M | Builds on the existing cheer moment |
 | 2.3 | **Body doubling on a task** ("do this together" on a task's page) | S–M | Reuses the focus-timer companion |
@@ -48,7 +49,22 @@ Making the logic visible, and companions feeling like people with their own live
 | 2b.2 | **An info page per companion** (tap a companion): closeness level and progress to the next one, how you got closer lately, last visit, birthday, favourites, what pleases it most, its chance to come by | M | Shows progress and good news only; closeness that went down shows as "not much changed", never as a loss (Rulebook) |
 | 2b.3 | **"Invite over" button:** ask a companion to come visit; the chance it says yes grows with closeness (low as strangers, high when close). A no is kind and in character, and costs nothing; trying again is possible later | M | Needs a few new line moments (`invite_yes`, `invite_no`) for every character |
 | 2b.4 | **Gift likes and dislikes per character:** some gifts please some characters much more (a whip is an insult to most, a compliment to the Obey Me demons), shown as hints on the info page | M | A field per character in the files, plus new gifts; a disliked gift gets a funny in-character reaction rather than a visible loss |
-| 2b.5 | **More social life:** companions with their own small moods and plans for the day, saying when they're busy, remembering your last visit together | L | Grows out of 2b.2 and 2b.3; design it once those exist |
+| 2b.5 | **More social life:** companions with their own small moods and plans for the day, saying when they're busy, remembering your last visit together | L | Now part of the companion society (phase 2c) |
+
+## Phase 2c: the companion society (decided 2026-10-22)
+
+Companions with relationships with each other, friendships that grow, group activities, drama and a social feed; mostly in the Journey hub and often on screen. Analysis and decisions: [COMPANION-SOCIETY](COMPANION-SOCIETY.md).
+
+| # | Part | Size |
+|---|---|---|
+| S1 | Personality categories (9) and dislikes | S |
+| S2 | Relationships between companions (canon ones from the files, strangers otherwise, growing by meeting) | M |
+| S3 | Social life on screen: socially aware visitors, up to 3 on screen, arrival and departure rituals | M |
+| S4 | Pair interactions: games, gifts between them, teasing, lines in three layers (replaces 3.1) | L |
+| S5 | Social feed and memories | M |
+| S6 | Group activities in the hub's rooms (with Journey J2) | L |
+| S7 | Real drama arcs, romance between companions within the age rules, couples that include you | L |
+| S8 | Rare interactions, discovery collection, social milestones, weekly and seasonal events | L, ongoing |
 
 ## Phase 3: companions, bigger systems
 
@@ -56,7 +72,7 @@ Each needs a new format and a lot of writing. Best after phase 2, when the small
 
 | # | Item | Size | Why here |
 |---|---|---|---|
-| 3.1 | **Banter per pair and longer conversations** (the brothers bickering, Kyle versus Cartman): a conversation format with turns, written per pair | L | New file format; writing grows with every pair, so start with a few favourite pairs per fandom |
+| 3.1 → S4 | **Banter per pair and longer conversations** (the brothers bickering, Kyle versus Cartman): a conversation format with turns, written per pair | L | New file format; writing grows with every pair, so start with a few favourite pairs per fandom |
 | 3.2 | **Relationship depth:** conversations and backstory that unlock at Friend, Close and Lover | L | Reuses the conversation format from 3.1, so it comes after it |
 | 3.3 | **Different pranks and entrances per character** (Discord's chaos, Kenny "dying", Pinkie popping out) | L | New behaviour per character, not only lines; each trick is its own little animation |
 | 3.4 | **Weather and season reactions, outfits per character** | L | Weather needs a source that works offline (the season and the date work without one; real weather would need internet, so optional) |
@@ -92,4 +108,4 @@ Built in the order of [JOURNEY-DESIGN](JOURNEY-DESIGN.md#build-order-replaces-ro
 
 ## The order in one line
 
-Phase 1 (1.1 → 1.4) → phase 2 (2.1 → 2.7) → phase 2b (2b.1 → 2b.5) → phase 3 (3.1 → 3.4) → phase 5 (J1 → J10; the Journey talk, phase 4, is done). J1 to J7 don't need phase 3, so they can start earlier if you'd rather play sooner; only the story chapters (J8) wait for the conversation format (3.1). Expression pictures and new characters slot in whenever they're ready.
+Phase 1 (1.1 → 1.4) ✅ → phase 2 (2.0 first, then 2.1 → 2.7) → phase 2b (2b.1 → 2b.4) → phase 2c (S1 → S5; S6 comes with the hub, S7 and S8 after) → phase 3 (3.1 → 3.4) → phase 5 (J1 → J10; the Journey talk, phase 4, is done). J1 to J7 don't need phase 3, so they can start earlier if you'd rather play sooner; only the story chapters (J8) wait for the conversation format (3.1). Expression pictures and new characters slot in whenever they're ready.
