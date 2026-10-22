@@ -8,6 +8,7 @@ import { DEFAULT_TRAITS, OPTION_INFO, traitsOf, type CompanionTraits, type Compa
 import { EXPRESSIONS, type Expression } from './companionExpressions'
 import { cleanQuestions, mergeQuestions, type CompanionQuestion } from './companionQuestions'
 import type { AgeGroup } from './ageGroup'
+import type { OwnSurprises } from './companionFun'
 
 // Share companions between installs (or bulk-add them): export the ones you
 // made, import a file that only ever *adds*. Nothing existing is changed or
@@ -48,6 +49,8 @@ export interface CompanionFileEntry {
   questions?: CompanionQuestion[]
   // "adult" or "minor" (lib/ageGroup); optional, missing means adult.
   age_group?: AgeGroup
+  // Its own daily surprises (lib/companionFun); optional.
+  surprises?: OwnSurprises
 }
 
 export interface CompanionFile {
@@ -70,6 +73,16 @@ function cleanMessages(v: unknown): CompanionMessages {
   const messages = { ...EMPTY_MESSAGES }
   for (const k of Object.keys(EMPTY_MESSAGES) as (keyof CompanionMessages)[]) messages[k] = strings(source[k])
   return messages
+}
+
+// Its own surprises: only lists of text (pairs for "would you rather"); none means none.
+function cleanSurprises(v: unknown): OwnSurprises | undefined {
+  if (!isObj(v)) return undefined
+  const pairs = Array.isArray(v.would_you_rather)
+    ? v.would_you_rather.filter((p): p is [string, string] => Array.isArray(p) && p.length === 2 && p.every(x => typeof x === 'string' && x.trim() !== ''))
+    : []
+  const out: OwnSurprises = { fortunes: strings(v.fortunes), facts: strings(v.facts), would_you_rather: pairs, compliments: strings(v.compliments) }
+  return Object.values(out).some(l => l && l.length > 0) ? out : undefined
 }
 
 // Only known traits, each 0, 1 or 2; anything else is left out.
@@ -120,6 +133,7 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
         expressions: Object.fromEntries(await Promise.all(Object.entries(c.expressions ?? {}).map(async ([k, blob]) => [k, await encodeBlob(blob as Blob)]))),
         questions: c.questions ?? [],
         age_group: c.age_group ?? 'adult',
+        surprises: c.surprises ?? {},
       }
     })),
   }
@@ -164,6 +178,7 @@ export function parseCompanionFile(raw: string): ParsedCompanions {
           : undefined,
         questions: cleanQuestions(c.questions),
         age_group: c.age_group === 'minor' ? 'minor' as const : c.age_group === 'adult' ? 'adult' as const : undefined,
+        surprises: cleanSurprises(c.surprises),
       }
     })
   if (companions.length === 0) return { ok: false, error: 'This file has no companions in it.' }
@@ -271,6 +286,7 @@ export async function applyCompanionImport(plan: CompanionImportPlan, { update =
         ...(c.birthday && { birthday: c.birthday }),
         ...(c.questions && c.questions.length > 0 && { questions: c.questions }),
         ...(c.age_group === 'minor' && { age_group: 'minor' as const }),
+        ...(c.surprises && { surprises: c.surprises }),
         ...(c.expressions && Object.keys(c.expressions).length > 0 && {
           expressions: Object.fromEntries(Object.entries(c.expressions).map(([k, v]) => [k, decodeBlob(v as EncodedBlob)])),
         }),
@@ -304,6 +320,7 @@ export async function applyCompanionImport(plan: CompanionImportPlan, { update =
         ...(c.birthday && { birthday: c.birthday }),
         ...(c.questions && c.questions.length > 0 && { questions: mergeQuestions(current.questions, c.questions) }),
         ...(c.age_group && { age_group: c.age_group }),
+        ...(c.surprises && { surprises: c.surprises }),
         ...(!current.avatar && c.avatar && { avatar: decodeBlob(c.avatar) }),
         ...(Object.keys(expressions).length > 0 && { expressions }),
         ...(current.folder_id == null && c.folder && { folder_id: folderId.get(key(c.folder)) ?? null }),

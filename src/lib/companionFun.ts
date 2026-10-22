@@ -149,29 +149,39 @@ export const ROMANTIC_COMPLIMENTS = [
   'I am very lucky that you picked me.',
 ]
 
+// A character's own surprises (ROADMAP 2.4, from its character file): used
+// instead of the shared lists for each kind it has.
+export interface OwnSurprises {
+  fortunes?: string[]
+  facts?: string[]
+  would_you_rather?: [string, string][]
+  compliments?: string[]
+}
+
 // Which surprises fit a companion (11j): fun facts from nerdy or very
 // playful ones, "would you rather" from playful or sassy ones, compliments
 // from caring, romantic or shy ones, gifts from those who bring gifts.
-// Fortunes fit anyone.
-export function surpriseKinds(t: CompanionTraits, givesGifts: boolean): Surprise['kind'][] {
+// Fortunes fit anyone. A kind it has its own surprises for always fits.
+export function surpriseKinds(t: CompanionTraits, givesGifts: boolean, own: OwnSurprises = {}): Surprise['kind'][] {
   const kinds: Surprise['kind'][] = ['fortune']
-  if (t.nerdy > 0 || t.playful === 2) kinds.push('fact')
-  if (t.playful > 0 || t.sassy > 0) kinds.push('would_you_rather')
-  if (t.caring > 0 || t.romantic > 0 || t.shy > 0) kinds.push('compliment')
+  if (t.nerdy > 0 || t.playful === 2 || own.facts?.length) kinds.push('fact')
+  if (t.playful > 0 || t.sassy > 0 || own.would_you_rather?.length) kinds.push('would_you_rather')
+  if (t.caring > 0 || t.romantic > 0 || t.shy > 0 || own.compliments?.length) kinds.push('compliment')
   if (givesGifts) kinds.push('gift')
   return kinds
 }
 
 // The same surprise all day, picked from the day.
-export function surpriseFor(seed: number, kinds: Surprise['kind'][] = ['fortune', 'fact', 'would_you_rather', 'compliment', 'gift'], romantic = false): Surprise {
+export function surpriseFor(seed: number, kinds: Surprise['kind'][] = ['fortune', 'fact', 'would_you_rather', 'compliment', 'gift'], romantic = false, own: OwnSurprises = {}): Surprise {
   const s = Math.abs(seed)
   const pick = <T,>(list: T[]) => list[Math.floor(s / 7) % list.length]
+  const mine = <T,>(list: T[] | undefined, shared: T[]) => (list?.length ? list : shared)
   switch (kinds[s % kinds.length]) {
-    case 'fact': return { kind: 'fact', text: pick(FUN_FACTS) }
-    case 'would_you_rather': return { kind: 'would_you_rather', options: pick(WOULD_YOU_RATHER) }
-    case 'compliment': return { kind: 'compliment', text: pick(romantic ? ROMANTIC_COMPLIMENTS : COMPLIMENTS) }
+    case 'fact': return { kind: 'fact', text: pick(mine(own.facts, FUN_FACTS)) }
+    case 'would_you_rather': return { kind: 'would_you_rather', options: pick(mine(own.would_you_rather, WOULD_YOU_RATHER)) }
+    case 'compliment': return { kind: 'compliment', text: pick(mine(own.compliments, romantic ? ROMANTIC_COMPLIMENTS : COMPLIMENTS)) }
     case 'gift': return { kind: 'gift', gift: pick(GIFTS_FOR_YOU) }
-    default: return { kind: 'fortune', text: pick(FORTUNES) }
+    default: return { kind: 'fortune', text: pick(mine(own.fortunes, FORTUNES)) }
   }
 }
 

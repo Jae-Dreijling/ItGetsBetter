@@ -10,6 +10,7 @@ import type { CompanionTraits, CompanionOptions } from '../lib/companionPersonal
 import type { Expression } from '../lib/companionExpressions'
 import type { CompanionQuestion } from '../lib/companionQuestions'
 import type { AgeGroup } from '../lib/ageGroup'
+import type { OwnSurprises } from '../lib/companionFun'
 
 export interface UserProfile {
   id?: number
@@ -374,6 +375,8 @@ export interface Companion {
   questions?: CompanionQuestion[]
   // Minors never become Lovers (lib/ageGroup). Missing means adult.
   age_group?: AgeGroup
+  // Its own fortunes, fun facts, "would you rather" and compliments (lib/companionFun).
+  surprises?: OwnSurprises
   created_at: string
 }
 

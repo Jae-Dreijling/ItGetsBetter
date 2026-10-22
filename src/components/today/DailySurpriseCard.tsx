@@ -31,7 +31,7 @@ export default function DailySurpriseCard() {
 
   if (!companion?.id) return null
   const traits = traitsOf(companion)
-  const surprise = surpriseFor(hashSeed(`${today}:${companion.id}`), surpriseKinds(traits, allows(companion, 'gifts')), traits.romantic > 0)
+  const surprise = surpriseFor(hashSeed(`${today}:${companion.id}`), surpriseKinds(traits, allows(companion, 'gifts'), companion.surprises), traits.romantic > 0, companion.surprises)
   const name = profile?.display_name ?? 'friend'
 
   async function reveal() {
