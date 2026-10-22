@@ -8,6 +8,7 @@ import DeleteEntryButton from '../../components/DeleteEntryButton'
 import { useTask, useSubTasks, useProjects, addTask, updateTask, toggleTask, deleteTask, addProject, deleteProject } from '../../hooks/useTasks'
 import { useLabels } from '../../hooks/useLabels'
 import DetailRow from './DetailRow'
+import DoTogether from './DoTogether'
 import type { Task, TaskPriority } from '../../types'
 
 const pillClass = 'rounded-lg bg-surface px-3 py-1.5 text-sm text-text-primary'
@@ -73,11 +74,9 @@ function TaskDetails({ task, onDeleted }: { task: Task; onDeleted: () => void })
 
   return (
     <div>
-      {labels.length > 0 && (
-        <div className="mb-4">
-          <LabelPicker labels={labels} selected={task.label_ids} onChange={ids => set({ label_ids: ids })} />
-        </div>
-      )}
+      <div className="mb-4">
+        <LabelPicker labels={labels} selected={task.label_ids} onChange={ids => set({ label_ids: ids })} />
+      </div>
 
       <div className="mb-4 flex items-start gap-3">
         <button
@@ -98,6 +97,8 @@ function TaskDetails({ task, onDeleted }: { task: Task; onDeleted: () => void })
           className="field-sizing-content w-full resize-none bg-transparent text-xl font-semibold text-text-primary focus:outline-none"
         />
       </div>
+
+      {!task.is_completed && <DoTogether task={task} />}
 
       <div className="mb-2 space-y-1 pl-1">
         {subtasks.map(sub => (

@@ -79,7 +79,7 @@ Everything in 11a to 11j is built. These parts of the user's ideas are only part
 - ~~**Three-choice questions per character**~~ built 2026-10-22 (step 12): each character can have its own questions with its own reactions, asked before the 14 shared ones.
 - **Daily surprise per character:** fortunes, fun facts, "would you rather" and compliments are generic lists. Each character should share its own (Lucifer's facts about the Devildom, Twilight's library facts).
 - **Memory questions in the Journey and in chat:** asked only on Today. The pattern-matching chat doesn't use memories or nicknames yet.
-- **Body doubling during a task:** only during the focus timer. Idea: "do this together" on a task's page.
+- ~~**Body doubling during a task**~~ built 2026-10-22 (ROADMAP 2.3): "do this together" on a task's page.
 - **A real birthday celebration:** a companion's birthday gives a line, a 🎂 and the whole day together. Missing: something special (confetti, a cake moment, a gift for you, its friends visiting). Your own birthday isn't known by the app yet.
 - **Expressions per character:** the feature exists, but no character has expression pictures yet (content to make).
 - **Idle animations with emoji (idea 2026-10-22):** small emoji props next to the companion while it idles, like sipping a ☕, reading a 📖, a 💤 when sleepy, per character (Lucifer's coffee, Levi's 🎮). Only transform/opacity, calmer with "reduce motion".

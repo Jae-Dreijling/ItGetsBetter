@@ -1,4 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { readTogether, endTogether, TOGETHER_CLOSENESS } from '../lib/togetherSession'
+import { changeCloseness } from '../lib/closeness'
 import { db } from '../db'
 import { nowISO } from '../lib/date'
 import { awardPoints } from './usePoints'
@@ -87,6 +89,12 @@ export async function toggleTask(id: number) {
     completed_at: completing ? nowISO() : null,
   })
   if (completing) {
+    // Done while doing it together (lib/togetherSession): that ends, a little closer.
+    const together = readTogether()
+    if (together?.taskId === id) {
+      endTogether()
+      if (together.companionId !== null) await changeCloseness(together.companionId, TOGETHER_CLOSENESS)
+    }
     await awardPoints('task_completed', id)
     if (wasFirstEver) triggerCompanionMessage('first_milestone')
     else await reactToTaskDone(task)

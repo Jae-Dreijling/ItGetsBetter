@@ -8,6 +8,7 @@ import SideMenu from './SideMenu'
 import FloatingCompanion from '../FloatingCompanion'
 import CompanionVisits from '../CompanionVisits'
 import GroupCheer from '../GroupCheer'
+import TogetherSession from '../TogetherSession'
 import { registerSideMenuOpener } from '../../lib/sideMenu'
 
 export default function AppShell() {
@@ -41,6 +42,7 @@ export default function AppShell() {
           <FloatingCompanion />
           <CompanionVisits />
           <GroupCheer />
+          <TogetherSession />
         </>
       )}
     </div>

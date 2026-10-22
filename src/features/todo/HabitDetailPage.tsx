@@ -72,11 +72,9 @@ function HabitDetails({ habit, onDeleted }: { habit: Habit; onDeleted: () => voi
 
   return (
     <div>
-      {labels.length > 0 && (
-        <div className="mb-4">
-          <LabelPicker labels={labels} selected={habit.label_ids} onChange={ids => set({ label_ids: ids })} />
-        </div>
-      )}
+      <div className="mb-4">
+        <LabelPicker labels={labels} selected={habit.label_ids} onChange={ids => set({ label_ids: ids })} />
+      </div>
 
       <textarea
         value={title}
