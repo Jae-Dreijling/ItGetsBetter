@@ -57,6 +57,17 @@ Two kinds, both cute and flattering, never a problem you have to solve:
 
 How it plays out: a short exchange of lines on screen (or a scene in the hub), sometimes ending with you being asked to pick a side as a joke (any answer is fine and it costs nothing), sometimes with them making up. It happens now and then, not every time they meet, and never on a hard day (mood 1 or 2): then they're only kind. Needs new line moments per character (jealous bickering, jealous reply, protective, making up), in the files like the others.
 
+## Plans with you: invitations, a calendar and a feed (added 2026-10-22)
+
+Companions invite you to do things, and the society keeps its own calendar and feed, so you can roleplay a social life alongside real life:
+
+- **One companion invites you:** "Want to get an iced coffee with me tomorrow around noon?", "Play games tonight?", "Walk with me after dinner?". Between adults (and you) it can be a date; minors only invite you to hangouts (games, baking, homework together).
+- **A friend group invites you** (the Mane Six, the brothers, or any group where everyone is close with each other and with you): the movies, a picnic, a game night, a beach day.
+- **They plan things among themselves** too ("Pinkie is throwing a party on Saturday"), which shows up in their calendar and feed whether or not you're invited.
+- **A calendar** of upcoming plans (yours with them, and theirs), and **a feed** like a little social network: posts, photos (emoji scenes), "who went where".
+- **Roleplay with real life:** you say yes, and when the time comes you do the activity yourself in real life (game on your own, make an iced coffee, watch a film). The app plays a small cutscene of the two of you (or the group) doing it, and it lands in the feed and in the companion's memories ("Remember our game night?"). Real-life links count where they fit (a walk logs as a walk).
+- **Rulebook:** saying no or "maybe later" is always fine and in character; a plan you miss is never a problem ("We'll go another time!"), nothing is counted against you, and plans pause on a hard day except for gentle ones (a quiet tea together). Reminders for a plan are optional and gentle, like the other notifications.
+
 ## The ideas, one by one
 
 | # | Idea | Possible? | How it fits |
@@ -93,3 +104,4 @@ What changes from the source: no limbs or body animations (movement and emoji pr
 | S6 | **Group activities in the hub's rooms** (tea party, movie night, group nap, talent show) with roles, **up to 7 at once**, friend groups found together | L | With JOURNEY-DESIGN J2 (the hub) |
 | S7 | **Real drama arcs (not always resolved: companions can become enemies) and romance between companions** (adults with adults, minors with minors and innocent only), couples that include you, **jealousy and protectiveness over you** (above) | L | Needs S2, S4 |
 | S8 | **Rare and unique interactions, discovery collection, social milestones, weekly and seasonal events** | L, ongoing | Content grows over time |
+| S9 | **Plans with you** (above): invitations from one companion or a friend group, their own plans, a calendar, the feed as a little social network, roleplay cutscenes when you do the activity in real life | L | Needs S2 (relationships) and S5 (feed); dates only between adults |

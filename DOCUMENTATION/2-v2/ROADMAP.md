@@ -65,6 +65,7 @@ Companions with relationships with each other, friendships that grow, group acti
 | S6 | Group activities in the hub's rooms, up to 7 at once, friend groups found together (with Journey J2) | L |
 | S7 | Real drama arcs (they can become enemies), romance between companions within the age rules, couples that include you, jealousy and protectiveness over you | L |
 | S8 | Rare interactions, discovery collection, social milestones, weekly and seasonal events | L, ongoing |
+| S9 | Plans with you: invitations (dates between adults, hangouts with minors, group outings), their own plans, a calendar and feed, roleplay cutscenes when you do it in real life | L |
 
 ## Phase 3: companions, bigger systems
 
