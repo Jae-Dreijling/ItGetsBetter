@@ -51,6 +51,8 @@ export interface CompanionFileEntry {
   age_group?: AgeGroup
   // Its own daily surprises (lib/companionFun); optional.
   surprises?: OwnSurprises
+  // Emoji props while idle (lib/idleProps); optional.
+  props?: string[]
 }
 
 export interface CompanionFile {
@@ -134,6 +136,7 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
         questions: c.questions ?? [],
         age_group: c.age_group ?? 'adult',
         surprises: c.surprises ?? {},
+        props: c.props ?? [],
       }
     })),
   }
@@ -179,6 +182,7 @@ export function parseCompanionFile(raw: string): ParsedCompanions {
         questions: cleanQuestions(c.questions),
         age_group: c.age_group === 'minor' ? 'minor' as const : c.age_group === 'adult' ? 'adult' as const : undefined,
         surprises: cleanSurprises(c.surprises),
+        props: strings(c.props).slice(0, 6),
       }
     })
   if (companions.length === 0) return { ok: false, error: 'This file has no companions in it.' }
@@ -287,6 +291,7 @@ export async function applyCompanionImport(plan: CompanionImportPlan, { update =
         ...(c.questions && c.questions.length > 0 && { questions: c.questions }),
         ...(c.age_group === 'minor' && { age_group: 'minor' as const }),
         ...(c.surprises && { surprises: c.surprises }),
+        ...(c.props && c.props.length > 0 && { props: c.props }),
         ...(c.expressions && Object.keys(c.expressions).length > 0 && {
           expressions: Object.fromEntries(Object.entries(c.expressions).map(([k, v]) => [k, decodeBlob(v as EncodedBlob)])),
         }),
@@ -321,6 +326,7 @@ export async function applyCompanionImport(plan: CompanionImportPlan, { update =
         ...(c.questions && c.questions.length > 0 && { questions: mergeQuestions(current.questions, c.questions) }),
         ...(c.age_group && { age_group: c.age_group }),
         ...(c.surprises && { surprises: c.surprises }),
+        ...(c.props && c.props.length > 0 && { props: c.props }),
         ...(!current.avatar && c.avatar && { avatar: decodeBlob(c.avatar) }),
         ...(Object.keys(expressions).length > 0 && { expressions }),
         ...(current.folder_id == null && c.folder && { folder_id: folderId.get(key(c.folder)) ?? null }),

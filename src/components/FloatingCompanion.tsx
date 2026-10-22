@@ -33,6 +33,7 @@ import { db } from '../db'
 import { nicknameFor, speakingName } from '../lib/nicknames'
 import { aloneUntil, isAloneTime, startAloneTime, overAloneZone } from '../lib/aloneTime'
 import { isMinor, slipsNow } from '../lib/ageGroup'
+import { idleProp, PROP_EVERY_MS, PROP_SHOW_MS } from '../lib/idleProps'
 import { pickAnotherCompanion, setSessionCompanionId } from '../lib/sessionCompanion'
 
 const POSITION_KEY = 'igb_companion_position'
@@ -99,6 +100,8 @@ export default function FloatingCompanion() {
   const shiny = companion?.id !== undefined && isShinyDay(companion.id, today)
   // Its accessory, or a seasonal one in themed weeks (11h).
   const worn = wornAccessory(companion?.accessory, today)
+  // A little prop while it's quiet (2.5).
+  const [prop, setProp] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   // Resting position, used to place the speech bubble. While dragging, the
   // companion moves through the x/y motion values only, outside React, so a
@@ -186,6 +189,17 @@ export default function FloatingCompanion() {
 
   useEffect(() => {
     ensureDefaultCompanion()
+  }, [])
+
+  // Now and then, while it's quiet, it holds a little prop for a few seconds.
+  useEffect(() => {
+    let hide: ReturnType<typeof setTimeout> | undefined
+    const every = setInterval(() => {
+      if (busyRef.current || awayRef.current || isAloneTime() || Math.random() < 0.4) return
+      setProp(idleProp(companionRef.current?.props, traitsRef.current, new Date().getHours(), Math.random()))
+      hide = setTimeout(() => setProp(null), PROP_SHOW_MS)
+    }, PROP_EVERY_MS)
+    return () => { clearInterval(every); clearTimeout(hide) }
   }, [])
 
   // Back after alone time.
@@ -722,6 +736,21 @@ export default function FloatingCompanion() {
         {worn && (
           <span className="pointer-events-none absolute -left-1.5 -top-2.5 text-base" aria-hidden>{worn}</span>
         )}
+        <AnimatePresence>
+          {prop && !message && !dragging && (
+            <m.span
+              key={prop}
+              className="pointer-events-none absolute -bottom-1 -right-2 text-lg"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1, y: [0, -3, 0] }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ y: { duration: 2, repeat: Infinity, ease: 'easeInOut' } }}
+              aria-hidden
+            >
+              {prop}
+            </m.span>
+          )}
+        </AnimatePresence>
         {(birthday || shiny) && (
           <span className="pointer-events-none absolute -right-1 -top-1 text-sm" aria-label={birthday ? 'Birthday' : 'Shiny day'}>
             {birthday ? '🎂' : '✨'}

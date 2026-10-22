@@ -377,6 +377,8 @@ export interface Companion {
   age_group?: AgeGroup
   // Its own fortunes, fun facts, "would you rather" and compliments (lib/companionFun).
   surprises?: OwnSurprises
+  // Emoji props it holds while idle (lib/idleProps), e.g. ['☕', '📖'].
+  props?: string[]
   created_at: string
 }
 
