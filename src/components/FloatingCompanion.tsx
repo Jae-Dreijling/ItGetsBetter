@@ -12,7 +12,7 @@ import { isQuietToday, speaksWhenQuiet, LOW_MOOD } from '../lib/softDay'
 import { useIsPhoneFreeTime, useIsGoodnightTime } from '../hooks/useSchedule'
 import { useCompanionAffinityFor } from '../hooks/useGame'
 import { getDataAwareNudge } from '../lib/companionNudges'
-import { registerCompanionMessageHandler } from '../lib/companionMessenger'
+import { registerCompanionMessageHandler, idleTurnForVisitor } from '../lib/companionMessenger'
 import type { TriggerValues } from '../lib/companionTriggers'
 import { startIdleTimer } from '../lib/idleTimer'
 import {
@@ -233,6 +233,8 @@ export default function FloatingCompanion() {
   const handleIdle = useCallback(async () => {
     // Phone-free time has its own repeating nudge (below) and takes over completely.
     if (isPhoneFreeTimeRef.current || isQuietToday()) return
+    // A visitor on screen takes its turn now and then (it talks as often as yours).
+    if (!isAloneTime() && idleTurnForVisitor()) return
 
     // A soft day (a low mood today): only gentle words, nothing else (11f).
     const mood = moodScoreRef.current

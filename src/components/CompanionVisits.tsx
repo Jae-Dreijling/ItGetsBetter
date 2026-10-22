@@ -15,7 +15,7 @@ import { isAloneTime } from '../lib/aloneTime'
 import { getLogicalDate } from '../lib/date'
 import { LOW_MOOD } from '../lib/softDay'
 import { changeCloseness } from '../lib/closeness'
-import { onCompanionMoment, askMainCompanion, msSinceLastMoment } from '../lib/companionMessenger'
+import { onCompanionMoment, askMainCompanion, registerVisitorSpeaker } from '../lib/companionMessenger'
 import {
   readVisits, startVisit, endVisit, MAX_VISITORS, markKnock, knockCooledDown, visitsOff, pickVisitor, supportKnockAllowed, markSupportKnock, pickSupporter,
   BIG_MOMENTS, CHECK_EVERY_MS, ACCEPT_CLOSENESS, type Visit,
@@ -185,9 +185,11 @@ function KnockCard({ knock, onAccept, onDecline }: {
   )
 }
 
-// The visitor: a second, simpler companion on screen. It cheers on big
-// moments, chats now and then (sometimes with your companion) and says
-// goodbye when its visit is over.
+// The visitor: a second, simpler companion on screen. It takes turns with
+// your companion (lib/companionMessenger): your moments and idle chats go to
+// whoever is next, so it talks to you as often as yours, never at the same
+// time. On big moments it cheers once your companion has spoken, now and then
+// it banters with yours, and it says goodbye when its visit is over.
 function Visitor({ visitor, index, mainName, until, support, greeting, onLeft }: {
   visitor: Companion
   // Its place in line, so two visitors don't sit on top of each other.
@@ -223,33 +225,25 @@ function Visitor({ visitor, index, mainName, until, support, greeting, onLeft }:
     return () => clearTimeout(t)
   }, [greeting])
 
-  // Joins in on big moments, a beat after your companion.
+  // Joins in on big moments once your companion's bubble is gone (5 s).
   useEffect(() => onCompanionMoment(event => {
-    if (BIG_MOMENTS.has(event)) setTimeout(() => say('cheer'), 1300)
+    if (BIG_MOMENTS.has(event)) setTimeout(() => say('cheer', undefined, 4000), 5300)
   }), [say])
 
-  // Now and then: a bit of banter with your companion, or just a word.
-  useEffect(() => {
-    let t: ReturnType<typeof setTimeout>
-    function schedule() {
-      t = setTimeout(() => {
-        if (document.visibilityState === 'visible' && msSinceLastMoment() > 8000) {
-          if (support) {
-            // A hard-day visit: soft words, no banter.
-            say('support_visit', undefined, 7000)
-          } else if (Math.random() < 0.6) {
-            say('banter', { other: ref.current.mainName })
-            setTimeout(() => askMainCompanion('banter_reply', { other: visitor.name }), 2800)
-          } else {
-            say('idle')
-          }
-        }
-        schedule()
-      }, 180_000 + Math.random() * 180_000)
+  // Its turns: your moments and idle chats that come to it.
+  useEffect(() => registerVisitorSpeaker(visitor.id!, (event, values) => {
+    if (event !== 'idle') return say(event, values)
+    if (support) {
+      // A hard-day visit: soft words, no banter.
+      say('support_visit', undefined, 7000)
+    } else if (Math.random() < 0.5) {
+      // A bit of banter: your companion answers once this line is gone.
+      say('banter', { other: ref.current.mainName }, 3500)
+      setTimeout(() => askMainCompanion('banter_reply', { other: visitor.name }), 3800)
+    } else {
+      say('idle')
     }
-    schedule()
-    return () => clearTimeout(t)
-  }, [say, visitor.name, support])
+  }), [say, visitor.id, visitor.name, support])
 
   // Time to go: a goodbye, then gone.
   useEffect(() => {

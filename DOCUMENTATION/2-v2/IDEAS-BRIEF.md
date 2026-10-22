@@ -1,6 +1,6 @@
 # Brief: companions and the Journey in ItGetsBetter (for brainstorming ideas)
 
-*Written 2026-10-22 to share with another AI for fresh ideas. It describes what exists, what's already planned, and the rules every idea has to fit. Ideas that break a rule in "Constraints" can't be used.*
+*Written 2026-10-22 (updated the same evening) to share with another AI for fresh ideas. It describes what exists, what's already planned, and the rules every idea has to fit. Ideas that break a rule in "Constraints" can't be used.*
 
 ## The app in short
 
@@ -40,7 +40,7 @@ The user's companions are 35 characters from four fandoms: **My Little Pony** (t
 - **Daily surprises:** a fortune, a fun fact, a "would you rather", a compliment, or a tiny gift for the **gift safe**.
 - **Small requests:** "Drink a glass of water with me?" (points and closeness, never a penalty).
 - **Gifts** you buy for a companion with points; **accessories** (hats and seasonal items) it can wear.
-- **Visits:** another companion knocks and visits for about 2.5 hours, chats, banters with yours (two-line exchanges), and cheers on big moments. On a hard day caring companions come to keep you company, up to 2 at once.
+- **Visits:** another companion knocks and visits for about 2.5 hours. While it's there it takes turns with your own companion: your moments and idle chats go to whoever is next, so the visitor talks to you just as often, never at the same time. Now and then the two banter (two-line exchanges), and on big moments the visitor cheers after yours has spoken. On a hard day caring companions come to keep you company, up to 3 a day and 2 at once.
 - **Pranks and entrances:** it hides a button and gives itself away with a tremble and a "pffft"; it rolls onto the screen.
 - **Hard days:** soft lines, a breathing moment, "quiet today" (silent for the day), body doubling during a focus timer.
 - **Feeling alive:** expression pictures per mood (optional), birthdays (the birthday companion is with you all day), rare "shiny" days, "on this day" memories, a weekly note written in its voice.
@@ -73,11 +73,14 @@ The user's companions are 35 characters from four fandoms: **My Little Pony** (t
 - **A social feed and memories:** "Twilight visited Fluttershy", "Remember our picnic?", including things that happened while the app was closed (told as their fun, never as something you missed).
 - **Plans with you:** companions invite you ("Iced coffee tomorrow around noon?", "Games tonight?"), friend groups invite you to movies or picnics, and they plan things among themselves; a calendar and a feed like a little social network. You do the activity in real life, and the app plays a short cutscene of it.
 - Rare and unique interactions with a discovery collection, social milestones, weekly and seasonal events.
+- **Social reactions to you:** two companions wave at you together, one brings another over to meet you, one shows off a gift it got, a group celebrates when you open the app (now and then), one introduces a new visitor, one looks a little disappointed when its game is interrupted (then shrugs it off), one asks you to choose between two activities, and a small summary of what happened while you were away (their fun, never "you missed this").
+- **Mischief:** stolen seats, arguments over a toy, failed attempts to impress, pranks, rivals competing for attention, being ignored at first when joining, knocking over what another built; resolved by an apology, a handshake, a mediator, a game or a gift, or not at all.
+- **Homes:** every companion lives somewhere from canon (the seven Obey Me brothers share the House of Lamentation, the Smiths share one house, Fluttershy has her cottage). Adults who get along can move in together; minors live with their canon family. You can only visit a home once you've **freed** it in the Journey (discovered its region and beaten that region's boss). **Travelers** (companions whose world isn't in the game yet) have no home and only turn up in public places like an inn or café. **You have your own home** too (the Journey hub), which you upgrade slowly and where you invite companions for activities and sleepovers (sleepovers only with adults).
 
 ### The Journey as a real game
 
 - A **full-screen game mode** inside the app with its own look.
-- **A hub** (your home base) with **portals to a world per fandom**: Equestria first, then the Devildom, South Park and the Citadel. The hub's rooms (café, library, garden, game room) are where companions hang out.
+- **A hub** (your home, upgraded over time) with **portals to a world per fandom**: Equestria first, then the Devildom, South Park and the Citadel. The hub's rooms (café, library, garden, game room) are where companions hang out, up to 7 at once. Companions' own homes are in their worlds, visitable once freed.
 - **Exploring** region maps, **story chapters** told visual-novel style with the companions, and **battles**.
 - **Real life drives it:** logging gives energy, finishing your daily minimum gives keys to new chapters and regions (they never expire), habits, exercise and sleep give materials and stats, and quests give Gold.
 - **A party** of 2 or 3 companions with roles from their strongest trait (caring heals, nerdy solves puzzles, playful finds secrets, proud hits hardest); closeness makes them stronger.
@@ -88,6 +91,7 @@ The user's companions are 35 characters from four fandoms: **My Little Pony** (t
 
 - **Social life:** more pair and group interactions, games between companions, group activities, and fandom-specific dynamics (what would the Obey Me brothers do together? a South Park group activity? how do Rick and Discord get along?).
 - **Plans with you:** invitations, outings and cutscenes that connect to small real-life actions without pressure.
+- **Homes:** what each home looks like and what you can do there, moving in together, what upgrades your own home could have, sleepover and visit activities.
 - **The Journey:** hub rooms, world-specific quests and story ideas per fandom, party abilities, battle mechanics that stay calm and short, collections.
 - **Rewards that never punish**, ways to make coming back after a long break feel welcoming, and things that make hard days gentler.
 - **Ways to feel alive with simple means:** movement, emoji props, timing, text.
