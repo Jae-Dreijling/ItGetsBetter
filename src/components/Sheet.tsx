@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, m } from 'motion/react'
 import { X } from 'lucide-react'
 import { fade, slideUp } from '../lib/animations'
@@ -11,8 +12,10 @@ interface SheetProps {
 }
 
 // Sits above the floating companion (z-50), so its bubble can't cover the sheet.
+// Rendered at the end of the page, so a sheet opened from inside another one
+// (picking labels while adding a task) still covers the screen properly.
 export default function Sheet({ open, onClose, title, children }: SheetProps) {
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <m.div
@@ -45,6 +48,7 @@ export default function Sheet({ open, onClose, title, children }: SheetProps) {
           {children}
         </m.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }

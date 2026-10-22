@@ -14,6 +14,11 @@ export async function updateLabel(id: number, changes: { name?: string; color?: 
   await db.labels.update(id, changes)
 }
 
+// Also takes the label off every habit and task that had it.
 export async function deleteLabel(id: number) {
-  await db.labels.delete(id)
+  await db.transaction('rw', [db.labels, db.habits, db.tasks], async () => {
+    await db.habits.filter(h => h.label_ids?.includes(id)).modify(h => { h.label_ids = h.label_ids.filter(l => l !== id) })
+    await db.tasks.filter(t => t.label_ids?.includes(id)).modify(t => { t.label_ids = t.label_ids.filter(l => l !== id) })
+    await db.labels.delete(id)
+  })
 }

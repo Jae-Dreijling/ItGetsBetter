@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { AnimatePresence, m } from 'motion/react'
-import { Check, ChevronDown, Feather, Flag, Link2, ListChecks, NotebookText, Plus, Repeat, Timer } from 'lucide-react'
+import { Check, ChevronDown, Feather, Flag, Link2, ListChecks, NotebookText, Pencil, Plus, Repeat, Timer } from 'lucide-react'
 import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import Sheet from '../../components/Sheet'
@@ -17,6 +17,8 @@ import { useFoldState } from '../../hooks/useFolders'
 import { FoldableSection } from '../../components/Folders'
 import { useLabels } from '../../hooks/useLabels'
 import QuickAdd from './QuickAdd'
+import ProjectsSheet from './ProjectsSheet'
+import LabelEditor from '../../components/LabelEditor'
 import type { Habit, Label, Task, TaskPriority, Weekday } from '../../types'
 
 const VIEW_KEY = 'igb_todo_view'
@@ -41,6 +43,8 @@ export default function TodoPage() {
 
   const [labelFilter, setLabelFilter] = useState<number | null>(null)
   const [adding, setAdding] = useState(false)
+  const [editingProjects, setEditingProjects] = useState(false)
+  const [editingLabels, setEditingLabels] = useState(false)
   const labels = useLabels() ?? []
   const labelsMap = new Map(labels.map(l => [l.id!, l]))
   const habits = useActiveHabits()
@@ -127,8 +131,12 @@ export default function TodoPage() {
                 {l.name}
               </Chip>
             ))}
+            <Chip active={false} onClick={() => setEditingLabels(true)}>✏️ Edit</Chip>
           </div>
         )}
+        <Sheet open={editingLabels} onClose={() => setEditingLabels(false)} title="Labels">
+          <LabelEditor inSheet />
+        </Sheet>
 
         {showHabits && (
           <section className="mb-5">
@@ -169,6 +177,11 @@ export default function TodoPage() {
                     open={projectFold.isOpen(String(project.id))}
                     onToggle={() => projectFold.toggle(String(project.id))}
                     gap="space-y-1.5"
+                    action={(
+                      <button onClick={() => setEditingProjects(true)} aria-label={`Edit project ${project.name}`} className="shrink-0 rounded-md p-1 text-muted hover:text-primary-500">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   >
                     {tasks.map(taskRow)}
                   </FoldableSection>
@@ -178,6 +191,12 @@ export default function TodoPage() {
             {openTasks.length === 0 && (
               <p className="py-2 text-sm text-muted">{doneTasks.length > 0 ? 'Nothing open. Nice.' : 'No tasks yet. Tap + to add one.'}</p>
             )}
+            {projects.length > 0 && (
+              <button onClick={() => setEditingProjects(true)} className="mt-2 text-xs font-medium text-primary-500">
+                📂 Projects ({projects.length}): rename or remove
+              </button>
+            )}
+            <ProjectsSheet open={editingProjects} onClose={() => setEditingProjects(false)} />
             <DoneGroup count={doneTasks.length}>
               {doneTasks.map(t => (
                 <TaskRow

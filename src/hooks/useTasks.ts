@@ -115,6 +115,12 @@ export async function addProject(name: string) {
   return db.projects.add({ name, created_at: nowISO() })
 }
 
+export async function renameProject(id: number, name: string) {
+  const trimmed = name.trim()
+  if (trimmed) await db.projects.update(id, { name: trimmed })
+}
+
+// Removing a project keeps its tasks; they just lose the project.
 export async function deleteProject(id: number) {
   await db.transaction('rw', [db.projects, db.tasks], async () => {
     await db.tasks.where('project_id').equals(id).modify({ project_id: null })

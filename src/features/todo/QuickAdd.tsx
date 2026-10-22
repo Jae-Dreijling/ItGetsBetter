@@ -100,7 +100,7 @@ export default function QuickAdd({ kinds, initialKind, labelId, onAdded }: {
         </div>
       )}
 
-      {labels.length > 0 && <LabelPicker labels={labels} selected={labelIds} onChange={setLabelIds} />}
+      <LabelPicker labels={labels} selected={labelIds} onChange={setLabelIds} />
 
       <button
         type="submit"

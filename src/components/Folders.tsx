@@ -141,7 +141,7 @@ export function FolderSections<T extends { id?: number; folder_id?: number | nul
 }
 
 // A section with a header you tap to fold it open or closed.
-export function FoldableSection({ emoji, title, count, open, onToggle, gap = 'space-y-3', children }: {
+export function FoldableSection({ emoji, title, count, open, onToggle, gap = 'space-y-3', action, children }: {
   emoji?: string
   title: string
   // Shown after the title, e.g. 3 or "2 of 5"; left out when missing.
@@ -149,15 +149,20 @@ export function FoldableSection({ emoji, title, count, open, onToggle, gap = 'sp
   open: boolean
   onToggle: () => void
   gap?: string
+  // A small button next to the header, e.g. to edit what the section is about.
+  action?: ReactNode
   children: ReactNode
 }) {
   return (
     <section>
-      <button onClick={onToggle} aria-expanded={open} className="mb-2 flex w-full items-center gap-2 text-left text-sm font-semibold text-muted">
-        {emoji && <span aria-hidden>{emoji}</span>}
-        <span className="flex-1">{title}{count !== undefined && ` · ${count}`}</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${open ? '' : '-rotate-90'}`} />
-      </button>
+      <div className="mb-2 flex items-center gap-1">
+        <button onClick={onToggle} aria-expanded={open} className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm font-semibold text-muted">
+          {emoji && <span aria-hidden>{emoji}</span>}
+          <span className="min-w-0 flex-1 truncate">{title}{count !== undefined && ` · ${count}`}</span>
+          <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${open ? '' : '-rotate-90'}`} />
+        </button>
+        {action}
+      </div>
       <AnimatePresence initial={false}>
         {open && (
           <m.div variants={fade} initial="hidden" animate="visible" exit="exit" className={gap}>
