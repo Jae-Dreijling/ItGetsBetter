@@ -13,7 +13,7 @@ Everything runs on the phone with rules, weights and pre-written lines: no AI, n
 | Romance between companions? | **Only between two adults or two minors, no exceptions.** Adults can be couples and still include you (polyamory: you can have several Lovers, a couple can both be yours). Minors' relationships stay innocent (sweethearts: holding hands, blushing, valentines; nothing more, never lover lines). |
 | Minors and you | **Minors never get Lover status or lover lines.** Their closest levels with you are family and bestie: they treat you like a parent or big sibling and sometimes slip ("Thanks, dad! ...I mean, {name}!"). The word they use is a **setting in your profile** (dad, mom, parent, big brother, big sister, big sib). |
 | Who is a minor? | By canon age: **all South Park kids** (Cartman, Kyle, Stan, Kenny, Wendy, Bebe, Butters), **Morty and Summer**, **Luke**, **Spike**. Everyone else is an adult. |
-| Drama | **Both:** mostly light and playful, and **now and then real drama** (an argument that lasts a while and is resolved later), true to the characters' dynamics. Never about you or your absence, never something you have to fix. |
+| Drama | **Both:** mostly light and playful, and **now and then real drama** (an argument that lasts a while and is resolved later), true to the characters' dynamics. Never about your absence, never something you have to fix. **Drama over you is allowed, in a flattering way** (added 2026-10-22, see below). |
 | Personality categories | **Every companion gets one category** (9, picked from the current characters, below). Some categories get along easily, some clash; each companion also **dislikes one category**. |
 
 ## Personality categories
@@ -48,6 +48,15 @@ How categories get along (a starting point; canon relationships always win):
 
 Each character also gets one personal **dislike** (a category), chosen from canon when there is one (Lucifer dislikes Laid-back because of Belphegor, Applejack dislikes Glamorous because of Rarity's fussing, Kyle dislikes Chaotic because of Cartman).
 
+## Drama over you (added 2026-10-22)
+
+Two kinds, both cute and flattering, never a problem you have to solve:
+
+- **Jealous over you:** now and then, when two companions who are both close to you meet, they bicker over you ("{name} likes MY cooking better!", "I was here first!"). Between two adults it can be romantic-jealous, especially when either is your Lover ("Back off, they're mine." "Says who?"). As soon as a minor is involved it's only "who's your favourite" rivalry, like siblings or best friends competing for you, never romantic.
+- **Protective of you:** when someone close to you meets a companion you're on bad terms with (very low closeness, your "enemy"), they take your side and bicker with them ("You were mean to {name}? Oh, we're going to have words.").
+
+How it plays out: a short exchange of lines on screen (or a scene in the hub), sometimes ending with you being asked to pick a side as a joke (any answer is fine and it costs nothing), sometimes with them making up. It happens now and then, not every time they meet, and never on a hard day (mood 1 or 2): then they're only kind. Needs new line moments per character (jealous bickering, jealous reply, protective, making up), in the files like the others.
+
 ## The ideas, one by one
 
 | # | Idea | Possible? | How it fits |
@@ -69,7 +78,7 @@ Each character also gets one personal **dislike** (a category), chosen from cano
 | 15 | **Roles in group activities** (organiser, enthusiast, reluctant one, troublemaker) | Yes | Picked when an activity starts, from categories; one activity template gives many variations. |
 | 16 | **Architecture**: data-driven companions, reusable interaction templates, a state machine, small saved data, three content layers | Yes, as proposed | 35 companions make 595 pairs, so lines come in three layers: general (any pair), by relationship type, and unique for favourite pairs. |
 
-What changes from the source: no limbs or body animations (movement and emoji props instead), drama never about you, the feed never phrased as "you missed this", and the age rules above.
+What changes from the source: no limbs or body animations (movement and emoji props instead), drama about you only in the flattering ways above, the feed never phrased as "you missed this", and the age rules above.
 
 ## Build order
 
@@ -82,5 +91,5 @@ What changes from the source: no limbs or body animations (movement and emoji pr
 | S4 | **Pair interactions**: quick games, gifts between them, light teasing and resolutions; per-relationship lines in the files (the three layers) | L | Replaces roadmap 3.1 (banter per pair) |
 | S5 | **Social feed and memories**: today's activity, friendships overview, memories ("Remember the picnic?"), catch-up on opening | M | |
 | S6 | **Group activities in the hub's rooms** (tea party, movie night, group nap, talent show) with roles | L | With JOURNEY-DESIGN J2 (the hub) |
-| S7 | **Real drama arcs and romance between companions** (adults with adults, minors with minors and innocent only), couples that include you | L | Needs S2, S4 |
+| S7 | **Real drama arcs and romance between companions** (adults with adults, minors with minors and innocent only), couples that include you, **jealousy and protectiveness over you** (above) | L | Needs S2, S4 |
 | S8 | **Rare and unique interactions, discovery collection, social milestones, weekly and seasonal events** | L, ongoing | Content grows over time |
