@@ -62,8 +62,8 @@ Companions with relationships with each other, friendships that grow, group acti
 | S3 | Social life on screen: socially aware visitors, up to 3 on screen, arrival and departure rituals | M |
 | S4 | Pair interactions: games, gifts between them, teasing, lines in three layers (replaces 3.1) | L |
 | S5 | Social feed and memories | M |
-| S6 | Group activities in the hub's rooms (with Journey J2) | L |
-| S7 | Real drama arcs, romance between companions within the age rules, couples that include you, jealousy and protectiveness over you | L |
+| S6 | Group activities in the hub's rooms, up to 7 at once, friend groups found together (with Journey J2) | L |
+| S7 | Real drama arcs (they can become enemies), romance between companions within the age rules, couples that include you, jealousy and protectiveness over you | L |
 | S8 | Rare interactions, discovery collection, social milestones, weekly and seasonal events | L, ongoing |
 
 ## Phase 3: companions, bigger systems

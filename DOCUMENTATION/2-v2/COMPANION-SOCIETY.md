@@ -8,12 +8,12 @@ Everything runs on the phone with rules, weights and pre-written lines: no AI, n
 
 | Question | Decided |
 |---|---|
-| Where does their social life happen? | **Mostly in the Journey hub** (its rooms are the places), **and often on the normal app screens too**: companions meet, chat and play on screen regularly. |
+| Where does their social life happen? | **Mostly in the Journey hub** (its rooms are the places), **and often on the normal app screens too**: companions meet, chat and play on screen regularly. **In the hub up to 7 can hang out together** (added 2026-10-22), so existing friend groups are found together when they're friends: the Mane Six (with Spike), the seven Obey Me brothers, the South Park boys. On the normal screens it stays at up to 3. |
 | Friends across fandoms? | **Yes, slowly by meeting.** Within a fandom they start with their canon relationships; across fandoms they start as strangers and become friends or rivals by meeting in the app. |
 | Romance between companions? | **Only between two adults or two minors, no exceptions.** Adults can be couples and still include you (polyamory: you can have several Lovers, a couple can both be yours). Minors' relationships stay innocent (sweethearts: holding hands, blushing, valentines; nothing more, never lover lines). |
 | Minors and you | **Minors never get Lover status or lover lines.** Their closest levels with you are family and bestie: they treat you like a parent or big sibling and sometimes slip ("Thanks, dad! ...I mean, {name}!"). The word they use is a **setting in your profile** (dad, mom, parent, big brother, big sister, big sib). |
 | Who is a minor? | By canon age: **all South Park kids** (Cartman, Kyle, Stan, Kenny, Wendy, Bebe, Butters), **Morty and Summer**, **Luke**, **Spike**. Everyone else is an adult. |
-| Drama | **Both:** mostly light and playful, and **now and then real drama** (an argument that lasts a while and is resolved later), true to the characters' dynamics. Never about your absence, never something you have to fix. **Drama over you is allowed, in a flattering way** (added 2026-10-22, see below). |
+| Drama | **Both:** mostly light and playful, and **now and then real drama** (an argument that lasts a while), true to the characters' dynamics. **Drama doesn't always resolve** (added 2026-10-22): companions can fall out for good and become enemies; enemies avoid or snipe at each other, and may (rarely) make up much later. Never about your absence, never something you have to fix. **Drama over you is allowed, in a flattering way** (added 2026-10-22, see below). |
 | Personality categories | **Every companion gets one category** (9, picked from the current characters, below). Some categories get along easily, some clash; each companion also **dislikes one category**. |
 
 ## Personality categories
@@ -90,6 +90,6 @@ What changes from the source: no limbs or body animations (movement and emoji pr
 | S3 | **Social on-screen life (often)**: socially aware visitors, up to 3 on screen, arrival and departure rituals, greetings and short chats by relationship | M | A setting for how often, defaulting to often |
 | S4 | **Pair interactions**: quick games, gifts between them, light teasing and resolutions; per-relationship lines in the files (the three layers) | L | Replaces roadmap 3.1 (banter per pair) |
 | S5 | **Social feed and memories**: today's activity, friendships overview, memories ("Remember the picnic?"), catch-up on opening | M | |
-| S6 | **Group activities in the hub's rooms** (tea party, movie night, group nap, talent show) with roles | L | With JOURNEY-DESIGN J2 (the hub) |
-| S7 | **Real drama arcs and romance between companions** (adults with adults, minors with minors and innocent only), couples that include you, **jealousy and protectiveness over you** (above) | L | Needs S2, S4 |
+| S6 | **Group activities in the hub's rooms** (tea party, movie night, group nap, talent show) with roles, **up to 7 at once**, friend groups found together | L | With JOURNEY-DESIGN J2 (the hub) |
+| S7 | **Real drama arcs (not always resolved: companions can become enemies) and romance between companions** (adults with adults, minors with minors and innocent only), couples that include you, **jealousy and protectiveness over you** (above) | L | Needs S2, S4 |
 | S8 | **Rare and unique interactions, discovery collection, social milestones, weekly and seasonal events** | L, ongoing | Content grows over time |
