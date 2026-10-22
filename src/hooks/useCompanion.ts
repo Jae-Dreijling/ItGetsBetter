@@ -110,6 +110,7 @@ export async function addCompanion(data: {
   about?: Record<string, string>
   birthday?: string | null
   expressions?: Companion['expressions']
+  age_group?: Companion['age_group']
 }) {
   return db.companions.add({
     name: data.name,
@@ -123,6 +124,7 @@ export async function addCompanion(data: {
     ...(data.about && { about: data.about }),
     ...(data.birthday && { birthday: data.birthday }),
     ...(data.expressions && { expressions: data.expressions }),
+    ...(data.age_group === 'minor' && { age_group: 'minor' as const }),
     created_at: nowISO(),
   })
 }
@@ -138,6 +140,7 @@ export async function updateCompanion(id: number, changes: Partial<{
   about: Record<string, string>
   birthday: string | null
   expressions: Companion['expressions']
+  age_group: Companion['age_group']
 }>) {
   await db.companions.update(id, changes)
 }

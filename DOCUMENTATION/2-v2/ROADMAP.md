@@ -30,7 +30,7 @@ Mostly existing systems taken a step further. Little new data.
 
 | # | Item | Size | Why here |
 |---|---|---|---|
-| 2.0 | **Age groups and minors' safety** (COMPANION-SOCIETY S0): minors never become Lovers or get lover lines; their top levels are Family and Bestie; your family word in the profile | M | **First**, before anything else with romance: today any companion can become a Lover |
+| 2.0 ✅ | **Age groups and minors' safety** (COMPANION-SOCIETY S0): minors never become Lovers or get lover lines; their top levels are Family and Bestie; your family word in the profile | M | Built 2026-10-22, waiting for the phone test: Age (adult/minor) in the editor and companion files; minors are never Lovers (Journey, levels, lover lines, lover nicknames, romantic trait); Besties at close, Family at 90+; family word in Profile with `family_slip` lines; re-importing clears old lover data for minors; the Lover cap of 2 is gone; the ring gift is a 💎 |
 | 2.1 | **Several companions on a hard day** (more than one may knock) | S | Only limits in `companionVisits` change |
 | 2.2 | **Group cheers from every switched-on companion** (a small row of avatars cheering on big moments) | S–M | Builds on the existing cheer moment |
 | 2.3 | **Body doubling on a task** ("do this together" on a task's page) | S–M | Reuses the focus-timer companion |

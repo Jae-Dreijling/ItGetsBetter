@@ -42,6 +42,8 @@ export const EXTRA_TRIGGERS = [
   'prank_hint', 'support_knock', 'support_visit', 'support_leaving',
   // Asked for alone time (dragged onto the ✕, 2026-10-22)
   'alone_time',
+  // Minors who feel like family slip and call you dad, big sib, ... (lib/ageGroup)
+  'family_slip',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
@@ -158,6 +160,15 @@ export const TRIGGERS: TriggerInfo[] = [
       sassy: ['Oh, real mature, {name}.', 'Throw me again and see what happens.', 'Rude!'],
       shy: ['Eek! P-please be gentle...', 'Aaah! ...okay, I survived.'],
     },
+  },
+  {
+    key: 'family_slip', label: 'Minors only: calls you {family} by accident', group: 'Nicknames for you', placeholders: ['family'],
+    defaults: [
+      'Thanks, {family}! ...I mean, {name}! Forget I said that.',
+      'Okay, {family}. ...Wait. I did NOT just say that.',
+      "You're kind of like family, you know? ...Never mind.",
+      "I'm glad you're around. Like, really glad. ...Don't make it weird.",
+    ],
   },
   {
     key: 'alone_time', label: 'You asked for some alone time (dragged onto the ✕)', group: 'Handling',

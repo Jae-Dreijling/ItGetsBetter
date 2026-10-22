@@ -105,6 +105,9 @@
 
 // ===== Nicknames for you =====
 
+[family_slip]
+// Minors only: calls you {family} by accident.  Placeholders: {family}
+
 [nickname_friend]
 // Nicknames once you are friends.
 

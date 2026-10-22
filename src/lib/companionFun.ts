@@ -22,7 +22,7 @@ export const GIFTS_FOR_COMPANIONS: { id: string; emoji: string; name: string; co
   { id: 'flowers', emoji: '💐', name: 'Flowers', cost: 50, closeness: 6 },
   { id: 'cake', emoji: '🍰', name: 'Cake', cost: 80, closeness: 9 },
   { id: 'plushie', emoji: '🧸', name: 'Plushie', cost: 150, closeness: 15 },
-  { id: 'crown', emoji: '💍', name: 'Something shiny', cost: 300, closeness: 25 },
+  { id: 'crown', emoji: '💎', name: 'Something shiny', cost: 300, closeness: 25 },
 ]
 
 // ─── Accessories ───────────────────────────────────────────────────────────────

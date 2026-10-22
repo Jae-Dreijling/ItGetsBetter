@@ -9,6 +9,7 @@ import type { ExtraTrigger } from '../lib/companionTriggers'
 import type { CompanionTraits, CompanionOptions } from '../lib/companionPersonality'
 import type { Expression } from '../lib/companionExpressions'
 import type { CompanionQuestion } from '../lib/companionQuestions'
+import type { AgeGroup } from '../lib/ageGroup'
 
 export interface UserProfile {
   id?: number
@@ -40,6 +41,8 @@ export interface UserProfile {
   daily_kcal_target?: number | null
   // Accessories bought for companions (lib/companionFun), by id.
   owned_accessories?: string[]
+  // What minor companions call you when they slip ('dad', 'big sib', ...; lib/ageGroup). Missing: they only hint at it.
+  family_word?: string
   created_at: string
 }
 
@@ -369,6 +372,8 @@ export interface Companion {
   // Its own three-choice questions (lib/companionQuestions), asked before
   // the shared ones. Missing means only the shared ones.
   questions?: CompanionQuestion[]
+  // Minors never become Lovers (lib/ageGroup). Missing means adult.
+  age_group?: AgeGroup
   created_at: string
 }
 

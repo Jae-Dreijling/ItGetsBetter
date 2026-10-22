@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db'
-import { closenessTier, TIER_LABELS } from '../../lib/closeness'
+import { closenessTier, tierLabel } from '../../lib/closeness'
+import { isMinor, type AgeGroup } from '../../lib/ageGroup'
 import { MEMORY_TOPICS } from '../../lib/companionMemory'
 import { EXPRESSIONS } from '../../lib/companionExpressions'
 import { visitsOff, setVisitsOff } from '../../lib/companionVisits'
@@ -64,7 +65,7 @@ export default function CompanionPage() {
       <CompanionCard
         key={c.id}
         companion={c}
-        closeness={(() => { const b = bonds?.find(x => x.companion_id === c.id); return TIER_LABELS[closenessTier(b?.affinity, b?.is_lover)] })()}
+        closeness={(() => { const b = bonds?.find(x => x.companion_id === c.id); return tierLabel(closenessTier(b?.affinity, b?.is_lover, isMinor(c)), isMinor(c)) })()}
         folders={folders ?? []}
         isCurrent={current?.id === c.id}
         canDeactivate={activeCount > 1 || !c.is_active}
@@ -258,6 +259,7 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
   const [about, setAbout] = useState<Record<string, string>>(initial?.about ?? {})
   const [showAbout, setShowAbout] = useState(false)
   const [birthday, setBirthday] = useState(initial?.birthday ?? '')
+  const [ageGroup, setAgeGroup] = useState<AgeGroup>(initial?.age_group ?? 'adult')
   const [expressions, setExpressions] = useState<NonNullable<Companion['expressions']>>(initial?.expressions ?? {})
   const validBirthday = /^\d{2}-\d{2}$/.test(birthday) ? birthday : null
   // Only filled-in favourites are kept.
@@ -286,10 +288,10 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
     if (!name.trim()) return
     let savedId: number
     if (initial?.id) {
-      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, options, about: aboutToSave, birthday: validBirthday, expressions })
+      await updateCompanion(initial.id, { name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, options, about: aboutToSave, birthday: validBirthday, expressions, age_group: ageGroup })
       savedId = initial.id
     } else {
-      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, options, about: aboutToSave, birthday: validBirthday, expressions }) as number
+      savedId = await addCompanion({ name: name.trim(), avatar, personality_group_id: personalityGroupId, messages, traits, options, about: aboutToSave, birthday: validBirthday, expressions, age_group: ageGroup }) as number
     }
     await setCompanionHomeRegion(savedId, homeRegion)
     await updateLoverDialogue(savedId, loverDialogue)
@@ -421,6 +423,30 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
         />
       </label>
 
+      {/* Age: minors never become Lovers (lib/ageGroup) */}
+      <div className="mb-4">
+        <p className="mb-1.5 text-xs font-semibold text-muted uppercase tracking-wide">Age</p>
+        <div className="flex gap-1 rounded-lg bg-surface p-0.5" role="radiogroup" aria-label="Age">
+          {(['adult', 'minor'] as const).map(a => (
+            <button
+              key={a}
+              type="button"
+              role="radio"
+              aria-checked={ageGroup === a}
+              onClick={() => setAgeGroup(a)}
+              className={`flex-1 rounded-md py-1.5 text-sm transition-colors ${ageGroup === a ? 'bg-primary-500 font-medium text-white' : 'text-muted'}`}
+            >
+              {a === 'adult' ? 'Adult' : 'Minor'}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-xs text-muted">
+          {ageGroup === 'minor'
+            ? 'A minor never becomes a Lover and has no lover lines. Its closest levels with you are Besties and Family, and it may call you your family word by accident.'
+            : 'Adults can become your Lover in the Journey.'}
+        </p>
+      </div>
+
       {/* Optional expressions (11g) */}
       <div className="mb-4">
         <p className="mb-1.5 text-xs font-semibold text-muted uppercase tracking-wide">Expressions (optional)</p>
@@ -484,10 +510,10 @@ function CompanionForm({ initial, onSave }: { initial?: Companion; onSave: () =>
       <MessagePoolEditor
         messages={messages}
         onChange={updater => setMessages(updater)}
-        showLoverImport
-        onImportLover={lines => setLoverDialogue(prev => [...prev, ...lines])}
-        loverLines={loverDialogue}
-        onLoverChange={updater => setLoverDialogue(updater)}
+        showLoverImport={ageGroup === 'adult'}
+        onImportLover={ageGroup === 'adult' ? lines => setLoverDialogue(prev => [...prev, ...lines]) : undefined}
+        loverLines={ageGroup === 'adult' ? loverDialogue : undefined}
+        onLoverChange={ageGroup === 'adult' ? updater => setLoverDialogue(updater) : undefined}
         loverHint={
           isLover
             ? 'Lines this companion says when they visit as your Lover. If empty, default visit greetings are used.'

@@ -2,6 +2,7 @@
 // "a bit" or "very", that decide how a companion behaves when you handle it,
 // and closeness (its affinity with you), which softens or strengthens that.
 // Pure choices here (testable); FloatingCompanion acts them out.
+import { isMinor, type AgeGroup } from './ageGroup'
 
 export type Trait = 'playful' | 'proud' | 'shy' | 'sassy' | 'romantic' | 'nerdy' | 'caring'
 export type TraitLevel = 0 | 1 | 2
@@ -57,8 +58,10 @@ export function forcedOn(companion: { traits?: Partial<CompanionTraits>; options
 
 export const LEVEL_LABELS = ['Not', 'A bit', 'Very'] as const
 
-export function traitsOf(companion: { traits?: Partial<CompanionTraits> } | undefined | null): CompanionTraits {
-  return { ...DEFAULT_TRAITS, ...companion?.traits }
+// A minor's romantic trait always counts as 0 (lib/ageGroup), whatever was set.
+export function traitsOf(companion: { traits?: Partial<CompanionTraits>; age_group?: AgeGroup } | undefined | null): CompanionTraits {
+  const traits = { ...DEFAULT_TRAITS, ...companion?.traits }
+  return isMinor(companion) ? { ...traits, romantic: 0 } : traits
 }
 
 // The trait that shows most, for picking fitting built-in lines. Ties go to

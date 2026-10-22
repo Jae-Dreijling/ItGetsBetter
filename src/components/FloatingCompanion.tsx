@@ -32,6 +32,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nicknameFor, speakingName } from '../lib/nicknames'
 import { aloneUntil, isAloneTime, startAloneTime, overAloneZone } from '../lib/aloneTime'
+import { isMinor, slipsNow } from '../lib/ageGroup'
 import { pickAnotherCompanion, setSessionCompanionId } from '../lib/sessionCompanion'
 
 const POSITION_KEY = 'igb_companion_position'
@@ -145,6 +146,7 @@ export default function FloatingCompanion() {
   // effect that starts the idle timer would re-run and restart the countdown.
   const messagesRef = useRef(effectiveMessages)
   const nameRef = useRef(name)
+  const familyWordRef = useRef(profile?.family_word)
   const moodScoreRef = useRef(latestMoodScore)
   const isPhoneFreeTimeRef = useRef(isPhoneFreeTime)
   const isGoodnightTimeRef = useRef(isGoodnightTime)
@@ -162,6 +164,7 @@ export default function FloatingCompanion() {
   const positionRef = useRef(position)
   useEffect(() => { messagesRef.current = effectiveMessages }, [effectiveMessages])
   useEffect(() => { nameRef.current = name }, [name])
+  useEffect(() => { familyWordRef.current = profile?.family_word }, [profile?.family_word])
   useEffect(() => { moodScoreRef.current = latestMoodScore }, [latestMoodScore])
   useEffect(() => { isPhoneFreeTimeRef.current = isPhoneFreeTime }, [isPhoneFreeTime])
   useEffect(() => { isGoodnightTimeRef.current = isGoodnightTime }, [isGoodnightTime])
@@ -200,10 +203,16 @@ export default function FloatingCompanion() {
     // It calls you by its nickname for you now and then (11c).
     const id = companionIdRef.current
     const bond = affinityRef.current
-    const nickname = id === undefined ? null : nicknameFor(messagesRef.current, traitsRef.current, closenessTier(bond?.affinity, bond?.is_lover), id)
+    const minor = isMinor(companionRef.current)
+    const tier = closenessTier(bond?.affinity, bond?.is_lover, minor)
+    const nickname = id === undefined ? null : nicknameFor(messagesRef.current, traitsRef.current, tier, id)
     const name = speakingName(nameRef.current, nickname, Math.random())
+    // A minor who feels like family now and then calls you dad, big sib, ...
+    // by accident (lib/ageGroup); without a family word set, it only hints.
+    if (slipsNow(minor, tier, event, Math.random())) event = 'family_slip'
+    const family: TriggerValues = familyWordRef.current ? { family: familyWordRef.current } : {}
     // What it remembers about you can turn up in any line ({food}, ...).
-    const msg = getCompanionMessage(messagesRef.current, event, name, { ...memoriesRef.current, nickname: nickname ?? nameRef.current, ...values }, traitsRef.current)
+    const msg = getCompanionMessage(messagesRef.current, event, name, { ...memoriesRef.current, nickname: nickname ?? nameRef.current, ...family, ...values }, traitsRef.current)
     setExpression(expressionFor(event))
     setMessage(msg)
     if (messageTimer.current) clearTimeout(messageTimer.current)
@@ -289,7 +298,7 @@ export default function FloatingCompanion() {
     // Affinity bleeding into the home screen: a Lover with high affinity
     // occasionally shows one of their Lover Messages instead of plain idle text.
     const currentAffinity = affinityRef.current
-    if (currentAffinity?.is_lover && currentAffinity.affinity >= 60 && currentAffinity.lover_dialogue.length > 0 && Math.random() < 0.3) {
+    if (!isMinor(companionRef.current) && currentAffinity?.is_lover && currentAffinity.affinity >= 60 && currentAffinity.lover_dialogue.length > 0 && Math.random() < 0.3) {
       const line = currentAffinity.lover_dialogue[Math.floor(Math.random() * currentAffinity.lover_dialogue.length)]
       showRawText(line.replace('{name}', nameRef.current), 5000)
       return

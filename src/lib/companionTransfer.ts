@@ -7,6 +7,7 @@ import type { CompanionMovement } from './companionMotion'
 import { DEFAULT_TRAITS, OPTION_INFO, traitsOf, type CompanionTraits, type CompanionOptions, type Trait } from './companionPersonality'
 import { EXPRESSIONS, type Expression } from './companionExpressions'
 import { cleanQuestions, mergeQuestions, type CompanionQuestion } from './companionQuestions'
+import type { AgeGroup } from './ageGroup'
 
 // Share companions between installs (or bulk-add them): export the ones you
 // made, import a file that only ever *adds*. Nothing existing is changed or
@@ -16,8 +17,8 @@ import { cleanQuestions, mergeQuestions, type CompanionQuestion } from './compan
 // Folders go by name too: a folder you already have is reused.
 // Re-importing (a newer version of a character file) can also update the
 // companions you already have: their lines are merged (nothing you wrote is
-// lost), and personality, options, favourites, birthday, nicknames and its
-// own questions come from the file. Pictures you set, memories and closeness stay yours.
+// lost), and personality, options, favourites, birthday, nicknames, its
+// own questions and its age group come from the file. Pictures you set, memories and closeness stay yours.
 
 export const COMPANIONS_FORMAT = 'itgetsbetter-companions'
 
@@ -45,6 +46,8 @@ export interface CompanionFileEntry {
   expressions?: Partial<Record<Expression, EncodedBlob>>
   // Its own three-choice questions (lib/companionQuestions); optional.
   questions?: CompanionQuestion[]
+  // "adult" or "minor" (lib/ageGroup); optional, missing means adult.
+  age_group?: AgeGroup
 }
 
 export interface CompanionFile {
@@ -116,6 +119,7 @@ export async function buildCompanionExport(): Promise<CompanionFile> {
         birthday: c.birthday ?? null,
         expressions: Object.fromEntries(await Promise.all(Object.entries(c.expressions ?? {}).map(async ([k, blob]) => [k, await encodeBlob(blob as Blob)]))),
         questions: c.questions ?? [],
+        age_group: c.age_group ?? 'adult',
       }
     })),
   }
@@ -159,6 +163,7 @@ export function parseCompanionFile(raw: string): ParsedCompanions {
           ? Object.fromEntries(Object.entries(c.expressions).filter(([k, v]) => EXPRESSIONS.some(e => e.key === k) && isObj(v) && v.__blob === true)) as Partial<Record<Expression, EncodedBlob>>
           : undefined,
         questions: cleanQuestions(c.questions),
+        age_group: c.age_group === 'minor' ? 'minor' as const : c.age_group === 'adult' ? 'adult' as const : undefined,
       }
     })
   if (companions.length === 0) return { ok: false, error: 'This file has no companions in it.' }
@@ -265,6 +270,7 @@ export async function applyCompanionImport(plan: CompanionImportPlan, { update =
         ...(c.options && Object.keys(c.options).length > 0 && { options: c.options }),
         ...(c.birthday && { birthday: c.birthday }),
         ...(c.questions && c.questions.length > 0 && { questions: c.questions }),
+        ...(c.age_group === 'minor' && { age_group: 'minor' as const }),
         ...(c.expressions && Object.keys(c.expressions).length > 0 && {
           expressions: Object.fromEntries(Object.entries(c.expressions).map(([k, v]) => [k, decodeBlob(v as EncodedBlob)])),
         }),
@@ -297,13 +303,17 @@ export async function applyCompanionImport(plan: CompanionImportPlan, { update =
         ...(c.about && Object.keys(c.about).length > 0 && { about: { ...current.about, ...c.about } }),
         ...(c.birthday && { birthday: c.birthday }),
         ...(c.questions && c.questions.length > 0 && { questions: mergeQuestions(current.questions, c.questions) }),
+        ...(c.age_group && { age_group: c.age_group }),
         ...(!current.avatar && c.avatar && { avatar: decodeBlob(c.avatar) }),
         ...(Object.keys(expressions).length > 0 && { expressions }),
         ...(current.folder_id == null && c.folder && { folder_id: folderId.get(key(c.folder)) ?? null }),
         ...(current.personality_group_id == null && c.personality_group && { personality_group_id: groupId.get(key(c.personality_group)) ?? null }),
       })
       const bond = await db.gameCompanionAffinity.where('companion_id').equals(current.id!).first()
-      if (bond) {
+      if (bond && c.age_group === 'minor') {
+        // A minor (lib/ageGroup): no lover lines and never a Lover, also from older imports.
+        await db.gameCompanionAffinity.update(bond.id!, { lover_dialogue: [], is_lover: false })
+      } else if (bond) {
         const lines = [...bond.lover_dialogue, ...c.lover_dialogue]
         await db.gameCompanionAffinity.update(bond.id!, { lover_dialogue: lines.filter((l, i) => lines.indexOf(l) === i) })
       } else if (c.lover_dialogue.length > 0 || c.home_region) {

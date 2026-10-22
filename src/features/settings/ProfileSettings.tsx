@@ -4,6 +4,7 @@ import TopBar from '../../components/layout/TopBar'
 import PageContainer from '../../components/layout/PageContainer'
 import { useProfile, updateProfile } from '../../hooks/useProfile'
 import { listNames, namesAfterAdd, namesAfterRemove, namesAfterSwitch, normalizeName } from '../../lib/names'
+import { FAMILY_WORDS } from '../../lib/ageGroup'
 import type { UserProfile } from '../../types'
 
 export default function ProfileSettings() {
@@ -16,12 +17,41 @@ export default function ProfileSettings() {
         {profile && (
           <div className="space-y-4">
             <NameSwitcher profile={profile} />
+            <FamilyWord profile={profile} />
             {/* Keyed by id so the form starts from the saved values once loaded. */}
             <BodyForm key={profile.id} profile={profile} />
           </div>
         )}
       </PageContainer>
     </>
+  )
+}
+
+// What minor companions call you when they slip ("Thanks, dad! ...I mean,
+// Jae!", lib/ageGroup). Without one they only hint that you feel like family.
+function FamilyWord({ profile }: { profile: UserProfile }) {
+  return (
+    <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <p className="text-sm font-semibold text-text-primary">Family word</p>
+      <p className="mb-3 text-xs text-muted">Young companions who feel like family sometimes call you this by accident.</p>
+      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Family word">
+        {[null, ...FAMILY_WORDS].map(word => {
+          const active = (profile.family_word ?? null) === word
+          return (
+            <button
+              key={word ?? 'none'}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => updateProfile(profile.id!, { family_word: word ?? undefined })}
+              className={`rounded-full px-3 py-1.5 text-sm transition-colors ${active ? 'bg-primary-500 font-medium text-white' : 'bg-surface text-text-primary'}`}
+            >
+              {word ?? 'None'}
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 

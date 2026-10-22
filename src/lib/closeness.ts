@@ -6,11 +6,16 @@ import { nowISO } from './date'
 // both grow it. Moments in the app can raise it to 100 at most; becoming a
 // Lover stays a Journey thing.
 
-export type ClosenessTier = 'new' | 'friend' | 'close' | 'lover'
+// Minors (lib/ageGroup) never become Lovers: their top level is Family, which
+// comes by itself at high closeness, and "close" with them is Besties.
+export type ClosenessTier = 'new' | 'friend' | 'close' | 'lover' | 'family'
 
-export function closenessTier(affinity: number | null | undefined, isLover = false): ClosenessTier {
-  if (isLover) return 'lover'
+export const FAMILY_AT = 90
+
+export function closenessTier(affinity: number | null | undefined, isLover = false, minor = false): ClosenessTier {
   const a = affinity ?? 0
+  if (minor) return a >= FAMILY_AT ? 'family' : a >= 60 ? 'close' : a >= 20 ? 'friend' : 'new'
+  if (isLover) return 'lover'
   return a >= 60 ? 'close' : a >= 20 ? 'friend' : 'new'
 }
 
@@ -19,6 +24,11 @@ export const TIER_LABELS: Record<ClosenessTier, string> = {
   friend: 'Friends',
   close: 'Close',
   lover: 'Lovers',
+  family: 'Family',
+}
+
+export function tierLabel(tier: ClosenessTier, minor = false): string {
+  return minor && tier === 'close' ? 'Besties' : TIER_LABELS[tier]
 }
 
 const APP_CAP = 100

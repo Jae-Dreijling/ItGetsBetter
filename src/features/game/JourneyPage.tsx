@@ -17,6 +17,7 @@ import {
   setLoverStatus,
   type QuizQuestion,
 } from '../../lib/game'
+import { isMinor } from '../../lib/ageGroup'
 import { rollEncounter, recordEncounterToday, ENCOUNTERS as ENCOUNTERS_ALL } from '../../lib/encounters'
 import { BOSSES } from '../../lib/bosses'
 import {
@@ -185,18 +186,20 @@ type VisitPhase = 'greeting' | 'responded' | 'confessing' | 'confessed'
 function CompanionVisitSheet({
   visitor,
   affinityRecord,
-  loverCount,
+  minor,
   onClose,
 }: {
   visitor: VisitorInfo
   affinityRecord: import('../../types').GameCompanionAffinity | null
-  loverCount: number
+  // Minors (lib/ageGroup) are never Lovers and are never offered a confession.
+  minor: boolean
   onClose: () => void
 }) {
   const isJointVisit = !!visitor.partnerId
-  const isLover      = affinityRecord?.is_lover ?? false
+  const isLover      = !minor && (affinityRecord?.is_lover ?? false)
   const affinity     = affinityRecord?.affinity ?? 0
-  const canConfess   = !isLover && affinity >= 100 && loverCount < 2
+  // You can have several Lovers (decided 2026-10-22).
+  const canConfess   = !minor && !isLover && affinity >= 100
 
   const [greeting] = useState(() => {
     if (isLover && affinityRecord?.lover_dialogue?.length) {
@@ -592,7 +595,6 @@ export default function JourneyPage() {
 
   const companionMap = new Map((companions ?? []).map(c => [c.id!, c.name]))
   const discoveredAffinities = (affinities ?? []).filter(a => a.is_discovered)
-  const loverCount = (affinities ?? []).filter(a => a.is_lover).length
   const visitorAffinity = visitor
     ? (affinities ?? []).find(a => a.companion_id === visitor.companionId) ?? null
     : null
@@ -867,7 +869,7 @@ export default function JourneyPage() {
         <CompanionVisitSheet
           visitor={visitor}
           affinityRecord={visitorAffinity}
-          loverCount={loverCount}
+          minor={isMinor(companions?.find(c => c.id === visitor.companionId))}
           onClose={() => {
             setShowVisitSheet(false)
             setVisitor(null)

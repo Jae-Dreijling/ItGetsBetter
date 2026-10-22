@@ -12,7 +12,8 @@ import { getLogicalDate } from '../../lib/date'
 import { fadeUp } from '../../lib/animations'
 import { fillPlaceholders } from '../../lib/companionTriggers'
 import { traitsOf } from '../../lib/companionPersonality'
-import { closenessTier, changeCloseness, TIER_LABELS } from '../../lib/closeness'
+import { closenessTier, changeCloseness, tierLabel } from '../../lib/closeness'
+import { isMinor } from '../../lib/ageGroup'
 import { nicknameFor } from '../../lib/nicknames'
 import { closenessChange, pickQuestion, type QuestionAnswer } from '../../lib/companionQuestions'
 import { memoryReply, nextTopic } from '../../lib/companionMemory'
@@ -62,7 +63,8 @@ export default function CompanionQuestionCard() {
   const seed = hash(`${today}:${companion.id}`)
 
   const traits = traitsOf(companion)
-  const tier = closenessTier(bond?.affinity, bond?.is_lover)
+  const minor = isMinor(companion)
+  const tier = closenessTier(bond?.affinity, bond?.is_lover, minor)
   const name = nicknameFor(messages, traits, tier, companion.id) ?? profile?.display_name ?? 'friend'
   // Recently asked questions are kept per companion, so each works through its own.
   const recentKey = `${RECENT_KEY}_${companion.id}`
@@ -89,12 +91,12 @@ export default function CompanionQuestionCard() {
   async function answer(a: QuestionAnswer) {
     const delta = closenessChange(a.tone, traits)
     const after = await changeCloseness(companion!.id!, delta)
-    const newTier = closenessTier(after, bond?.is_lover)
+    const newTier = closenessTier(after, bond?.is_lover, minor)
     finish(true)
     setAnswered({
       reply: fillPlaceholders(a.reply, name),
       // Only good news is shown; a reply that didn't land just passes.
-      note: newTier !== tier && delta > 0 ? `💗 You and ${companion!.name}: ${TIER_LABELS[newTier]}!` : delta > 0 ? '💗 You two got a little closer' : null,
+      note: newTier !== tier && delta > 0 ? `💗 You and ${companion!.name}: ${tierLabel(newTier, minor)}!` : delta > 0 ? '💗 You two got a little closer' : null,
     })
   }
 

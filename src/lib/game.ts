@@ -1,4 +1,5 @@
 import { db } from '../db'
+import { isMinor } from './ageGroup'
 import { getFeatureTiers } from '../hooks/useFeatures'
 import { isQuestObjectiveOn } from './features'
 import { getLogicalDate, nowISO } from './date'
@@ -521,8 +522,9 @@ export async function getOrPickDailyVisitor(): Promise<{
   const allCompanions = await db.companions.toArray()
   if (allCompanions.length === 0) return null
 
-  // Joint Lover visit: 30% of triggered visits when 2+ Lovers exist
-  const lovers = await db.gameCompanionAffinity.filter(a => a.is_lover).toArray()
+  // Joint Lover visit: 30% of triggered visits when 2+ Lovers exist (never minors).
+  const minorIds = new Set(allCompanions.filter(c => isMinor(c)).map(c => c.id))
+  const lovers = await db.gameCompanionAffinity.filter(a => a.is_lover && !minorIds.has(a.companion_id)).toArray()
   if (lovers.length >= 2 && Math.random() < 0.30) {
     const comp1 = await db.companions.get(lovers[0].companion_id)
     const comp2 = await db.companions.get(lovers[1].companion_id)
@@ -571,7 +573,9 @@ export async function recordCompanionVisit(companionId: number, affinityDelta: n
 
 // ─── Lover system ─────────────────────────────────────────────────────────────
 
+// A minor never becomes a Lover (lib/ageGroup).
 export async function setLoverStatus(companionId: number, isLover: boolean): Promise<void> {
+  if (isLover && isMinor(await db.companions.get(companionId))) return
   const existing = await db.gameCompanionAffinity
     .where('companion_id').equals(companionId)
     .first()

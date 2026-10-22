@@ -11,7 +11,8 @@ export function nicknameFor(
   messages: CompanionMessages | undefined, traits: CompanionTraits, tier: ClosenessTier, companionId: number,
 ): string | null {
   if (tier === 'new') return null
-  const key = `nickname_${tier}` as const
+  // Family (minors) uses its close nicknames; the family word comes in its own slips.
+  const key = `nickname_${tier === 'family' ? 'close' : tier}` as const
   const info = triggerInfo(key)
   const trait = dominantTrait(traits)
   const pool = [messages?.[key], trait ? info?.traitDefaults?.[trait] : undefined, info?.defaults].find(p => p && p.length > 0)
