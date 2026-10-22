@@ -1,4 +1,6 @@
-# Journey, game-ified big-time (brainstorm, not started)
+# Journey, game-ified big-time (brainstorm, decided 2026-10-22)
+
+**Decided:** the answers and the design are in [JOURNEY-DESIGN](JOURNEY-DESIGN.md). This page stays as the starting point and the list of ideas.
 
 Asked for on 2026-10-21: the user wants to expand the Journey (the optional game layer) a lot, and to consider everything from a mini game inside the app to a separate game app that connects to this one. Nothing here is decided or built; this is the starting point for the brainstorm. Read with [GAME-LAYER-DESIGN](../3-game/GAME-LAYER-DESIGN.md) (the design) and [GAME-IMPLEMENTATION](../3-game/GAME-IMPLEMENTATION.md) (what exists).
 

@@ -62,31 +62,28 @@ Each needs a new format and a lot of writing. Best after phase 2, when the small
 | 3.4 | **Weather and season reactions, outfits per character** | L | Weather needs a source that works offline (the season and the date work without one; real weather would need internet, so optional) |
 | 3.5 | **Expression pictures** for the characters | content | The feature is built; the pictures have to be found or drawn by you. Can happen any time, alongside other work |
 
-## Phase 4: decide the Journey
+## Phase 4: decide the Journey ✅
 
-Before building anything big for the Journey, the brainstorm questions need answers (JOURNEY-BRAINSTORM, "Questions for the user"): where the game lives (A inside the app, B separate app, C a full-screen game mode), how game-like it looks, one world or one per fandom, how much real life drives it, and whether Gold stakes stay. **Size: one conversation**, then a short design doc like COMPANION-PLAN.
+Decided with the user on 2026-10-22: a full-screen game mode inside the app, a hub with a portal to each fandom's world, exploring, story and battles, real life driving the important things, a small party of companions, Gold risk kept within the safety rules, an optional daily play limit, and graphics made without AI (companion pictures turned into pixel art, procedural sprites, free CC0 pixel-art packs, emoji). The full design: [JOURNEY-DESIGN](JOURNEY-DESIGN.md).
 
-These small Journey items don't depend on that decision and can be done any time after phase 1:
-
-| # | Item | Size |
-|---|---|---|
-| 4.1 | Adventure and Legend quest tiers (longer quests, bigger rewards) | M |
-| 4.2 | Real-life links: water fills a well, sleep restores energy, exercise trains a stat, a friend you saw appears as a guest | M |
-| 4.3 | More Guild Hall rooms | M |
+The small Journey items from before are now part of that design: real-life links (well, energy, stats, guests) are J4, more Guild Hall rooms come with the hub (J2). **Adventure and Legend quest tiers** (longer quests, bigger rewards, M) can still be done any time.
 
 ## Phase 5: the big Journey
 
-Built in parts, in this order, because each needs the one before.
+Built in the order of [JOURNEY-DESIGN](JOURNEY-DESIGN.md#build-order-replaces-roadmap-phase-5), each part needing the one before:
 
-| # | Item | Size | Depends on |
-|---|---|---|---|
-| 5.1 | **Region map and unlocking** (the ten planned regions) | L | Phase 4 decision |
-| 5.2 | **Companions as a party:** pick who comes along, traits matter (nerdy solves puzzles, playful finds secrets, caring heals) | L | 5.1 |
-| 5.3 | **Mini games**, one at a time: memory, dodge waves, tap-timing battles, then calm ones (fishing, gardening) | M each | Phase 4 decision (engine or not) |
-| 5.4 | **Story chapters / adventures:** pre-written, progressed by your daily floor, waiting patiently when you're away | XL | 5.1, 5.2; also the conversation format from 3.1 |
-| 5.5 | **Fandom worlds:** the Devildom, South Park, the Citadel, next to Equestria | XL | 5.1, 5.4; a lot of writing per world |
-| 5.6 | **Collections and base building** (outfits, decorations, creatures, cards; a home that grows with real life) | L | 5.1 |
-| 5.7 | **Seasonal chapters and events** (holidays, character birthdays) | L | 5.4 |
+| # | Part | Size |
+|---|---|---|
+| J1 | Game mode shell (full-screen, own look, a way out, optional daily limit) | M |
+| J2 | The hub with the Guild Hall, quest board, companions and the Equestria portal | L |
+| J3 | Pixel art tools: pixel companions, procedural sprites, the first CC0 tile set | M |
+| J4 | Real-life links: energy, keys from the daily floor, materials and stats, the well, guests | M |
+| J5 | The party: 2 or 3 companions, roles from traits | L |
+| J6 | Battles v2 with the party | L |
+| J7 | Equestria's region map and exploring | L |
+| J8 | Story chapters (visual novel), Equestria first; needs the conversation format (3.1) | XL |
+| J9 | More worlds, one at a time: the Devildom, South Park, the Citadel | XL each |
+| J10 | Collections, seasonal events, calm mini-games | L |
 
 ## Any time, on request
 
@@ -95,4 +92,4 @@ Built in parts, in this order, because each needs the one before.
 
 ## The order in one line
 
-Phase 1 (1.1 → 1.4) → phase 2 (2.1 → 2.7) → phase 2b (2b.1 → 2b.5) → phase 3 (3.1 → 3.4) → the Journey talk (phase 4) → phase 5 (5.1 → 5.7). Expression pictures and new characters slot in whenever they're ready.
+Phase 1 (1.1 → 1.4) → phase 2 (2.1 → 2.7) → phase 2b (2b.1 → 2b.5) → phase 3 (3.1 → 3.4) → phase 5 (J1 → J10; the Journey talk, phase 4, is done). J1 to J7 don't need phase 3, so they can start earlier if you'd rather play sooner; only the story chapters (J8) wait for the conversation format (3.1). Expression pictures and new characters slot in whenever they're ready.
