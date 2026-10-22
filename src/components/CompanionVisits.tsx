@@ -11,6 +11,7 @@ import { fadeUp, pop } from '../lib/animations'
 import { traitsOf, isCalmPlace, allows } from '../lib/companionPersonality'
 import { useTodaysMoodScore } from '../hooks/useMood'
 import { isDue, markTurn } from '../lib/companionTurns'
+import { isAloneTime } from '../lib/aloneTime'
 import { getLogicalDate } from '../lib/date'
 import { LOW_MOOD } from '../lib/softDay'
 import { changeCloseness } from '../lib/closeness'
@@ -52,7 +53,7 @@ export default function CompanionVisits() {
     function check() {
       const s = latest.current
       if (s.visit || s.knock || !s.companions || !s.current || visitsOff()) return
-      if (s.isPhoneFreeTime || isQuietToday() || isCalmPlace(s.path) || document.visibilityState !== 'visible') return
+      if (s.isPhoneFreeTime || isQuietToday() || isAloneTime() || isCalmPlace(s.path) || document.visibilityState !== 'visible') return
       const others = s.companions.filter(c => c.id !== s.current!.id && allows(c, 'visits'))
       // A hard day: someone may come by to keep you company (11j).
       const today = getLogicalDate()
@@ -78,6 +79,18 @@ export default function CompanionVisits() {
     const every = setInterval(check, CHECK_EVERY_MS)
     window.addEventListener('igb-support-check', check)
     return () => { clearTimeout(first); clearInterval(every); window.removeEventListener('igb-support-check', check) }
+  }, [])
+
+  // Alone time: a visitor or a waiting knock goes away quietly.
+  useEffect(() => {
+    function goAway() {
+      endVisit()
+      setVisit(null)
+      setGreeting(null)
+      setKnock(null)
+    }
+    window.addEventListener('igb-alone-time', goAway)
+    return () => window.removeEventListener('igb-alone-time', goAway)
   }, [])
 
   // Right after a low mood is logged, check sooner.

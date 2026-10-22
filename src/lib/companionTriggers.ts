@@ -40,6 +40,8 @@ export const EXTRA_TRIGGERS = [
   'gift_received', 'gift_for_you', 'request_done',
   // Prank hints and support visits (11j)
   'prank_hint', 'support_knock', 'support_visit', 'support_leaving',
+  // Asked for alone time (dragged onto the ✕, 2026-10-22)
+  'alone_time',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
@@ -155,6 +157,17 @@ export const TRIGGERS: TriggerInfo[] = [
       proud: ['Was that strictly necessary, {name}?!', 'I am NOT a ball.', 'Undignified. Utterly undignified.'],
       sassy: ['Oh, real mature, {name}.', 'Throw me again and see what happens.', 'Rude!'],
       shy: ['Eek! P-please be gentle...', 'Aaah! ...okay, I survived.'],
+    },
+  },
+  {
+    key: 'alone_time', label: 'You asked for some alone time (dragged onto the ✕)', group: 'Handling',
+    defaults: ["Okay! I'll give you some space. See you in a bit.", 'Alone time, got it. Take care of yourself.', "Sure thing. I'll be around when you want me."],
+    traitDefaults: {
+      playful: ['Fine, fine, I know when I am not wanted! ...Kidding. Bye for now!', "Hide and seek? I'll hide. Don't come looking. Bye!"],
+      proud: ['Very well. I have matters to attend to anyway.', 'As you wish. Call when you need me.'],
+      sassy: ['Wow, kicked out. Rude. ...Okay, enjoy your peace.', "Fine. But you'll miss me."],
+      shy: ["Oh! Um, okay. I hope I wasn't too much...", 'S-sure. Rest well.'],
+      caring: ["Of course. Rest is important. I'm proud of you for asking.", 'Take all the quiet you need.'],
     },
   },
   {

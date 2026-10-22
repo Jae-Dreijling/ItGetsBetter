@@ -79,6 +79,9 @@
 [thrown]
 // Thrown hard (dizzy).
 
+[alone_time]
+// You asked for some alone time (dragged onto the ✕).
+
 [tapped_a_lot]
 // Tapped many times in a row.
 

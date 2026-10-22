@@ -31,6 +31,8 @@ import { onThisDay } from '../lib/onThisDay'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { nicknameFor, speakingName } from '../lib/nicknames'
+import { aloneUntil, isAloneTime, startAloneTime, overAloneZone } from '../lib/aloneTime'
+import { pickAnotherCompanion, setSessionCompanionId } from '../lib/sessionCompanion'
 
 const POSITION_KEY = 'igb_companion_position'
 const SIZE = 56
@@ -126,7 +128,12 @@ export default function FloatingCompanion() {
   const tapTimes = useRef<number[]>([])
   // Where the speech bubble goes while the companion is away from its spot.
   const [awaySpot, setAwaySpot] = useState<{ x: number; y: number } | null>(null)
-  const drag = useRef<{ from: { x: number; y: number }; refused: boolean; thrown: boolean } | null>(null)
+  const drag = useRef<{ from: { x: number; y: number }; refused: boolean; thrown: boolean; alone: boolean } | null>(null)
+  // Alone time: hidden for a few minutes after being dragged onto the ✕.
+  const [alone, setAlone] = useState(isAloneTime)
+  const [leaving, setLeaving] = useState(false)
+  const [overZone, setOverZone] = useState(false)
+  const overZoneRef = useRef(false)
   // Off on its own (jumped at your finger, rolling in): no wandering then.
   const awayRef = useRef(false)
   // Talking, being dragged or chatting: no wandering then.
@@ -178,7 +185,16 @@ export default function FloatingCompanion() {
     ensureDefaultCompanion()
   }, [])
 
+  // Back after alone time.
+  useEffect(() => {
+    if (!alone) return
+    const t = setTimeout(() => setAlone(false), Math.max(0, aloneUntil() - Date.now()))
+    return () => clearTimeout(t)
+  }, [alone])
+
   const showMessage = useCallback((event: CompanionEvent, values?: TriggerValues) => {
+    // Alone time: nothing at all until it's back.
+    if (isAloneTime()) return
     // Quiet today: only answers your own taps (11f).
     if (isQuietToday() && !speaksWhenQuiet(event)) return
     // It calls you by its nickname for you now and then (11c).
@@ -523,6 +539,33 @@ export default function FloatingCompanion() {
     setDragging(false)
     // Motion also reports a settle after a plain tap: nothing to react to.
     if (!moved) return
+    setOverZone(false)
+    overZoneRef.current = false
+    if (moved.alone) {
+      // Says goodbye where it was dropped, fades out, and someone else gets
+      // the next turn after alone time. Its spot stays where it was.
+      awayRef.current = true
+      setAwaySpot({ x: x.get(), y: y.get() })
+      showMessage('alone_time')
+      await new Promise(resolve => setTimeout(resolve, 2600))
+      setLeaving(true)
+      await new Promise(resolve => setTimeout(resolve, 450))
+      startAloneTime()
+      // A visitor (or a knock) leaves too (CompanionVisits).
+      window.dispatchEvent(new Event('igb-alone-time'))
+      if (messageTimer.current) clearTimeout(messageTimer.current)
+      setMessage(null)
+      setAwaySpot(null)
+      x.set(moved.from.x)
+      y.set(moved.from.y)
+      setPosition(moved.from)
+      awayRef.current = false
+      setLeaving(false)
+      setAlone(true)
+      const next = pickAnotherCompanion(await db.companions.toArray(), companionIdRef.current)
+      if (next?.id !== undefined) setSessionCompanionId(next.id)
+      return
+    }
     if (moved?.refused) {
       awayRef.current = true
       showMessage('pickup_refused')
@@ -547,6 +590,11 @@ export default function FloatingCompanion() {
   if (chatOpen) {
     return <CompanionChat isOpen={chatOpen} onClose={() => setChatOpen(false)} />
   }
+  if (alone) return null
+
+  // The ✕ to drag the companion onto for alone time: bottom centre, above the tab bar.
+  const zone = { x: window.innerWidth / 2, y: window.innerHeight - 120, radius: 44 }
+  const centreOverZone = () => overAloneZone(x.get() + 28, y.get() + 28, zone)
 
   const avatarUrl = (message && expressionUrl) || plainUrl
   const anchor = awaySpot ?? position
@@ -585,12 +633,35 @@ export default function FloatingCompanion() {
       )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {dragging && (
+          <m.div
+            key="alone-zone"
+            variants={pop}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            aria-hidden
+            className="pointer-events-none fixed z-40 flex flex-col items-center"
+            style={{ left: zone.x - zone.radius, top: zone.y - zone.radius, width: zone.radius * 2 }}
+          >
+            <m.div
+              animate={{ scale: overZone ? 1.15 : 1 }}
+              className={`flex h-[88px] w-[88px] items-center justify-center rounded-full border-2 border-dashed text-3xl transition-colors ${overZone ? 'border-primary-500 bg-primary-100 text-primary-600 dark:bg-primary-900/50' : 'border-primary-200 bg-card/90 text-muted dark:border-primary-800'}`}
+            >
+              ✕
+            </m.div>
+            <p className="mt-1 whitespace-nowrap rounded-full bg-card/90 px-2 py-0.5 text-[11px] font-medium text-muted">Alone time</p>
+          </m.div>
+        )}
+      </AnimatePresence>
+
       <m.div
         ref={companionEl}
         className={`fixed left-0 top-0 z-50 flex h-14 w-14 touch-none select-none items-center justify-center rounded-full bg-card shadow-lg border-2 cursor-grab active:cursor-grabbing ${shiny ? 'border-accent-400 ring-2 ring-accent-200' : 'border-primary-200 dark:border-primary-800'}`}
         style={{ x, y }}
         initial={false}
-        animate={{ scale: message || dragging ? 1 : IDLE_SCALE }}
+        animate={leaving ? { scale: 0.3, opacity: 0 } : { scale: message || dragging ? 1 : IDLE_SCALE, opacity: 1 }}
         transition={transitions.springy}
         drag
         dragConstraints={bounds}
@@ -606,9 +677,20 @@ export default function FloatingCompanion() {
             from: positionRef.current,
             refused: refusesPickup(traitsRef.current, closenessOf(affinityRef.current?.affinity), Math.random()),
             thrown: false,
+            alone: false,
           }
         }}
-        onDragEnd={(_, info) => { if (drag.current) drag.current.thrown = isThrow(info.velocity) }}
+        onDrag={() => {
+          // Only re-renders when it crosses the ✕'s edge, not every frame.
+          const over = centreOverZone()
+          if (over !== overZoneRef.current) { overZoneRef.current = over; setOverZone(over) }
+        }}
+        onDragEnd={(_, info) => {
+          if (!drag.current) return
+          // Let go over the ✕: alone time, even for one that refuses to be carried.
+          drag.current.alone = centreOverZone()
+          drag.current.thrown = !drag.current.alone && isThrow(info.velocity)
+        }}
         onDragTransitionEnd={handleDragSettled}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}

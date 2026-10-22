@@ -86,7 +86,7 @@ Everything in 11a to 11j is built. These parts of the user's ideas are only part
 - **Feeling alive extras:** idle animations, reactions to weather and season, outfits per character (accessories are emoji only), seasonal events beyond seasonal accessories, collections and decorations.
 - **Relationship depth:** conversations and backstory that unlock at higher closeness (and as Lovers) were planned in V2-PLAN §5; not built.
 - ~~**Each companion on its own clock**~~ built 2026-10-22: questions, surprises, requests and visit knocks happen per companion every 2 or 3 days (up to 2 of a kind a day across companions), instead of once a day for all (`lib/companionTurns`).
-- **Alone time (asked 2026-10-22):** drag the companion to a ✕ at the bottom of the screen to ask for some alone time; it reacts in character and leaves, another is picked, and none pops up for 3 minutes.
+- ~~**Alone time**~~ built 2026-10-22: drag the companion to the ✕ at the bottom of the screen; it says goodbye in character and leaves, a different companion is picked, and none shows up, talks or knocks for 3 minutes (`lib/aloneTime`).
 - **Per-character prank and entrance variety:** pranks hide one button and entrances roll in; character-specific tricks (Discord's chaos, Kenny "dying") are lines only, not different behaviour.
 
 ## 11i: Tools for lines

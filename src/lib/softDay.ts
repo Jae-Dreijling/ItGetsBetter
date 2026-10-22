@@ -18,7 +18,8 @@ export function setQuietToday(on: boolean, today = getLogicalDate()) {
   } catch { /* fine */ }
 }
 
-// What still gets through on a quiet day: answers to your own taps.
+// What still gets through on a quiet day: answers to your own taps, and its
+// goodbye when you ask for alone time.
 export function speaksWhenQuiet(event: string): boolean {
-  return event === 'general' || event.startsWith('tapped_') || event === 'quiet_today_on'
+  return event === 'general' || event.startsWith('tapped_') || event === 'quiet_today_on' || event === 'alone_time'
 }

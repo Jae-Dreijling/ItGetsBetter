@@ -28,6 +28,18 @@ export function subscribeSessionCompanion(listener: () => void): () => void {
   return () => listeners.delete(listener)
 }
 
+// After alone time: a different switched-on companion, picked at random;
+// the same one when it's the only one on.
+export function pickAnotherCompanion<T extends { id?: number; is_active: boolean }>(
+  companions: T[],
+  currentId: number | null | undefined,
+  random: () => number = Math.random,
+): T | undefined {
+  const others = companions.filter(c => c.is_active && c.id !== currentId)
+  if (others.length === 0) return companions.find(c => c.id === currentId)
+  return others[Math.floor(random() * others.length)]
+}
+
 // On its birthday a companion is the one with you all day. Otherwise a
 // tapped (or earlier auto-picked) companion stays current for the session,
 // or a random active companion is picked, falling back to the default one
