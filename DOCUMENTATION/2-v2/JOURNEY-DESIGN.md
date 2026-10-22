@@ -61,6 +61,34 @@ Built on the existing battle mini-game, now with the party: short, tap-timing tu
 
 Visual-novel scenes: the companions' (pixel) pictures, dialogue, sometimes a choice that changes closeness or the path. Each chapter opens with a key (your daily floor) and waits patiently. They use the conversation format from roadmap item 3.1, so they come after it. Written per world, with the characters' voices from the CHARACTERS files.
 
+### The arcade: real mini games (added 2026-10-22)
+
+The game room in your home (the hub) gets an **arcade**: small games you actually play, often together with a companion, who reacts in its own voice (cheering, teasing, sulking for a moment when it loses). Opponents play by simple rules, no AI; how well they play comes from their traits (a nerdy one is better at puzzles, a playful one takes wild risks, a proud one hates losing).
+
+Candidates, to pick from one at a time:
+
+| Game | With companions | Size |
+|---|---|---|
+| **Memory** (match pairs of companion portraits) | They cheer, or race you for pairs | S |
+| **Tic-tac-toe, Connect Four** against a companion | Its difficulty from its traits; Rick is hard to beat | S |
+| **Rock-paper-scissors** best of five | Each has its favourite move (and a tell) | S |
+| **Fandom trivia** (questions written per fandom) | The fandom's companions host it | M (writing) |
+| **Catch** (catch falling snacks, dodge the rest) | A companion throws them | S |
+| **Whack-a-mole** with portraits popping up (Cartman, Discord) | They complain when hit | S |
+| **Sliding puzzle** of a companion's picture | It comments as its face comes together | S |
+| **Rhythm tapping** (tap on the beat) | They dance (wobble) along | M |
+| **Snake, Breakout, Flappy-style** classics with companion skins | Their portrait is the ball or the snake's head | S each |
+| **Card games** (Go Fish, Old Maid, snap) with 2 or 3 companions | Character reactions to every turn | M |
+| **Calm games** for hard days: a fishing pond, watering a garden, colouring, bubble popping | A caring companion keeps you company | S each |
+
+Rules:
+- **Optional and short:** a round takes a minute or two. The daily play limit (if you set one) counts arcade time too.
+- **No gambling mechanics:** no slot machines, loot boxes, gacha or betting in the arcade, whatever Gold rules apply elsewhere.
+- **Rewards stay small:** a bit of Gold or a cosmetic, closeness with whoever played with you, a memory in the society ("Remember when you beat me at Connect Four?"). Never a streak, never a daily requirement.
+- **Personal bests only:** you can see your own best score; nobody ranks you. Companions can have their own playful rivalries in the game room.
+- **Hard days:** only the calm games are suggested, and companions always let it be fun.
+- **Light and offline:** each game is its own small piece of code, loaded only when you open it; plain canvas or DOM, transform and opacity animations, "reduce motion" respected.
+
 ## Technical shape
 
 - **One lazy-loaded game route** (`/journey/play` or similar): the game's code, tile sets and fonts load only when you open it, so the health app stays small and fast.
@@ -90,4 +118,5 @@ Visual-novel scenes: the companions' (pixel) pictures, dialogue, sometimes a cho
 | J7 | **Equestria's region map** and exploring (Ponyville, then the planned regions) | L | J2, J3, J4 |
 | J8 | **Story chapters** (visual novel), Equestria first | XL | J7; the conversation format (roadmap 3.1) |
 | J9 | **More worlds**, one at a time: the Devildom, South Park, the Citadel | XL each | J7, J8 |
-| J10 | Collections, seasonal events, calm mini-games | L | J2 |
+| J10 | Collections, seasonal events | L | J2 |
+| J11 | **The arcade**: real mini games in the game room, played with companions (memory, Connect Four, trivia, catch, card games, calm games for hard days), one game at a time | M each | J2 (the first simple ones could come earlier as a page of their own) |

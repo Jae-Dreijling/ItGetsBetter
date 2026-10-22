@@ -101,7 +101,8 @@ Built in the order of [JOURNEY-DESIGN](JOURNEY-DESIGN.md#build-order-replaces-ro
 | J7 | Equestria's region map and exploring | L |
 | J8 | Story chapters (visual novel), Equestria first; needs the conversation format (3.1) | XL |
 | J9 | More worlds, one at a time: the Devildom, South Park, the Citadel | XL each |
-| J10 | Collections, seasonal events, calm mini-games | L |
+| J10 | Collections, seasonal events | L |
+| J11 | The arcade: real mini games in the game room with companions (memory, Connect Four, trivia, catch, card games, calm games for hard days), one at a time | M each |
 
 ## Any time, on request
 
@@ -110,4 +111,4 @@ Built in the order of [JOURNEY-DESIGN](JOURNEY-DESIGN.md#build-order-replaces-ro
 
 ## The order in one line
 
-Phase 1 (1.1 → 1.4) ✅ → phase 2 (2.0 first, then 2.1 → 2.7) → phase 2b (2b.1 → 2b.4) → phase 2c (S1 → S5; S6 comes with the hub, S7 and S8 after) → phase 3 (3.1 → 3.4) → phase 5 (J1 → J10; the Journey talk, phase 4, is done). J1 to J7 don't need phase 3, so they can start earlier if you'd rather play sooner; only the story chapters (J8) wait for the conversation format (3.1). Expression pictures and new characters slot in whenever they're ready.
+Phase 1 (1.1 → 1.4) ✅ → phase 2 (2.0 first, then 2.1 → 2.7) → phase 2b (2b.1 → 2b.4) → phase 2c (S1 → S5; S6 comes with the hub, S7 and S8 after) → phase 3 (3.1 → 3.4) → phase 5 (J1 → J11; the Journey talk, phase 4, is done). J1 to J7 don't need phase 3, so they can start earlier if you'd rather play sooner; only the story chapters (J8) wait for the conversation format (3.1). Expression pictures and new characters slot in whenever they're ready.

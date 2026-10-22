@@ -85,6 +85,7 @@ The user's companions are 35 characters from four fandoms: **My Little Pony** (t
 - **Real life drives it:** logging gives energy, finishing your daily minimum gives keys to new chapters and regions (they never expire), habits, exercise and sleep give materials and stats, and quests give Gold.
 - **A party** of 2 or 3 companions with roles from their strongest trait (caring heals, nerdy solves puzzles, playful finds secrets, proud hits hardest); closeness makes them stronger.
 - An optional daily play limit (off by default); no decay; easier and kinder on hard days.
+- **An arcade** in the game room: real mini games you play with companions (memory, Connect Four, trivia, catch, card games, calm games for hard days), opponents playing by simple rules, no gambling mechanics, personal bests only.
 - **Graphics without AI:** companion pictures turned into pixel art on the phone, procedurally generated pixel creatures, free CC0 pixel-art packs, emoji.
 
 ## Where new ideas would help most
