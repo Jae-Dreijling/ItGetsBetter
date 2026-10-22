@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { AnimatePresence, m } from 'motion/react'
-import { useSessionCompanion, useEffectiveMessages, getCompanionMessage } from '../../hooks/useCompanion'
+import { useEffectiveMessages, getCompanionMessage } from '../../hooks/useCompanion'
+import { useCompanionTurn } from '../../hooks/useCompanionTurn'
+import { markTurn } from '../../lib/companionTurns'
+import type { Companion } from '../../types'
 import { useProfile } from '../../hooks/useProfile'
 import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { receiveGift } from '../../hooks/useCompanionFun'
@@ -10,30 +13,32 @@ import { traitsOf, allows } from '../../lib/companionPersonality'
 import { changeCloseness } from '../../lib/closeness'
 import { surpriseFor, surpriseKinds, hashSeed } from '../../lib/companionFun'
 
-const DONE_KEY = 'igb_daily_surprise'
-
-// A small surprise from your companion, once a day (COMPANION-PLAN 11h): a
-// fortune, a fun fact, a "would you rather", a compliment or a tiny gift
-// for the gift safe.
+// A small surprise from a companion (COMPANION-PLAN 11h): a fortune, a fun
+// fact, a "would you rather", a compliment or a tiny gift for the gift safe.
+// Each companion brings one on its own clock, every 2 or 3 days
+// (lib/companionTurns).
 export default function DailySurpriseCard() {
   const today = getLogicalDate()
-  const companion = useSessionCompanion()
+  const turn = useCompanionTurn('surprise', 'surprises', today)
+  // Once opened, it stays this companion's surprise until you close it.
+  const [held, setHeld] = useState<Companion | null>(null)
+  const companion = held ?? turn ?? undefined
   const messages = useEffectiveMessages(companion)
   const { profile } = useProfile()
   const avatar = useObjectUrl(companion?.avatar)
-  const [done, setDone] = useState(() => {
-    try { return localStorage.getItem(DONE_KEY) === today } catch { return false }
-  })
   const [open, setOpen] = useState(false)
   const [reply, setReply] = useState<string | null>(null)
 
-  if (done || !companion?.id || !allows(companion, 'surprises')) return null
+  if (!companion?.id) return null
   const traits = traitsOf(companion)
   const surprise = surpriseFor(hashSeed(`${today}:${companion.id}`), surpriseKinds(traits, allows(companion, 'gifts')), traits.romantic > 0)
   const name = profile?.display_name ?? 'friend'
 
   async function reveal() {
+    setHeld(companion!)
     setOpen(true)
+    // The turn is used on opening, so a gift can't be handed out twice.
+    markTurn(companion!.id!, 'surprise', today)
     if (surprise.kind === 'gift') {
       await receiveGift(companion!, surprise.gift)
       setReply(getCompanionMessage(messages, 'gift_for_you', name, { gift: `${surprise.gift.emoji} ${surprise.gift.name}` }, traitsOf(companion)))
@@ -46,8 +51,9 @@ export default function DailySurpriseCard() {
   }
 
   function finish() {
-    try { localStorage.setItem(DONE_KEY, today) } catch { /* shown again today, fine */ }
-    setDone(true)
+    setHeld(null)
+    setOpen(false)
+    setReply(null)
   }
 
   return (

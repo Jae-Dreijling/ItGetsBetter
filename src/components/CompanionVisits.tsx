@@ -10,6 +10,7 @@ import { useIsPhoneFreeTime } from '../hooks/useSchedule'
 import { fadeUp, pop } from '../lib/animations'
 import { traitsOf, isCalmPlace, allows } from '../lib/companionPersonality'
 import { useTodaysMoodScore } from '../hooks/useMood'
+import { isDue, markTurn } from '../lib/companionTurns'
 import { getLogicalDate } from '../lib/date'
 import { LOW_MOOD } from '../lib/softDay'
 import { changeCloseness } from '../lib/closeness'
@@ -64,10 +65,13 @@ export default function CompanionVisits() {
         return
       }
       if (!knockCooledDown()) return
-      const id = pickVisitor(others.map(c => ({ id: c.id!, affinity: s.bonds?.find(b => b.companion_id === c.id)?.affinity ?? null })), Math.random)
-      const companion = others.find(c => c.id === id)
+      // Each companion knocks on its own clock, every 2 or 3 days (lib/companionTurns).
+      const ready = others.filter(c => isDue(c.id!, 'visit', today))
+      const id = pickVisitor(ready.map(c => ({ id: c.id!, affinity: s.bonds?.find(b => b.companion_id === c.id)?.affinity ?? null })), Math.random)
+      const companion = ready.find(c => c.id === id)
       if (!companion) return
       markKnock()
+      markTurn(companion.id!, 'visit', today)
       setKnock({ companion, declined: false, support: false, line: getCompanionMessage(companion.messages, 'visit_knock', s.name, {}, traitsOf(companion)) })
     }
     const first = setTimeout(check, 25_000)

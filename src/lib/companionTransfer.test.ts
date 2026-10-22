@@ -129,6 +129,31 @@ describe('companion export and import', () => {
     expect(bond).toMatchObject({ affinity: 55, lover_dialogue: ['Old', 'New'], home_region: 'canterlot' })
   })
 
+  it('carries its own questions: incomplete ones dropped, re-import replaces by id and keeps yours', async () => {
+    const q = (id: string, text: string) => ({
+      id, text,
+      answers: [
+        { tone: 'warm', text: 'Yes', reply: 'Lovely.' },
+        { tone: 'playful', text: 'Ha', reply: 'Hehe.' },
+        { tone: 'blunt', text: 'No', reply: 'Fair.' },
+      ],
+    })
+    const id = await db.companions.add(companion('Lucifer', { questions: [q('mine', 'My own question?'), q('coffee', 'Old wording?')] as Companion['questions'] })) as number
+    const file = parseCompanionFile(JSON.stringify({
+      format: 'itgetsbetter-companions', version: 1, exported_at: '', personality_groups: [],
+      companions: [{
+        name: 'Lucifer', avatar: null, personality_group: null, messages: {}, lover_dialogue: [], home_region: null,
+        questions: [q('coffee', 'How do you take your coffee?'), { id: 'broken', text: 'No answers?', answers: [] }, q('order', 'Do you like order?')],
+      }],
+    }))
+    if (!file.ok) throw new Error(file.error)
+    expect(file.file.companions[0].questions!.map(q => q.id)).toEqual(['coffee', 'order'])
+    await applyCompanionImport(planCompanionImport(file.file, await db.companions.toArray(), []), { update: true })
+    const after = (await db.companions.get(id))!
+    expect(after.questions!.map(q => [q.id, q.text])).toEqual([['mine', 'My own question?'], ['coffee', 'How do you take your coffee?'], ['order', 'Do you like order?']])
+    expect((await buildCompanionExport()).companions[0].questions).toHaveLength(3)
+  })
+
   it('explains a wrong file', () => {
     expect(parseCompanionFile('nope')).toMatchObject({ ok: false })
     expect(parseCompanionFile(JSON.stringify({ version: 6, tables: {} }))).toMatchObject({ ok: false })

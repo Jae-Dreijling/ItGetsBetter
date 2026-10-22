@@ -192,16 +192,18 @@ function CompanionCard({ companion, closeness, folders, isCurrent, canDeactivate
           <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${companion.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
         </button>
       </div>
-      <div className="mt-2 flex items-center gap-2">
+      {/* Wraps on narrow phones: folder, edit and delete move to their own line. */}
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
         <MovementPicker companion={companion} />
         <button onClick={() => setSheet('gift')} className="p-1 text-lg" aria-label={`Give ${companion.name} a gift`}>🎁</button>
         <button onClick={() => setSheet('wardrobe')} className="p-1 text-lg" aria-label={`${companion.name}'s wardrobe`}>👒</button>
-        <span className="flex-1" />
-        <FolderSelect area="companions" itemId={companion.id!} folderId={companion.folder_id} folders={folders} label={companion.name} />
-        <button onClick={onEdit} className="p-1.5 text-muted hover:text-primary-500">
-          <Pencil className="h-4 w-4" />
-        </button>
-        {canDelete && <DeleteButton name={companion.name} onDelete={onDelete} />}
+        <div className="ml-auto flex min-w-0 items-center gap-2">
+          <FolderSelect area="companions" itemId={companion.id!} folderId={companion.folder_id} folders={folders} label={companion.name} />
+          <button onClick={onEdit} aria-label={`Edit ${companion.name}`} className="p-1.5 text-muted hover:text-primary-500">
+            <Pencil className="h-4 w-4" />
+          </button>
+          {canDelete && <DeleteButton name={companion.name} onDelete={onDelete} />}
+        </div>
       </div>
       <Sheet open={sheet !== null} onClose={() => setSheet(null)} title={sheet === 'wardrobe' ? `${companion.name}'s wardrobe` : `A gift for ${companion.name}`}>
         {sheet === 'gift' && <GiveGift companion={companion} isCurrent={isCurrent} />}

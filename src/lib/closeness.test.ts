@@ -3,7 +3,7 @@ import { db } from '../db'
 import { clearDb } from '../test/dbHelpers'
 import { changeCloseness, closenessTier } from './closeness'
 import { nicknameFor, speakingName } from './nicknames'
-import { closenessChange, pickQuestion, asksToday, QUESTIONS } from './companionQuestions'
+import { closenessChange, pickQuestion, QUESTIONS } from './companionQuestions'
 import { traitsOf } from './companionPersonality'
 import { EMPTY_MESSAGES } from '../hooks/useCompanion'
 
@@ -51,11 +51,15 @@ describe('replies', () => {
     expect(closenessChange('playful', traits({ traits: { playful: 2 } }))).toBe(4)
   })
 
-  it('asks on about three days in five, and not the same question again soon', () => {
-    const asked = Array.from({ length: 1000 }, (_, i) => asksToday(i * 7919)).filter(Boolean).length
-    expect(asked).toBeGreaterThan(500)
-    expect(asked).toBeLessThan(700)
+  it('does not ask the same question again soon', () => {
     const recent = QUESTIONS.slice(0, QUESTIONS.length - 1).map(q => q.id)
     expect(pickQuestion(12345, recent).id).toBe(QUESTIONS.at(-1)!.id)
+  })
+
+  it("asks its own questions first, then the shared ones once it has asked all of its own lately", () => {
+    const own = [{ ...QUESTIONS[0], id: 'own_a' }, { ...QUESTIONS[1], id: 'own_b' }]
+    expect(['own_a', 'own_b']).toContain(pickQuestion(7, [], own).id)
+    expect(pickQuestion(7, ['own_a'], own).id).toBe('own_b')
+    expect(QUESTIONS.map(q => q.id)).toContain(pickQuestion(7, ['own_a', 'own_b'], own).id)
   })
 })

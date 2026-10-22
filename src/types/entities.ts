@@ -8,6 +8,7 @@ import type { CravingOutcome } from '../lib/craving'
 import type { ExtraTrigger } from '../lib/companionTriggers'
 import type { CompanionTraits, CompanionOptions } from '../lib/companionPersonality'
 import type { Expression } from '../lib/companionExpressions'
+import type { CompanionQuestion } from '../lib/companionQuestions'
 
 export interface UserProfile {
   id?: number
@@ -365,6 +366,9 @@ export interface Companion {
   birthday?: string | null
   // The accessory it wears (lib/companionFun). Missing means none.
   accessory?: string | null
+  // Its own three-choice questions (lib/companionQuestions), asked before
+  // the shared ones. Missing means only the shared ones.
+  questions?: CompanionQuestion[]
   created_at: string
 }
 

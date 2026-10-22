@@ -30,6 +30,7 @@ The JSON file that **Companions → Export mine** writes and **Import** reads (`
 | `about` | no | Its own favourites, by memory topic: `food`, `drink`, `colour`, `animal`, `hobby`, `song`, `place`, `comfort`, `season`, `movie`, `snack`, `dream`. It answers with these when it asks for yours. |
 | `birthday` | no | `"MM-DD"`. On that day it's the companion with you all day. |
 | `expressions` | no | Extra pictures (encoded like `avatar`) for `happy`, `proud`, `sleepy`, `worried`, `surprised`. |
+| `questions` | no | Its own three-choice questions, asked before the shared ones: `[{ "id": "coffee", "text": "How do you take your coffee, {name}?", "answers": [{ "tone": "warm", "text": "…", "reply": "…" }, { "tone": "playful", … }, { "tone": "blunt", … }] }]`. Each question needs an id (unique for that companion) and one answer per tone, each with the companion's reply. How a reply changes closeness depends on its traits. Re-importing replaces a question with the same id. |
 
 What a companion remembers about you, its closeness with you and its gifts stay personal and are never exported.
 

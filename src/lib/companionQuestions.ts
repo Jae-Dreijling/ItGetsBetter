@@ -146,14 +146,40 @@ export function closenessChange(tone: Tone, traits: CompanionTraits): number {
   return BASE.warm + Math.max(traits.proud, traits.shy)
 }
 
-// Today's question: the same all day, avoiding the ones asked recently.
-export function pickQuestion(seed: number, recent: string[]): CompanionQuestion {
+// Today's question: the same all day, avoiding the ones asked recently. A
+// companion's own questions (from its character file) come first; the shared
+// ones fill in once it has asked all of its own lately.
+export function pickQuestion(seed: number, recent: string[], own: CompanionQuestion[] = []): CompanionQuestion {
+  const freshOwn = own.filter(q => !recent.includes(q.id))
+  if (freshOwn.length) return freshOwn[Math.abs(seed) % freshOwn.length]
   const fresh = QUESTIONS.filter(q => !recent.includes(q.id))
   const pool = fresh.length ? fresh : QUESTIONS
   return pool[Math.abs(seed) % pool.length]
 }
 
-// Not every day: about three days in five, the same for the whole day.
-export function asksToday(seed: number): boolean {
-  return Math.abs(seed) % 5 < 3
+const TONES: Tone[] = ['warm', 'playful', 'blunt']
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+
+// Questions from a file: each needs an id, a question and one answer per tone
+// (warm, playful, blunt), each with a reply. Anything incomplete is left out.
+export function cleanQuestions(v: unknown): CompanionQuestion[] {
+  if (!Array.isArray(v)) return []
+  const out: CompanionQuestion[] = []
+  for (const q of v) {
+    if (!isObj(q) || !text(q.id) || !text(q.text) || !Array.isArray(q.answers)) continue
+    const answers = TONES.map(tone => {
+      const a = (q.answers as unknown[]).find(a => isObj(a) && a.tone === tone) as Record<string, unknown> | undefined
+      return a && text(a.text) && text(a.reply) ? { tone, text: text(a.text), reply: text(a.reply) } : null
+    })
+    if (answers.some(a => !a) || out.some(o => o.id === text(q.id))) continue
+    out.push({ id: text(q.id), text: text(q.text), answers: answers as CompanionQuestion['answers'] })
+  }
+  return out
+}
+
+// On re-import: the file's version of a question wins (it may have new
+// wording), questions only you have stay.
+export function mergeQuestions(mine: CompanionQuestion[] = [], theirs: CompanionQuestion[] = []): CompanionQuestion[] {
+  return [...mine.filter(q => !theirs.some(t => t.id === q.id)), ...theirs]
 }

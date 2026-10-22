@@ -76,14 +76,17 @@ Everything in 11a to 11j is built. These parts of the user's ideas are only part
 - **Hard-day support from several companions at once:** today one knocks at a time (up to two a day). The idea was that several might come by.
 - **Real conversations between companions:** banter is a two-line exchange from generic lines. Missing: longer exchanges, and relationships between specific characters (the Obey Me brothers bickering, Kyle versus Cartman), with lines written per pair.
 - **Group celebrations with all companions:** only the visitor joins the main companion; switched-on companions that aren't on screen don't cheer.
-- **Three-choice questions per character:** the 14 questions are the same for everyone. Each character should have its own questions and its own reactions to each answer.
+- ~~**Three-choice questions per character**~~ built 2026-10-22 (step 12): each character can have its own questions with its own reactions, asked before the 14 shared ones.
 - **Daily surprise per character:** fortunes, fun facts, "would you rather" and compliments are generic lists. Each character should share its own (Lucifer's facts about the Devildom, Twilight's library facts).
 - **Memory questions in the Journey and in chat:** asked only on Today. The pattern-matching chat doesn't use memories or nicknames yet.
 - **Body doubling during a task:** only during the focus timer. Idea: "do this together" on a task's page.
 - **A real birthday celebration:** a companion's birthday gives a line, a 🎂 and the whole day together. Missing: something special (confetti, a cake moment, a gift for you, its friends visiting). Your own birthday isn't known by the app yet.
 - **Expressions per character:** the feature exists, but no character has expression pictures yet (content to make).
+- **Idle animations with emoji (idea 2026-10-22):** small emoji props next to the companion while it idles, like sipping a ☕, reading a 📖, a 💤 when sleepy, per character (Lucifer's coffee, Levi's 🎮). Only transform/opacity, calmer with "reduce motion".
 - **Feeling alive extras:** idle animations, reactions to weather and season, outfits per character (accessories are emoji only), seasonal events beyond seasonal accessories, collections and decorations.
 - **Relationship depth:** conversations and backstory that unlock at higher closeness (and as Lovers) were planned in V2-PLAN §5; not built.
+- ~~**Each companion on its own clock**~~ built 2026-10-22: questions, surprises, requests and visit knocks happen per companion every 2 or 3 days (up to 2 of a kind a day across companions), instead of once a day for all (`lib/companionTurns`).
+- **Alone time (asked 2026-10-22):** drag the companion to a ✕ at the bottom of the screen to ask for some alone time; it reacts in character and leaves, another is picked, and none pops up for 3 minutes.
 - **Per-character prank and entrance variety:** pranks hide one button and entrances roll in; character-specific tricks (Discord's chaos, Kenny "dying") are lines only, not different behaviour.
 
 ## 11i: Tools for lines

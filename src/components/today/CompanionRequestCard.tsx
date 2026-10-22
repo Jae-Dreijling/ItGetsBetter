@@ -1,45 +1,46 @@
 import { useState } from 'react'
 import { m } from 'motion/react'
-import { useSessionCompanion, useEffectiveMessages, getCompanionMessage } from '../../hooks/useCompanion'
+import { useEffectiveMessages, getCompanionMessage } from '../../hooks/useCompanion'
+import { useCompanionTurn } from '../../hooks/useCompanionTurn'
+import { markTurn } from '../../lib/companionTurns'
+import type { Companion } from '../../types'
 import { useProfile } from '../../hooks/useProfile'
 import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { awardPoints } from '../../hooks/usePoints'
 import { getLogicalDate } from '../../lib/date'
 import { fadeUp } from '../../lib/animations'
-import { traitsOf, allows } from '../../lib/companionPersonality'
+import { traitsOf } from '../../lib/companionPersonality'
 import { changeCloseness } from '../../lib/closeness'
 import { REQUESTS, REQUEST_CLOSENESS, REQUEST_POINTS, hashSeed } from '../../lib/companionFun'
 import { isQuietToday } from '../../lib/softDay'
 
-const DONE_KEY = 'igb_companion_request'
-
-// About half the days, between late morning and evening, the companion asks
-// for one tiny thing (COMPANION-PLAN 11h). Doing it earns a few points and
-// some closeness; "not now" costs nothing.
+// Between late morning and evening, a companion asks for one tiny thing
+// (COMPANION-PLAN 11h), each on its own clock, every 2 or 3 days
+// (lib/companionTurns). Doing it earns a few points and some closeness;
+// "not now" costs nothing.
 export default function CompanionRequestCard() {
   const today = getLogicalDate()
   const hour = new Date().getHours()
-  const companion = useSessionCompanion()
+  const turn = useCompanionTurn('request', 'requests', today)
+  // Who asked stays on the card while its thanks shows.
+  const [held, setHeld] = useState<Companion | null>(null)
+  const companion = held ?? turn ?? undefined
   const messages = useEffectiveMessages(companion)
   const { profile } = useProfile()
   const avatar = useObjectUrl(companion?.avatar)
-  const [done, setDone] = useState(() => {
-    try { return localStorage.getItem(DONE_KEY) === today } catch { return false }
-  })
   const [thanks, setThanks] = useState<string | null>(null)
 
-  if (!companion?.id || !allows(companion, 'requests')) return null
+  if (!companion?.id) return null
+  if (!thanks && (hour < 11 || hour >= 20 || isQuietToday())) return null
   const seed = Math.abs(hashSeed(`request:${today}:${companion.id}`))
-  const asks = seed % 2 === 0 && hour >= 11 && hour < 20 && !isQuietToday()
-  if (!thanks && (done || !asks)) return null
   const request = REQUESTS[seed % REQUESTS.length]
 
   function close() {
-    try { localStorage.setItem(DONE_KEY, today) } catch { /* fine */ }
-    setDone(true)
+    markTurn(companion!.id!, 'request', today)
   }
 
   async function didIt() {
+    setHeld(companion!)
     close()
     await awardPoints('companion_request')
     await changeCloseness(companion!.id!, REQUEST_CLOSENESS)
@@ -58,7 +59,7 @@ export default function CompanionRequestCard() {
         <>
           <p className="text-text-primary">{thanks}</p>
           <p className="mt-1 text-xs font-medium text-primary-500">+{REQUEST_POINTS} points · 💗 a little closer</p>
-          <button onClick={() => setThanks(null)} className="mt-3 w-full rounded-lg bg-surface py-2 text-sm font-medium text-text-primary">OK</button>
+          <button onClick={() => { setThanks(null); setHeld(null) }} className="mt-3 w-full rounded-lg bg-surface py-2 text-sm font-medium text-text-primary">OK</button>
         </>
       ) : (
         <>
