@@ -108,10 +108,10 @@ What changes from the source: no limbs or body animations (movement and emoji pr
 |---|---|---|---|
 | S0 ✅ | **Age groups and minors' safety**: an adult/minor field on every companion (files, editor, import); minors can never become Lovers (Journey and closeness), their top levels become Family and Bestie, no lover lines or nicknames, no romantic compliments or gifts; your **family word** in the profile; a new `family_slip` moment ("...I mean, {name}!") for minors | M | **Do first**: today any companion can become a Lover, and the files have lover lines for everyone. Character files: lover lines removed for minors, family-slip lines added |
 | S1 | **Personality categories and dislikes**: one field per companion, the compatibility table in code, assigned in the files | S | Needed by everything below |
-| S2 | **Relationships between companions**: a pairs table (type, score), canon relationships from the files, strangers otherwise, passive growth when they meet | M | Dexie version with upgrade; backups automatic |
+| S2 | **Relationships between companions**: a pairs table (type, score) **plus a history of meaningful shared events** (first meeting, games, gifts, fights, where it happened), canon relationships from the files, strangers otherwise, passive growth when they meet | M | Dexie version with upgrade; backups automatic |
 | S3 | **Social on-screen life (often)**: socially aware visitors, up to 3 on screen, arrival and departure rituals, greetings and short chats by relationship | M | A setting for how often, defaulting to often |
 | S4 | **Pair interactions**: quick games, gifts between them, light teasing and resolutions; per-relationship lines in the files (the three layers) | L | Replaces roadmap 3.1 (banter per pair) |
-| S5 | **Social feed and memories**: today's activity, friendships overview, memories ("Remember the picnic?"), catch-up on opening | M | |
+| S5 | **Social feed and memories**: today's activity, friendships overview, memories ("Remember the picnic?"), **memory albums per pair and group, callbacks to past events, news passed along, reputations**, catch-up on opening | M | |
 | S6 | **Group activities in the hub's rooms** (tea party, movie night, group nap, talent show) with roles, **up to 7 at once**, friend groups found together | L | With JOURNEY-DESIGN J2 (the hub) |
 | S7 | **Real drama arcs (not always resolved: companions can become enemies) and romance between companions** (adults with adults, minors with minors and innocent only), couples that include you, **jealousy and protectiveness over you** (above) | L | Needs S2, S4 |
 | S8 | **Rare and unique interactions, discovery collection, social milestones, weekly and seasonal events** | L, ongoing | Content grows over time |
@@ -155,3 +155,80 @@ All of it is taken into consideration (the user asked for everything to count). 
 **16. How to build it:** ✓ companion profiles ✓ relationship manager ✓ activity scheduler ✓ interaction system ✓ events and memory ✓ social interface; ✓ data-driven ✓ templates ✓ a state machine (idle, wandering, observing, approaching, socialising, playing, sleeping, visiting, leaving, reacting) ✓ store only what matters ✓ three content layers.
 
 **17 and 18. Priorities and the first version:** followed in the build order above (relationships and pair interactions first, then groups, the feed, growth and unique moments).
+
+## Second idea list, analysed (2026-10-22)
+
+Source: a research and ideas document from another AI (ItGetsBetter_Companion_Society_Research_and_Ideas, made from [IDEAS-BRIEF](IDEAS-BRIEF.md)). Every idea checked: **Yes** = good, add; **Adjust** = good with a change; **Already** = already planned (merged); **No** = leave out.
+
+Its central advice is right and is now part of the plan: **store a history of meaningful events between companions, not just a score**, and let that history change what they do next (S2, S5).
+
+### Lessons from similar apps
+
+| Idea | Verdict | Why / how |
+|---|---|---|
+| Social formations (a circle to talk, a line for a race, a cluster around someone celebrating, follow the leader, making space for a visitor) | Yes | Cheap: only positions and timing. Up to 3 on screen, up to 7 in the hub (S3, S6). |
+| Companion discoveries (favourite places, activities, facts about each other) | Yes | Stored in the relationship history; later chats use them (S2, S5). |
+| Social territory (favourite spots in the hub; a friend often joins them there) | Yes | Fits the hub rooms (S6). |
+| Encounter collection (Neko Atsume: combinations and events you've seen) | Already | The discovery collection (S8); no check-ins, nothing expires. |
+| Composable interactions (general action + character reactions + relationship modifier + a dialogue pair) | Already | The three content layers. |
+
+### New social ideas
+
+| Idea | Verdict | Why / how |
+|---|---|---|
+| Friend groups with an identity (name, favourite activities, emblem, shared memories; canon groups predefined, others emerging) | Yes | The Mane Six, the brothers, the boys exist already; emerging groups make cross-fandom life visible (S2, S6). |
+| Introductions and mutual friends (one introduces two who haven't met; later callbacks on how it went) | Yes | The best way for cross-fandom friendships to start (S3). |
+| Social reputation (storyteller, always loses games, trusted organiser, thoughtful gift-giver, harmless troublemaker, unofficial therapist) | Yes | Words, not numbers, earned from real events; only ever about companions, never about you (S5). |
+| Roles picked per situation (mediator, organiser, audience, instigator, peacemaker, reluctant one; a shy one takes charge when a friend needs help) | Already | Roles in groups (S6); "a shy one takes charge" added as a rare moment (S8). |
+| Shared memory albums per pair or group (first meeting, first game, a memorable fight, a gift, a new member, a Journey outing) | Yes | A relationship's own history, next to the general feed (S5). |
+| Sentimental objects (mementos from each other: a flower, a ticket, a drawing; kept even if they fall out) | Yes | Cheap (emoji objects), and it makes enemies who were once friends poignant (S4). |
+| Callbacks (a rematch referencing last time, refusing a game it lost badly, recreating a celebration pose, giving back the same kind of gift, ex-rivals joking) | Yes | The most effective way to feel continuous; follow-up lines per event type (S4, S5). |
+| Secret plans (a birthday surprise, a group performance, an apology gift, secret rematch training, a welcome for a newly discovered companion) | Yes | Small stories with a reveal; if you're away it simply happened and they enjoyed it (S8, S9). Also good for your own birthday (roadmap 2.6). |
+| Rumours and news (based only on real saved events) | Adjust | Called **news**, not rumours; never about you or your health data, only about companions' own lives (S5). |
+| Friendship support (comforting, distracting, a gift, an activity after a lost game or a fight) | Yes | Mirrors how they support you; follows the hard-day rules (S4). |
+
+### Per fandom
+
+| Idea | Verdict | Why / how |
+|---|---|---|
+| **My Little Pony:** friendship challenges (cooperative goals), harmony events (combinations that unlock a group moment), friendship repair talks, cutie-mark-style social accomplishments, friendship reports (Twilight's letters) | Yes | Very much in character; cooperation as their mechanic. |
+| **Obey Me!:** household disputes (chores, shared spaces), contests and quizzes, household roles (Lucifer keeps order, Mammon causes chaos), temporary sibling alliances, rivals teaming up | Yes | Their shared home (House of Lamentation) makes this a little household simulation. |
+| **South Park:** a bad plan (Cartman's) and the group votes, blame games, temporary alliances, recurring jokes, escalating nonsense | Adjust | Great as branching events; the show's humour stays light here: no slurs, no cruelty, no punching down, minors' rules apply. |
+| **Rick and Morty:** Rick changing the rules of a game, temporary effects, failed inventions, absurd outcomes, competitions over silly theories | Adjust | Weighted outcomes work well. Effects only touch the companions' portraits, are short, never change your app or data, and stay away on hard days and calm pages. |
+| **Cross-fandom chemistry** (Rick and Discord out-pranking each other, Twilight and Lucifer arguing about organising, Cartman meddling with the brothers, Morty and Fluttershy bonding over quiet, Butters mediating, Levi and Rick bonding over a niche interest) | Yes | A small table for chosen pairs; personality and relationship decide the rest. The big strength of having four fandoms. |
+
+### Rooms with a purpose (the hub)
+
+| Room | Verdict | Notes |
+|---|---|---|
+| Library: shared interests, recommendations, study groups | Yes | Unlocks conversation topics. |
+| Café: favourite drinks, break invitations, routines, a favourite table | Yes | Also the public place where travelers turn up. |
+| Game room: tournaments, teams, past winners, rivalries | Adjust | Leaderboards only for companions and only for fun; you are never ranked. |
+| Garden: quiet time, a pond, gentle talks | Yes | The room for hard days. |
+| Workshop: shared projects (a mural, a model) that grow and never reset | Yes | Each companion adds an emoji or generated piece. |
+| Memories remember where they happened | Yes | Part of the event history. |
+
+### While the app is closed
+
+A few plausible events from saved state, saved so they don't repeat, never "missed", nothing to claim: **Already** planned (catch-up in S5), and these rules are adopted as written.
+
+### Ideas for round portraits and emoji
+
+All **Yes**: whispering (close together, 🤫), secret-sharing (🔒), group laughter (wobbling in turn), awkward silence (a pause, 💧), taking sides (moving next to one), secret admiration (**adjust:** portraits can't look, so it leans toward the other and back, with a quick 👀; romantic admiration only within the age rules), synchronised reactions, following a leader, passing an object (an emoji travelling between them), a group photo (lining up, 📸), interrupting (a third moves between two), comforting (staying close, 🫂), shared surprise (all jump at once), leaving one by one with a wave. **Staggered reactions** (one notices, a second follows, a third copies) cost nothing and make everything feel alive.
+
+### Smaller systems
+
+| Idea | Verdict |
+|---|---|
+| Relationship anniversaries (first meeting, friendship), never expiring | Yes |
+| Conversation topics unlocked by shared activities and interests | Yes |
+| Compatibility discoveries (shared interests, surprising common ground) | Yes |
+| Group aesthetics (colours, symbols, decorations, arrangements) | Yes, cosmetic |
+| Relationship story arcs for chosen pairs (meeting, shared interest, disagreement, resolution or a changed relationship) | Yes |
+| Unexpected pairings (neutral, awkward, surprisingly good, a new friendship) | Yes |
+
+### Its priorities and technical advice
+
+Its priority list (memory albums and callbacks first, then cross-fandom chemistry, reputation, groups, introductions, room routines, secret plans, encounter collection, workshop projects, fandom event chains) fits the build order: history and callbacks come with S2 and S5, the rest spreads over S3, S4, S6 and S8. Its technical design (data-driven profiles, reusable templates, event IDs and history, weighted choices, three content layers, small offline catch-up) matches the plan. Its eight principles all agree with the Rulebook.
+
+**No:** none of the ideas is a bad fit. Two things to watch: the **writing volume** (every template needs lines per character, so start with generic and relationship lines and add unique ones over time), and the **research links** in that document are placeholders, not real addresses, so the product comparisons can't be checked from it (the products themselves are real).
