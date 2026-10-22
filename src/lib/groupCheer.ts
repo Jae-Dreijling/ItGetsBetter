@@ -13,7 +13,10 @@ export function groupCheerers<T extends { id?: number; is_active: boolean }>(com
 
 // Not more than once every 20 minutes, so a busy day doesn't get noisy.
 export function groupCheerCooledDown(now = Date.now()): boolean {
-  try { return now - Number(localStorage.getItem(KEY) ?? 0) >= COOLDOWN_MS } catch { return true }
+  try {
+    const last = localStorage.getItem(KEY)
+    return last === null || now - Number(last) >= COOLDOWN_MS
+  } catch { return true }
 }
 
 export function markGroupCheer(now = Date.now()) {
