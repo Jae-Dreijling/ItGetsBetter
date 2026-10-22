@@ -29,17 +29,28 @@ function write(key: string, value: unknown) {
   try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* fine */ }
 }
 
-export function readVisit(now = Date.now()): Visit | null {
-  const visit = read<Visit | null>(STATE_KEY, null)
-  return visit && visit.until > now ? visit : null
+// Up to two visitors at once (three companions on screen with yours): on a
+// hard day several may come by together (ROADMAP 2.1).
+export const MAX_VISITORS = 2
+
+// The visits still going on. Older versions stored a single visit.
+export function readVisits(now = Date.now()): Visit[] {
+  const stored = read<Visit | Visit[] | null>(STATE_KEY, null)
+  const visits = Array.isArray(stored) ? stored : stored ? [stored] : []
+  return visits.filter(v => v.until > now)
 }
 export function startVisit(companionId: number, now = Date.now(), support = false): Visit {
   const visit = { companionId, until: now + VISIT_MS, ...(support && { support }) }
-  write(STATE_KEY, visit)
+  write(STATE_KEY, [...readVisits(now).filter(v => v.companionId !== companionId), visit])
   return visit
 }
-export function endVisit() {
-  try { localStorage.removeItem(STATE_KEY) } catch { /* fine */ }
+// Ends one companion's visit, or all of them.
+export function endVisit(companionId?: number) {
+  if (companionId === undefined) {
+    try { localStorage.removeItem(STATE_KEY) } catch { /* fine */ }
+    return
+  }
+  write(STATE_KEY, readVisits().filter(v => v.companionId !== companionId))
 }
 export function markKnock(now = Date.now()) {
   write(LAST_KNOCK_KEY, now)
@@ -71,11 +82,11 @@ export function pickVisitor(candidates: { id: number; affinity: number | null }[
 }
 
 // Hard days (11j): with a mood of 1 or 2 today, companions may knock to keep
-// you company, outside the usual limits: up to two a day, an hour apart,
-// caring and romantic ones first.
+// you company, outside the usual limits: up to three a day, half an hour
+// apart, caring and romantic ones first. Several can stay at once (2.1).
 const SUPPORT_KEY = 'igb_support_visits'
-export const SUPPORT_PER_DAY = 2
-export const SUPPORT_GAP_MS = 60 * 60 * 1000
+export const SUPPORT_PER_DAY = 3
+export const SUPPORT_GAP_MS = 30 * 60 * 1000
 
 export function supportKnockAllowed(today: string, now = Date.now()): boolean {
   const s = read<{ date: string; count: number; lastAt: number }>(SUPPORT_KEY, { date: '', count: 0, lastAt: 0 })

@@ -73,7 +73,7 @@ Rules that hold for every part:
 
 Everything in 11a to 11j is built. These parts of the user's ideas are only partly there, or not yet:
 
-- **Hard-day support from several companions at once:** today one knocks at a time (up to two a day). The idea was that several might come by.
+- ~~**Hard-day support from several companions at once**~~ built 2026-10-22 (ROADMAP 2.1): up to 3 a day, and 2 can visit at the same time.
 - **Real conversations between companions:** banter is a two-line exchange from generic lines. Missing: longer exchanges, and relationships between specific characters (the Obey Me brothers bickering, Kyle versus Cartman), with lines written per pair.
 - **Group celebrations with all companions:** only the visitor joins the main companion; switched-on companions that aren't on screen don't cheer.
 - ~~**Three-choice questions per character**~~ built 2026-10-22 (step 12): each character can have its own questions with its own reactions, asked before the 14 shared ones.

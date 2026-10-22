@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
-  pickVisitor, readVisit, startVisit, knockCooledDown, markKnock, VISIT_MS, KNOCK_COOLDOWN_MS,
+  pickVisitor, readVisits, startVisit, endVisit, knockCooledDown, markKnock, VISIT_MS, KNOCK_COOLDOWN_MS,
   supportKnockAllowed, markSupportKnock, pickSupporter, SUPPORT_GAP_MS,
 } from './companionVisits'
 
@@ -27,13 +27,14 @@ describe('visits', () => {
     expect(pickVisitor([], Math.random)).toBeNull()
   })
 
-  it('on a hard day, up to two support visits, an hour apart, caring ones first', () => {
+  it('on a hard day, up to three support visits, half an hour apart, caring ones first', () => {
     const now = 5_000_000
     expect(supportKnockAllowed('2026-10-21', now)).toBe(true)
     markSupportKnock('2026-10-21', now)
     expect(supportKnockAllowed('2026-10-21', now + 1000)).toBe(false)
     expect(supportKnockAllowed('2026-10-21', now + SUPPORT_GAP_MS)).toBe(true)
     markSupportKnock('2026-10-21', now + SUPPORT_GAP_MS)
+    markSupportKnock('2026-10-21', now + 2 * SUPPORT_GAP_MS)
     expect(supportKnockAllowed('2026-10-21', now + 5 * SUPPORT_GAP_MS)).toBe(false)
     expect(supportKnockAllowed('2026-10-22', now + 5 * SUPPORT_GAP_MS)).toBe(true)
     let i = 0
@@ -45,10 +46,22 @@ describe('visits', () => {
   it('a visit lasts its time, and knocking has a cooldown', () => {
     const now = 1_000_000
     startVisit(5, now)
-    expect(readVisit(now + VISIT_MS - 1)?.companionId).toBe(5)
-    expect(readVisit(now + VISIT_MS + 1)).toBeNull()
+    expect(readVisits(now + VISIT_MS - 1).map(v => v.companionId)).toEqual([5])
+    expect(readVisits(now + VISIT_MS + 1)).toEqual([])
     markKnock(now)
     expect(knockCooledDown(now + 1000)).toBe(false)
     expect(knockCooledDown(now + KNOCK_COOLDOWN_MS)).toBe(true)
+  })
+
+  it('several can visit at once and leave one by one; an old single visit still reads', () => {
+    // endVisit reads the visits at the real time.
+    const now = Date.now()
+    startVisit(1, now, true)
+    startVisit(2, now + 1000, true)
+    expect(readVisits(now + 2000).map(v => v.companionId)).toEqual([1, 2])
+    endVisit(1)
+    expect(readVisits(now + 2000).map(v => v.companionId)).toEqual([2])
+    store.set('igb_visit', JSON.stringify({ companionId: 7, until: now + VISIT_MS }))
+    expect(readVisits(now).map(v => v.companionId)).toEqual([7])
   })
 })

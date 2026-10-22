@@ -17,7 +17,7 @@ import { LOW_MOOD } from '../lib/softDay'
 import { changeCloseness } from '../lib/closeness'
 import { onCompanionMoment, askMainCompanion, msSinceLastMoment } from '../lib/companionMessenger'
 import {
-  readVisit, startVisit, endVisit, markKnock, knockCooledDown, visitsOff, pickVisitor, supportKnockAllowed, markSupportKnock, pickSupporter,
+  readVisits, startVisit, endVisit, MAX_VISITORS, markKnock, knockCooledDown, visitsOff, pickVisitor, supportKnockAllowed, markSupportKnock, pickSupporter,
   BIG_MOMENTS, CHECK_EVERY_MS, ACCEPT_CLOSENESS, type Visit,
 } from '../lib/companionVisits'
 import type { TriggerValues } from '../lib/companionTriggers'
@@ -39,25 +39,30 @@ export default function CompanionVisits() {
   const mood = useTodaysMoodScore()
   const { profile } = useProfile()
   const name = profile?.display_name ?? 'friend'
-  const [visit, setVisit] = useState<Visit | null>(readVisit)
+  // Who's visiting now: usually one, on a hard day up to MAX_VISITORS (2.1).
+  const [visits, setVisits] = useState<Visit[]>(readVisits)
   const [knock, setKnock] = useState<{ companion: Companion; line: string; declined: boolean; support: boolean } | null>(null)
-  const [greeting, setGreeting] = useState<string | null>(null)
+  // Each visitor's first words, by companion id.
+  const [greetings, setGreetings] = useState<Record<number, string>>({})
 
   // Everything the check needs, read when it runs.
-  const latest = useRef({ current, companions, bonds, isPhoneFreeTime, path: location.pathname, visit, knock, name, mood })
+  const latest = useRef({ current, companions, bonds, isPhoneFreeTime, path: location.pathname, visits, knock, name, mood })
   useEffect(() => {
-    latest.current = { current, companions, bonds, isPhoneFreeTime, path: location.pathname, visit, knock, name, mood }
+    latest.current = { current, companions, bonds, isPhoneFreeTime, path: location.pathname, visits, knock, name, mood }
   })
 
   useEffect(() => {
     function check() {
       const s = latest.current
-      if (s.visit || s.knock || !s.companions || !s.current || visitsOff()) return
+      if (s.knock || !s.companions || !s.current || visitsOff()) return
       if (s.isPhoneFreeTime || isQuietToday() || isAloneTime() || isCalmPlace(s.path) || document.visibilityState !== 'visible') return
-      const others = s.companions.filter(c => c.id !== s.current!.id && allows(c, 'visits'))
-      // A hard day: someone may come by to keep you company (11j).
+      const visiting = new Set(s.visits.map(v => v.companionId))
+      const others = s.companions.filter(c => c.id !== s.current!.id && !visiting.has(c.id!) && allows(c, 'visits'))
+      // A hard day: someone may come by to keep you company (11j), and more
+      // than one can be with you at once (2.1).
       const today = getLogicalDate()
-      if (s.mood != null && s.mood <= LOW_MOOD && supportKnockAllowed(today)) {
+      if (s.mood != null && s.mood <= LOW_MOOD) {
+        if (s.visits.length >= MAX_VISITORS || !supportKnockAllowed(today)) return
         const id = pickSupporter(others.map(c => ({ id: c.id!, care: traitsOf(c).caring + traitsOf(c).romantic })), Math.random)
         const companion = others.find(c => c.id === id)
         if (!companion) return
@@ -65,7 +70,8 @@ export default function CompanionVisits() {
         setKnock({ companion, declined: false, support: true, line: getCompanionMessage(companion.messages, 'support_knock', s.name, {}, traitsOf(companion)) })
         return
       }
-      if (!knockCooledDown()) return
+      // An ordinary visit: one visitor at a time.
+      if (s.visits.length > 0 || !knockCooledDown()) return
       // Each companion knocks on its own clock, every 2 or 3 days (lib/companionTurns).
       const ready = others.filter(c => isDue(c.id!, 'visit', today))
       const id = pickVisitor(ready.map(c => ({ id: c.id!, affinity: s.bonds?.find(b => b.companion_id === c.id)?.affinity ?? null })), Math.random)
@@ -85,8 +91,8 @@ export default function CompanionVisits() {
   useEffect(() => {
     function goAway() {
       endVisit()
-      setVisit(null)
-      setGreeting(null)
+      setVisits([])
+      setGreetings({})
       setKnock(null)
     }
     window.addEventListener('igb-alone-time', goAway)
@@ -98,18 +104,19 @@ export default function CompanionVisits() {
     if (mood == null || mood > LOW_MOOD) return
     const t = setTimeout(() => {
       const s = latest.current
-      if (!s.visit && !s.knock) window.dispatchEvent(new Event('igb-support-check'))
+      if (!s.knock) window.dispatchEvent(new Event('igb-support-check'))
     }, 8000)
     return () => clearTimeout(t)
   }, [mood])
 
   async function accept() {
     if (!knock) return
-    const v = startVisit(knock.companion.id!, Date.now(), knock.support)
-    await changeCloseness(knock.companion.id!, ACCEPT_CLOSENESS)
-    setGreeting(getCompanionMessage(knock.companion.messages, 'visit_accepted', name, {}, traitsOf(knock.companion)))
+    const id = knock.companion.id!
+    const v = startVisit(id, Date.now(), knock.support)
+    await changeCloseness(id, ACCEPT_CLOSENESS)
+    setGreetings(g => ({ ...g, [id]: getCompanionMessage(knock.companion.messages, 'visit_accepted', name, {}, traitsOf(knock.companion)) }))
     setKnock(null)
-    setVisit(v)
+    setVisits(vs => [...vs.filter(x => x.companionId !== id), v])
   }
 
   function decline() {
@@ -118,23 +125,31 @@ export default function CompanionVisits() {
     setTimeout(() => setKnock(null), 2800)
   }
 
-  const visitor = visit ? companions?.find(c => c.id === visit.companionId) : undefined
-
   return (
     <>
       <AnimatePresence>
         {knock && <KnockCard key="knock" knock={knock} onAccept={accept} onDecline={decline} />}
       </AnimatePresence>
-      {visit && visitor && visitor.id !== current?.id && (
-        <Visitor
-          visitor={visitor}
-          mainName={current?.name ?? 'your companion'}
-          until={visit.until}
-          support={!!visit.support}
-          greeting={greeting}
-          onLeft={() => { endVisit(); setVisit(null); setGreeting(null) }}
-        />
-      )}
+      {visits.map((visit, index) => {
+        const visitor = companions?.find(c => c.id === visit.companionId)
+        if (!visitor || visitor.id === current?.id) return null
+        return (
+          <Visitor
+            key={visitor.id}
+            visitor={visitor}
+            index={index}
+            mainName={current?.name ?? 'your companion'}
+            until={visit.until}
+            support={!!visit.support}
+            greeting={greetings[visitor.id!] ?? null}
+            onLeft={() => {
+              endVisit(visitor.id)
+              setVisits(vs => vs.filter(x => x.companionId !== visitor.id))
+              setGreetings(g => Object.fromEntries(Object.entries(g).filter(([id]) => Number(id) !== visitor.id)))
+            }}
+          />
+        )
+      })}
     </>
   )
 }
@@ -173,8 +188,10 @@ function KnockCard({ knock, onAccept, onDecline }: {
 // The visitor: a second, simpler companion on screen. It cheers on big
 // moments, chats now and then (sometimes with your companion) and says
 // goodbye when its visit is over.
-function Visitor({ visitor, mainName, until, support, greeting, onLeft }: {
+function Visitor({ visitor, index, mainName, until, support, greeting, onLeft }: {
   visitor: Companion
+  // Its place in line, so two visitors don't sit on top of each other.
+  index: number
   mainName: string
   until: number
   support: boolean
@@ -185,9 +202,10 @@ function Visitor({ visitor, mainName, until, support, greeting, onLeft }: {
   const avatar = useObjectUrl(visitor.avatar)
   const { profile } = useProfile()
   const [line, setLine] = useState<string | null>(greeting)
+  const startY = window.innerHeight - 260 - index * (SIZE + 24)
   const x = useMotionValue(12)
-  const y = useMotionValue(window.innerHeight - 260)
-  const [spot, setSpot] = useState({ x: 12, y: window.innerHeight - 260 })
+  const y = useMotionValue(startY)
+  const [spot, setSpot] = useState({ x: 12, y: startY })
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const ref = useRef({ messages, name: profile?.display_name ?? 'friend', mainName, onLeft })
   useEffect(() => { ref.current = { messages, name: profile?.display_name ?? 'friend', mainName, onLeft } })
