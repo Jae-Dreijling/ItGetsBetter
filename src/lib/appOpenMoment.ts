@@ -36,6 +36,10 @@ export async function appOpenMoment(): Promise<{ event: CompanionEvent; values: 
     }
   }
 
+  // Your own birthday comes before companions' (ROADMAP 2.6): everyone celebrates.
+  const you = await db.userProfile.toCollection().first()
+  if (you?.birthday && you.birthday === today.slice(5) && once('your_birthday', today)) return { event: 'your_birthday', values: {} }
+
   // A companion's birthday comes right after people's.
   const birthdayCompanion = (await db.companions.toArray()).find(c => isBirthday(c.birthday, today))
   if (birthdayCompanion && once('companion_birthday', today)) return { event: 'companion_birthday', values: {} }

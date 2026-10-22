@@ -115,5 +115,5 @@ export function pickSupporter(candidates: { id: number; care: number }[], random
 export const BIG_MOMENTS = new Set<CompanionEvent>([
   'goal_completed', 'goal_step_reached', 'abstinence_milestone', 'habit_built', 'habits_all_done', 'floor_done',
   'personal_best', 'level_up', 'boss_defeated', 'project_done', 'tasks_all_done', 'streak_milestone', 'achievement_unlocked',
-  'fasting_goal', 'craving_passed',
+  'fasting_goal', 'craving_passed', 'your_birthday',
 ])

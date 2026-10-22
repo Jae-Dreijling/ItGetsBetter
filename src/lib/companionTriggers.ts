@@ -44,6 +44,8 @@ export const EXTRA_TRIGGERS = [
   'alone_time',
   // Minors who feel like family slip and call you dad, big sib, ... (lib/ageGroup)
   'family_slip',
+  // Your own birthday (ROADMAP 2.6)
+  'your_birthday',
 ] as const
 
 export type ExtraTrigger = (typeof EXTRA_TRIGGERS)[number]
@@ -159,6 +161,21 @@ export const TRIGGERS: TriggerInfo[] = [
       proud: ['Was that strictly necessary, {name}?!', 'I am NOT a ball.', 'Undignified. Utterly undignified.'],
       sassy: ['Oh, real mature, {name}.', 'Throw me again and see what happens.', 'Rude!'],
       shy: ['Eek! P-please be gentle...', 'Aaah! ...okay, I survived.'],
+    },
+  },
+  {
+    key: 'your_birthday', label: 'Your birthday (set in Profile)', group: 'Calendar',
+    defaults: [
+      'HAPPY BIRTHDAY, {name}! 🎂 Today is all about you.',
+      "It's your birthday! I'm so glad you were born, {name}. 🎉",
+      'Happy birthday! Eat something nice, do something fun, and let us celebrate you. 🎈',
+      'Birthday {name}! 🎂 Everyone came by to say it: we are so happy you exist.',
+    ],
+    traitDefaults: {
+      proud: ['Happy birthday, {name}. Another year of you. The world is better for it. 🎂'],
+      sassy: ["Happy birthday! Yes, you're getting older. Yes, you're still iconic. 🎉"],
+      romantic: ['Happy birthday, my dear {name}. Today I only want to celebrate you. 💗🎂'],
+      shy: ['H-happy birthday, {name}... I made you a tiny cake. 🎂'],
     },
   },
   {

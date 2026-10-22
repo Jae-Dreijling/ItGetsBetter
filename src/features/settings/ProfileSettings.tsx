@@ -18,6 +18,7 @@ export default function ProfileSettings() {
           <div className="space-y-4">
             <NameSwitcher profile={profile} />
             <FamilyWord profile={profile} />
+            <YourBirthday profile={profile} />
             {/* Keyed by id so the form starts from the saved values once loaded. */}
             <BodyForm key={profile.id} profile={profile} />
           </div>
@@ -52,6 +53,28 @@ function FamilyWord({ profile }: { profile: UserProfile }) {
         })}
       </div>
     </div>
+  )
+}
+
+// Your birthday (ROADMAP 2.6): on that day every companion celebrates you.
+function YourBirthday({ profile }: { profile: UserProfile }) {
+  const [value, setValue] = useState(profile.birthday ?? '')
+  function save(v: string) {
+    setValue(v)
+    if (v === '' || /^\d{2}-\d{2}$/.test(v)) updateProfile(profile.id!, { birthday: v || undefined })
+  }
+  return (
+    <label className="flex items-center gap-2 rounded-2xl bg-card p-4 text-sm font-semibold text-text-primary shadow-sm">
+      <span className="flex-1">🎂 Your birthday <span className="block text-xs font-normal text-muted">Your companions celebrate it. MM-DD, optional.</span></span>
+      <input
+        value={value}
+        onChange={e => save(e.target.value.trim())}
+        placeholder="05-14"
+        inputMode="numeric"
+        aria-label="Your birthday"
+        className="w-24 rounded-lg border border-primary-100 bg-surface px-2.5 py-1.5 text-center text-sm font-normal text-text-primary focus:border-primary-400 focus:outline-none dark:border-primary-900"
+      />
+    </label>
   )
 }
 

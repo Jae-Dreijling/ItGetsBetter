@@ -44,6 +44,8 @@ export interface UserProfile {
   owned_accessories?: string[]
   // What minor companions call you when they slip ('dad', 'big sib', ...; lib/ageGroup). Missing: they only hint at it.
   family_word?: string
+  // Your birthday, "MM-DD" (ROADMAP 2.6): companions celebrate it. Missing means not set.
+  birthday?: string
   created_at: string
 }
 

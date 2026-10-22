@@ -68,6 +68,9 @@
 [shiny_day]
 // A rare shiny day ✨.
 
+[your_birthday]
+// Your birthday (set in Profile).
+
 // ===== Handling =====
 
 [pickup_refused]

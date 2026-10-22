@@ -96,7 +96,8 @@ export default function FloatingCompanion() {
   const expressionUrl = useObjectUrl(expression ? companion?.expressions?.[expression] : undefined)
   const plainUrl = useObjectUrl(companion?.avatar)
   const today = getLogicalDate()
-  const birthday = isBirthday(companion?.birthday, today)
+  // Its birthday, or yours (2.6): a 🎂 either way.
+  const birthday = isBirthday(companion?.birthday, today) || (!!profile?.birthday && profile.birthday === today.slice(5))
   const shiny = companion?.id !== undefined && isShinyDay(companion.id, today)
   // Its accessory, or a seasonal one in themed weeks (11h).
   const worn = wornAccessory(companion?.accessory, today)
